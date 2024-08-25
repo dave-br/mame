@@ -20,7 +20,7 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 		return;
 
 	// TODO: WILL NEED THIS
-	// m_views[0].reset(new debugview_info(debugger, *this, window(), DVT_BREAK_POINTS));
+	m_views[0].reset(new debugview_info(debugger, *this, window(), DVT_SOURCE));
 	// if ((m_views[0] == nullptr) || !m_views[0]->is_valid())
 	// {
 	// 	m_views[0].reset();
