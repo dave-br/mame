@@ -34,7 +34,9 @@ protected:
 	virtual void view_update() override;
 	virtual void view_click(const int button, const debug_view_xy& pos) override;
 
-// private:
+private:
+	void print_line(u32 row, std::string text);
+
 // 	// internal helpers
 // 	void enumerate_sources();
 // 	void pad_ostream_to_length(std::ostream& str, int len);
