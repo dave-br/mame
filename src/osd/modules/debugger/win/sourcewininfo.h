@@ -21,12 +21,12 @@ public:
 	sourcewin_info(debugger_windows_interface &debugger);
 	virtual ~sourcewin_info();
 
-	// virtual bool handle_key(WPARAM wparam, LPARAM lparam) override;
+	virtual bool handle_key(WPARAM wparam, LPARAM lparam) override;
 	// virtual void restore_configuration_from_node(util::xml::data_node const &node) override;
 
 protected:
 	// virtual void update_menu() override;
-	// virtual bool handle_command(WPARAM wparam, LPARAM lparam) override;
+	virtual bool handle_command(WPARAM wparam, LPARAM lparam) override;
 	// virtual void save_configuration_to_node(util::xml::data_node &node) override;
 };
 
