@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include "debugcpu.h"
+#include "emu.h"
+//#include "debugcpu.h"
 #include "debugvw.h"
 
 
@@ -20,14 +21,24 @@
 //  TYPE DEFINITIONS
 //**************************************************************************
 
-// debug view for watchpoints
+// abstract base class for debug-info (symbols) file readers
+class debug_info_provider_base
+{
+	
+};
+
+// debug-info provider for the simple format
+// TODO: NAME?  MOVE TO ANOTHER FILE?
+class debug_info_simple : public debug_info_provider_base
+{
+public:
+	debug_info_simple(running_machine & machine) {}
+};
+
+// debug view for source-level debugging
 class debug_view_sourcecode : public debug_view
 {
 	friend class debug_view_manager;
-
-	// construction/destruction
-	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
-	virtual ~debug_view_sourcecode();
 
 protected:
 	// view overrides
@@ -35,7 +46,11 @@ protected:
 	virtual void view_click(const int button, const debug_view_xy& pos) override;
 
 private:
+	// construction/destruction
+	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
+	virtual ~debug_view_sourcecode();
 	void print_line(u32 row, std::string text);
+	const debug_info_provider_base & 		m_debug_info;		// Interface to the loaded debugging info file
 
 // 	// internal helpers
 // 	void enumerate_sources();

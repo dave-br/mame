@@ -159,6 +159,7 @@
 #define OPTION_UPDATEINPAUSE        "update_in_pause"
 #define OPTION_DEBUGSCRIPT          "debugscript"
 #define OPTION_DEBUGLOG             "debuglog"
+#define OPTION_DEBUGINFO            "debuginfo"
 
 // core misc options
 #define OPTION_DRC                  "drc"
@@ -443,6 +444,7 @@ public:
 	const char *debug_script() const { return value(OPTION_DEBUGSCRIPT); }
 	bool update_in_pause() const { return bool_value(OPTION_UPDATEINPAUSE); }
 	bool debuglog() const { return bool_value(OPTION_DEBUGLOG); }
+	const char *debug_info() const { return value(OPTION_DEBUGINFO); }
 
 	// core misc options
 	bool drc() const { return bool_value(OPTION_DRC); }

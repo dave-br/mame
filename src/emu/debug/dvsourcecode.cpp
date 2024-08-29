@@ -10,6 +10,7 @@
 
 #include "emu.h"
 #include "dvsourcecode.h"
+#include "debugger.h"
 
 
 //-------------------------------------------------
@@ -17,7 +18,8 @@
 //-------------------------------------------------
 
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate)
-	: debug_view(machine, DVT_SOURCE, osdupdate, osdprivate)
+	: debug_view(machine, DVT_SOURCE, osdupdate, osdprivate),
+	  m_debug_info(machine.debugger().debug_info())
 {
 }
 
