@@ -15,6 +15,7 @@
 #include "debug/debugcmd.h"
 #include "debug/debugcon.h"
 #include "debug/debugvw.h"
+#include "debug/dvsourcecode.h"		// TODO: THIS IS JUST FOR DEBUG_INFO STUFF; MOVE IT
 #include <cctype>
 
 /***************************************************************************
@@ -65,6 +66,7 @@ debugger_manager::debugger_manager(running_machine &machine)
 	m_cpu = std::make_unique<debugger_cpu>(machine);
 	m_console = std::make_unique<debugger_console>(machine);
 	m_commands = std::make_unique<debugger_commands>(machine, cpu(), console());
+	m_debug_info = load_debug_info(machine);
 
 	g_machine = &machine;
 
@@ -84,6 +86,12 @@ debugger_manager::debugger_manager(running_machine &machine)
 debugger_manager::~debugger_manager()
 {
 	g_machine = nullptr;
+}
+
+// TODO COMMENT
+std::unique_ptr<debug_info_provider_base> debugger_manager::load_debug_info(running_machine &machine)
+{
+	return std::make_unique<debug_info_simple>(machine);
 }
 
 /*-------------------------------------------------
