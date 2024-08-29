@@ -31,6 +31,9 @@
 
 #include "emu.h"
 #include "express.h"
+#include "debugger.h"
+#include "dvsourcecode.h"		// TODO: ONLY FOR debug_info_provider_base, MOVE
+
 
 #include "corestr.h"
 #include <cctype>
@@ -1580,13 +1583,25 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 		throw expression_error(expression_error::UNBALANCED_QUOTES, token.offset());
 	string++;
 
-	// JUST NOW
-	parse_number(token, buffer.c_str() + 1, 10, expression_error::INVALID_NUMBER);
-	m_symtable;
+	// The rest of the token should be the base 10 line number
+	std::string linenum_buffer;
+	while (1)
+	{
+		static const char valid[] = "0123456789";
+		char val = u8(string[0]);
+		if (val == 0 || strchr(valid, val) == nullptr)
+			break;
+		linenum_buffer.append(&val, 1);
+		string++;
+	}
+	parse_token linenum_token;
+	parse_number(linenum_token, linenum_buffer.c_str() + 1, 10, expression_error::INVALID_NUMBER);
+
+	// Convert file path and line number to an address
+	u16 address = symbols().machine().debugger().debug_info().file_line_to_address(file_path.c_str(), linenum_token.value());
 
 	// make the token
-	token.configure_string(m_stringlist.emplace(m_stringlist.end(), buffer.c_str())->c_str());
-
+	token.configure_number(address);
 }
 
 
