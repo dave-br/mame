@@ -24,6 +24,9 @@
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
 {
+public:
+	virtual ~debug_info_provider_base() {};
+	virtual u16 file_line_to_address(const char * file_path, int line_number) = 0;
 	
 };
 
@@ -33,6 +36,8 @@ class debug_info_simple : public debug_info_provider_base
 {
 public:
 	debug_info_simple(running_machine & machine) {}
+	~debug_info_simple() { }
+	virtual u16 file_line_to_address(const char * file_path, int line_number) override { return 44; };
 };
 
 // debug view for source-level debugging
