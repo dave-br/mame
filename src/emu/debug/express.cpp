@@ -12,7 +12,7 @@
     ===================
     0x0000       ( )
     0x0001       ++ (postfix), -- (postfix)
-    0x0002       ++ (prefix), -- (prefix), ~, !, - (unary), + (unary), b@, w@, d@, q@
+    0x0002       ++ (prefix), -- (prefix), ~, !, - (unary), + (unary), b@, w@, d@, q@, <srcfile>@
     0x0003       *, /, %
     0x0004       + -
     0x0005       << >>
@@ -1300,6 +1300,10 @@ void parsed_expression::parse_string_into_tokens()
 				parse_quoted_char(token, string);
 				break;
 
+			case '`':
+				parse_source_file_position(token, string);
+				break;
+
 			default:
 				parse_symbol_or_number(token, string);
 				break;
@@ -1554,6 +1558,35 @@ void parsed_expression::parse_quoted_string(parse_token &token, const char *&str
 
 	// make the token
 	token.configure_string(m_stringlist.emplace(m_stringlist.end(), buffer.c_str())->c_str());
+}
+
+
+//-------------------------------------------------
+//  TODO
+//-------------------------------------------------
+
+void parsed_expression::parse_source_file_position(parse_token &token, const char *&string)
+{
+	// accumulate a copy of the back-quoted source file path
+	string++;
+	std::string file_path;
+	while (string[0] != 0 && string[0] != '`')
+	{
+		file_path.append(string++, 1);
+	}
+
+	// if we didn't find the ending back-quote, report an error
+	if (string[0] != '`')
+		throw expression_error(expression_error::UNBALANCED_QUOTES, token.offset());
+	string++;
+
+	// JUST NOW
+	parse_number(token, buffer.c_str() + 1, 10, expression_error::INVALID_NUMBER);
+	m_symtable;
+
+	// make the token
+	token.configure_string(m_stringlist.emplace(m_stringlist.end(), buffer.c_str())->c_str());
+
 }
 
 
