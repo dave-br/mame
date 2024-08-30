@@ -9,7 +9,7 @@
 #include "emu.h"
 #include "sourcewininfo.h"
 
-#include "debugviewinfo.h"
+#include "sourceviewinfo.h"
 
 namespace osd::debugger::win {
 
@@ -20,7 +20,7 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 		return;
 
 	// TODO: WILL NEED THIS
-	// m_views[0].reset(new debugview_info(debugger, *this, window(), DVT_SOURCE));
+	m_views[0].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
 	// if ((m_views[0] == nullptr) || !m_views[0]->is_valid())
 	// {
 	// 	m_views[0].reset();

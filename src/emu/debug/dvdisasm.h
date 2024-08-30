@@ -64,8 +64,9 @@ class debug_view_disasm : public debug_view
 {
 	friend class debug_view_manager;
 
+protected:
 	// construction/destruction
-	debug_view_disasm(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
+	debug_view_disasm(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate, debug_view_type type = DVT_DISASSEMBLY);
 	virtual ~debug_view_disasm();
 
 public:
