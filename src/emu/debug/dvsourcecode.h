@@ -14,7 +14,7 @@
 
 #include "emu.h"
 //#include "debugcpu.h"
-#include "debugvw.h"
+#include "dvdisasm.h"
 
 
 //**************************************************************************
@@ -41,7 +41,7 @@ public:
 };
 
 // debug view for source-level debugging
-class debug_view_sourcecode : public debug_view
+class debug_view_sourcecode : public debug_view_disasm
 {
 	friend class debug_view_manager;
 

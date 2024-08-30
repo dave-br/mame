@@ -14,8 +14,8 @@
 
 namespace osd::debugger::win {
 
-disasmview_info::disasmview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent) :
-	debugview_info(debugger, owner, parent, DVT_DISASSEMBLY)
+disasmview_info::disasmview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent, debug_view_type type /* = DVT_DISASSEMBLY */) :
+	debugview_info(debugger, owner, parent, type)
 {
 }
 

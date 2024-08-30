@@ -22,7 +22,7 @@ namespace osd::debugger::win {
 class disasmview_info : public debugview_info
 {
 public:
-	disasmview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent);
+	disasmview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent, debug_view_type type = DVT_DISASSEMBLY);
 	virtual ~disasmview_info();
 
 	char const *expression() const;
