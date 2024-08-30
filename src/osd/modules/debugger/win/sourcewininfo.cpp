@@ -19,13 +19,12 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 	if (!window())
 		return;
 
-	// TODO: WILL NEED THIS
 	m_views[0].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
-	// if ((m_views[0] == nullptr) || !m_views[0]->is_valid())
-	// {
-	// 	m_views[0].reset();
-	// 	return;
-	// }
+	if ((m_views[0] == nullptr) || !m_views[0]->is_valid())
+	{
+		m_views[0].reset();
+		return;
+	}
 
 	// create the options menu
 	// HMENU const optionsmenu = CreatePopupMenu();

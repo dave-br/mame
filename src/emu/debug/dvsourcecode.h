@@ -25,6 +25,7 @@
 class debug_info_provider_base
 {
 public:
+	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual u16 file_line_to_address(const char * file_path, int line_number) = 0;
 	
@@ -35,7 +36,7 @@ public:
 class debug_info_simple : public debug_info_provider_base
 {
 public:
-	debug_info_simple(running_machine & machine) {}
+	debug_info_simple(running_machine & machine, const char * di_path);
 	~debug_info_simple() { }
 	virtual u16 file_line_to_address(const char * file_path, int line_number) override { return 44; };
 };

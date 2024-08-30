@@ -10,8 +10,35 @@
 
 #include "emu.h"
 #include "dvsourcecode.h"
+#include "emuopts.h"
 #include "debugger.h"
- 
+
+
+// static
+std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug_info(running_machine &machine)
+{
+	const char* di_path = machine.options().debug_info();
+	if (di_path[0] == 0)
+	{
+		return nullptr;
+		// TODO: Or, do something like...
+		// return std::make_unique<debug_info_empty>(machine);
+	}
+
+	// FUTURE: Insert code here that validates di_path is a path to a MAME
+	// debug info file, reads the header, and instantiates the corresponding
+	// debug_info_* class to read it.  For now, only debug_info_simple
+	// is supported
+
+	return std::make_unique<debug_info_simple>(machine, di_path);
+
+}
+
+debug_info_simple::debug_info_simple(running_machine & machine, const char * di_path)
+{
+	// TODO	
+}
+
 
 //-------------------------------------------------
 //  debug_view_sourcecode - constructor
