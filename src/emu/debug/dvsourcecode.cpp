@@ -37,6 +37,7 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 debug_info_simple::debug_info_simple(running_machine & machine, const char * di_path)
 {
 	// TODO	
+	// fopen(di_path, "r");  (no open-for-share file mode?!, actually use emu_file I guess)
 }
 
 
@@ -47,7 +48,9 @@ debug_info_simple::debug_info_simple(running_machine & machine, const char * di_
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
 	// debug_view(machine, DVT_SOURCE, osdupdate, osdprivate),
 	debug_view_disasm(machine, osdupdate, osdprivate, DVT_SOURCE),
-	m_debug_info(machine.debugger().debug_info())
+	m_debug_info(machine.debugger().debug_info()),
+	m_cur_src_index(0),
+	m_displayed_src_index(-1)
 {
 }
 
@@ -68,15 +71,33 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 void debug_view_sourcecode::view_update()
 {
-	std::string textE = "I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     ";
-	std::string textO = " ";
-	for(u32 row = 0; row < m_visible.y; row++)
+	if (m_cur_src_index != m_displayed_src_index)
 	{
-		if (row % 2 == 0)
-			print_line(row, textE);
-		else
-			print_line(row, textO);
+		// Source file choice changed.  Close old file, open new file.
+		if (m_displayed_src_fptr != NULL)
+		{
+			fclose(m_displayed_src_fptr);
+			m_displayed_src_fptr = NULL;
+		}
+
+		m_displayed_src_fptr = m_debug_info.open_src_file(m_displayed_src_index);
+		if (m_displayed_src_fptr == NULL)
+		{
+			// TODO LOG ERROR
+			return;
+		}
+
+		m_displayed_src_index = m_cur_src_index;
 	}
+	// std::string textE = "I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     ";
+	// std::string textO = " ";
+	// for(u32 row = 0; row < m_visible.y; row++)
+	// {
+	// 	if (row % 2 == 0)
+	// 		print_line(row, textE);
+	// 	else
+	// 		print_line(row, textO);
+	// }
 
 }
 
