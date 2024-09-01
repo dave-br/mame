@@ -21,6 +21,20 @@
 //  TYPE DEFINITIONS
 //**************************************************************************
 
+class line_indexed_file
+{
+public:
+	line_indexed_file();
+	~line_indexed_file();
+	void open(const char * file_path);
+	u32 num_lines() { m_line_starts.size(); };
+	const char * get_line_text(u32 n) { m_line_starts[n]; };
+
+private:
+	util::core_file::ptr m_file;
+	std::vector<const char *> m_line_starts;
+};
+
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
 {
@@ -56,7 +70,7 @@ private:
 	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
 	virtual ~debug_view_sourcecode();
 
-	void print_line(u32 row, std::string text, u8 attrib);
+	void print_line(u32 row, const char * text, u8 attrib);
 	bool is_visible(u32 line) { return (m_first_visible_line <= line && line < m_first_visible_line + m_visible.y); }
 	void adjust_visible_lines();
 

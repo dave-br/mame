@@ -85,7 +85,7 @@ void debug_view_sourcecode::view_update()
 		// 	m_displayed_src_file.close();
 		// }
 
-		m_displayed_src_file.open(m_displayed_src_index);
+		m_displayed_src_file->open(m_displayed_src_index);
 		if (m_displayed_src_file == NULL)
 		{
 			// TODO LOG ERROR
@@ -108,7 +108,7 @@ void debug_view_sourcecode::view_update()
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
 		u32 line = row + m_first_visible_line;
-		if (line > m_displayed_src_file.num_lines())
+		if (line > m_displayed_src_file->num_lines())
 		{
 			print_line(row, " ", DCA_NORMAL);
 		}
@@ -116,7 +116,7 @@ void debug_view_sourcecode::view_update()
 		{
 			print_line(
 				row,
-				m_displayed_src_file.get_line_text(),
+				m_displayed_src_file->get_line_text(line),
 				(line == m_highlighted_line) ? DCA_CURRENT : DCA_NORMAL);
 		}
 	}
@@ -137,7 +137,7 @@ void debug_view_sourcecode::adjust_visible_lines()
 {
 	// Generally center visible line in view, but there are corner cases
 
-	if (m_displayed_src_file.num_lines() <= m_visible.y)
+	if (m_displayed_src_file->num_lines() <= m_visible.y)
 	{
 		// Entire file fits in visible view.  Start at begining
 		m_first_visible_line = 0;
@@ -147,10 +147,10 @@ void debug_view_sourcecode::adjust_visible_lines()
 		// m_highlighted_line close to top, start at top
 		m_first_visible_line = 0;
 	}
-	else if (m_highlighted_line + m_visible.y / 2 > m_displayed_src_file.num_lines())
+	else if (m_highlighted_line + m_visible.y / 2 > m_displayed_src_file->num_lines())
 	{
 		// m_highlighted_line close to bottom, so bottom line at bottom
-		m_first_visible_line = m_displayed_src_file.num_lines() - m_visible.y;
+		m_first_visible_line = m_displayed_src_file->num_lines() - m_visible.y;
 	}
 	else
 	{
