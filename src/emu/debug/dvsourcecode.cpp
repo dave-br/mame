@@ -13,11 +13,52 @@
 #include "emuopts.h"
 #include "debugger.h"
 
+line_indexed_file::line_indexed_file() :
+	m_data(),
+	m_line_starts()
+{
+}
+
+std::error_condition line_indexed_file::open(const char * file_path)
+{
+	std::error_condition err = util::core_file::load(file_path, m_data);
+	if (err)
+	{
+		return err;
+	}
+
+	u32 cur_line_start = 0;
+	for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
+	{
+		// Check for line endings
+		bool crlf = false;
+		if (m_data[i] == '\r' && m_data[i+1] == '\n')
+		{
+			crlf = true;
+		}
+		else if (m_data[i] != '\n')
+		{
+			// Neither crlf nor lf, so not a line ending
+			continue;
+		}
+
+		m_data[i] = '\0';                                       // Terminate line
+		m_line_starts.push_back(cur_line_start);                // Record line's starting index
+		if (crlf)
+		{
+			i++;    // Skip \n in \r\n
+		}
+		cur_line_start = i+1;                                   // Prepare for next line
+	}
+	m_data[m_data.size()] = '\0';
+	return std::error_condition();
+}
+
 
 // static
 std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug_info(running_machine &machine)
 {
-	const char* di_path = machine.options().debug_info();
+	const char * di_path = machine.options().debug_info();
 	if (di_path[0] == 0)
 	{
 		return nullptr;
@@ -51,9 +92,9 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_debug_info(machine.debugger().debug_info()),
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
-	m_displayed_src_file(),
-	m_highlighted_line(-1),
-	m_first_visible_line(0)
+	m_displayed_src_file(std::make_unique<line_indexed_file>()),
+	m_highlighted_line(4),
+	m_first_visible_line(1)
 {
 }
 
@@ -85,8 +126,8 @@ void debug_view_sourcecode::view_update()
 		// 	m_displayed_src_file.close();
 		// }
 
-		m_displayed_src_file->open(m_displayed_src_index);
-		if (m_displayed_src_file == NULL)
+		std::error_condition err = m_displayed_src_file->open(this->m_debug_info.file_index_to_path(m_cur_src_index));
+		if (err)
 		{
 			// TODO LOG ERROR
 			return;
@@ -140,12 +181,12 @@ void debug_view_sourcecode::adjust_visible_lines()
 	if (m_displayed_src_file->num_lines() <= m_visible.y)
 	{
 		// Entire file fits in visible view.  Start at begining
-		m_first_visible_line = 0;
+		m_first_visible_line = 1;
 	}
 	else if (m_highlighted_line <= m_visible.y / 2)
 	{
 		// m_highlighted_line close to top, start at top
-		m_first_visible_line = 0;
+		m_first_visible_line = 1;
 	}
 	else if (m_highlighted_line + m_visible.y / 2 > m_displayed_src_file->num_lines())
 	{

@@ -25,14 +25,15 @@ class line_indexed_file
 {
 public:
 	line_indexed_file();
-	~line_indexed_file();
-	void open(const char * file_path);
-	u32 num_lines() { m_line_starts.size(); };
-	const char * get_line_text(u32 n) { m_line_starts[n]; };
+	~line_indexed_file() { };
+	std::error_condition open(const char * file_path);
+	u32 num_lines() { return m_line_starts.size(); };
+	const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
 
 private:
-	util::core_file::ptr m_file;
-	std::vector<const char *> m_line_starts;
+	// util::core_file::ptr m_file;
+	std::vector<uint8_t> m_data;
+	std::vector<u32> m_line_starts;
 };
 
 // abstract base class for debug-info (symbols) file readers
@@ -41,7 +42,9 @@ class debug_info_provider_base
 public:
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
-	virtual u16 file_line_to_address(const char * file_path, int line_number) = 0;
+	virtual const char * file_index_to_path(int file_index) const = 0;
+	virtual u16 file_line_to_address (const char * file_path, int line_number) const = 0;
+
 	
 };
 
@@ -52,7 +55,8 @@ class debug_info_simple : public debug_info_provider_base
 public:
 	debug_info_simple(running_machine & machine, const char * di_path);
 	~debug_info_simple() { }
-	virtual u16 file_line_to_address(const char * file_path, int line_number) override { return 44; };
+	virtual const char * file_index_to_path(int file_index) const override { return "D:\\coco\\asm\\moon\\Final\\mpE.asm"; };
+	virtual u16 file_line_to_address (const char * file_path, int line_number) const override { return 44; };
 };
 
 // debug view for source-level debugging
