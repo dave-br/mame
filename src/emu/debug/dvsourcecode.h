@@ -55,8 +55,17 @@ private:
 	// construction/destruction
 	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
 	virtual ~debug_view_sourcecode();
-	void print_line(u32 row, std::string text);
-	const debug_info_provider_base & 		m_debug_info;		// Interface to the loaded debugging info file
+
+	void print_line(u32 row, std::string text, u8 attrib);
+	bool is_visible(u32 line) { return (m_first_visible_line <= line && line < m_first_visible_line + m_visible.y); }
+	void adjust_visible_lines();
+
+	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
+	u32                                 m_cur_src_index;         // Identifies which source file we show show now
+	u32                                 m_displayed_src_index;   // Identifies which source file is currently shown
+	std::unique_ptr<line_indexed_file>  m_displayed_src_file;    // File object currently printed to the view
+	u32                                 m_highlighted_line;      // Line number to be highlighted
+	u32                                 m_first_visible_line;    // Line number to show at top of scrolled view
 
 // 	// internal helpers
 // 	void enumerate_sources();
