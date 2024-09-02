@@ -24,6 +24,7 @@ includedirs {
 	MAME_DIR .. "src/osd",
 	MAME_DIR .. "src/emu",
 	MAME_DIR .. "src/lib",
+	MAME_DIR .. "src/lib/dbginfo",
 	MAME_DIR .. "src/lib/util",
 	MAME_DIR .. "3rdparty",
 	MAME_DIR .. "3rdparty/sol2",
