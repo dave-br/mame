@@ -13,9 +13,9 @@
 #include "emuopts.h"
 #include "debugger.h"
 
-line_indexed_file::line_indexed_file() /* :
+line_indexed_file::line_indexed_file() :
 	m_data(),
-	m_line_starts() */
+	m_line_starts()
 {
 }
 
