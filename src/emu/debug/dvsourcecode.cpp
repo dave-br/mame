@@ -13,9 +13,9 @@
 #include "emuopts.h"
 #include "debugger.h"
 
-line_indexed_file::line_indexed_file() :
+line_indexed_file::line_indexed_file() /* :
 	m_data(),
-	m_line_starts()
+	m_line_starts() */
 {
 }
 
@@ -207,11 +207,11 @@ void debug_view_sourcecode::print_line(u32 row, const char * text, u8 attrib)
 		int viewdata_col = visible_col - m_topleft.x;
 		if (visible_col >= strlen(text))
 		{
-			m_viewdata[row * m_visible.x + viewdata_col] = { ' ', DCA_NORMAL };
+			m_viewdata[row * m_visible.x + viewdata_col] = { ' ', attrib };
 		}
 		else
 		{
-			m_viewdata[row * m_visible.x + viewdata_col] = { u8(text[visible_col]), DCA_NORMAL };
+			m_viewdata[row * m_visible.x + viewdata_col] = { u8(text[visible_col]), attrib };
 		}
 	}
 }

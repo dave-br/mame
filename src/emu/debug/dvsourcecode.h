@@ -31,7 +31,6 @@ public:
 	const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
 
 private:
-	// util::core_file::ptr m_file;
 	std::vector<uint8_t> m_data;
 	std::vector<u32> m_line_starts;
 };
