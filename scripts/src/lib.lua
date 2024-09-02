@@ -146,3 +146,20 @@ end
 		MAME_DIR .. "src/lib/util/zippath.cpp",
 		MAME_DIR .. "src/lib/util/zippath.h",
 	}
+
+
+
+project "dbginfo"
+	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
+	kind (LIBTYPE)
+
+	addprojectflags()
+
+	includedirs {
+		MAME_DIR .. "src/lib/util",
+	}
+
+	files {
+		MAME_DIR .. "src/lib/dbginfo/dbginfo.cpp",
+		MAME_DIR .. "src/lib/dbginfo/dbginfo.h",
+	}
