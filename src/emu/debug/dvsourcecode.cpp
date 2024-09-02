@@ -50,7 +50,7 @@ std::error_condition line_indexed_file::open(const char * file_path)
 		}
 		cur_line_start = i+1;                                   // Prepare for next line
 	}
-	m_data[m_data.size()] = '\0';
+	m_data[m_data.size()-1] = '\0';
 	return std::error_condition();
 }
 
