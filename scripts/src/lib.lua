@@ -162,4 +162,5 @@ project "dbginfo"
 	files {
 		MAME_DIR .. "src/lib/dbginfo/dbginfo.cpp",
 		MAME_DIR .. "src/lib/dbginfo/dbginfo.h",
+		MAME_DIR .. "src/lib/dbginfo/mdisimple.h",
 	}
