@@ -15,7 +15,7 @@
 #include "emu.h"
 //#include "debugcpu.h"
 #include "dvdisasm.h"
-#include "mdisimple.h"
+// #include "mdisimple.h"
 
 
 //**************************************************************************
@@ -44,6 +44,9 @@ public:
 	virtual ~debug_info_provider_base() {};
 	virtual const char * file_index_to_path(int file_index) const = 0;
 	virtual u16 file_line_to_address (const char * file_path, int line_number) const = 0;
+
+// protected:
+	// mame_debug_info_header * m_mdi;
 };
 
 // debug-info provider for the simple format
@@ -51,13 +54,10 @@ public:
 class debug_info_simple : public debug_info_provider_base
 {
 public:
-	debug_info_simple(running_machine & machine, const char * di_path);
+	debug_info_simple(running_machine & machine, std::vector<uint8_t> & data);
 	~debug_info_simple() { }
 	virtual const char * file_index_to_path(int file_index) const override { return "D:\\coco\\asm\\moon\\Final\\mpE.asm"; };
 	virtual u16 file_line_to_address (const char * file_path, int line_number) const override { return 44; };
-
-private:
-	mame_debug_info_simple * m_mdi_simple;
 };
 
 // debug view for source-level debugging

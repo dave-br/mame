@@ -12,6 +12,7 @@
 #include "dvsourcecode.h"
 #include "emuopts.h"
 #include "debugger.h"
+#include "mdisimple.h"
 
 line_indexed_file::line_indexed_file() :
 	m_data(),
@@ -66,19 +67,38 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 		// return std::make_unique<debug_info_empty>(machine);
 	}
 
+	std::vector<uint8_t> data;
+	util::core_file::load(di_path, data);
+	
+	// TODO: Validate header
+
 	// FUTURE: Insert code here that validates di_path is a path to a MAME
 	// debug info file, reads the header, and instantiates the corresponding
 	// debug_info_* class to read it.  For now, only debug_info_simple
 	// is supported
 
-	return std::make_unique<debug_info_simple>(machine, di_path);
+	return std::make_unique<debug_info_simple>(machine, data);
 
 }
 
-debug_info_simple::debug_info_simple(running_machine & machine, const char * di_path)
+debug_info_simple::debug_info_simple(running_machine & machine, std::vector<uint8_t> & data)
 {
-	// TODO	
-	// util::core_file (verify it uses osd winfile and sets share mode to read)
+	u32 i = sizeof(mame_debug_info_header);
+	if (data.size() < i + sizeof(u32))
+	{
+		// TODO ERROR
+		assert(false);
+	}
+	u32 size = *(u32*) data[i];
+	i += sizeof(u32);
+
+	if (data.size() != i + size - 1)
+	{
+		// TODO ERROR
+		assert(false);
+	}
+
+	// JUST NOW
 }
 
 
