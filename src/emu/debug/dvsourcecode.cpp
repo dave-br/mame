@@ -83,22 +83,39 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 
 debug_info_simple::debug_info_simple(running_machine & machine, std::vector<uint8_t> & data)
 {
+	mame_debug_info_header * header = (mame_debug_info_header *) &data[0];
+	assert(strncmp(header->magic, "MDbI", 4) == 0);		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
+	assert(strncmp(header->type, "simp", 4) == 0);		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
+	assert(header->version == 1);						// TODO: ERROR
+
 	u32 i = sizeof(mame_debug_info_header);
 	if (data.size() < i + sizeof(u32))
 	{
 		// TODO ERROR
 		assert(false);
 	}
-	u32 size = *(u32*) data[i];
+	u32 size = *(u32*) &data[i];
 	i += sizeof(u32);
-
 	if (data.size() != i + size - 1)
 	{
 		// TODO ERROR
 		assert(false);
 	}
 
-	// JUST NOW
+	if (data.size() < i + sizeof(u16))
+	{
+		// TODO ERROR
+		assert(false);
+	}
+	u16 num_source_files = *(u16*) &data[i];
+	i += sizeof(u16);
+	std::vector<const char *> index_to_path;
+	index_to_path.reserve(num_source_files);
+
+	for (u16 j = 0; j < num_source_files; j++)
+	{
+
+	}
 }
 
 
