@@ -81,40 +81,68 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 
 }
 
-debug_info_simple::debug_info_simple(running_machine & machine, std::vector<uint8_t> & data)
+template <typename T> static void read_field(T& var, std::vector<uint8_t>& data, u32& i)
 {
-	mame_debug_info_header * header = (mame_debug_info_header *) &data[0];
-	assert(strncmp(header->magic, "MDbI", 4) == 0);		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
-	assert(strncmp(header->type, "simp", 4) == 0);		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
-	assert(header->version == 1);						// TODO: ERROR
-
-	u32 i = sizeof(mame_debug_info_header);
-	if (data.size() < i + sizeof(u32))
+	if (data.size() < i + sizeof(T))
 	{
 		// TODO ERROR
 		assert(false);
 	}
-	u32 size = *(u32*) &data[i];
-	i += sizeof(u32);
+
+	var = *(T*) &data[i];
+	i += sizeof(T);
+}
+
+debug_info_simple::debug_info_simple(running_machine & machine, std::vector<uint8_t> & data) :
+	debug_info_provider_base(),
+	source_file_paths()
+{
+	// In case string null terminators are missing, this prevents reading past end of buffer, 
+	data.push_back(0);
+
+	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
+	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
+	if (strncmp(header_base->type, "simp", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
+	if (header_base->version != 1) { assert(false); };						// TODO: ERROR
+
+	u32 i = 0;
+	mame_debug_info_simple_header header;
+	read_field<mame_debug_info_simple_header>(header, data, i);
+
+	u32 size;
+	read_field<u32>(size, data, i);
+
 	if (data.size() != i + size - 1)
 	{
+		// File size doesn't match size promised by header
 		// TODO ERROR
 		assert(false);
 	}
 
-	if (data.size() < i + sizeof(u16))
+	u32 first_line_mapping = i + header.source_file_paths_size;
+	if (data.size() < first_line_mapping - 1)
 	{
 		// TODO ERROR
 		assert(false);
 	}
-	u16 num_source_files = *(u16*) &data[i];
-	i += sizeof(u16);
-	std::vector<const char *> index_to_path;
-	index_to_path.reserve(num_source_files);
 
-	for (u16 j = 0; j < num_source_files; j++)
+	// Read starting char address for each source file path into vector
+	source_file_paths.push_back((const char*) &data[i++]);
+	for (; i < first_line_mapping; i++)
 	{
+		if (data[i-1] == 0)
+		{
+			// i points to character immediately following terminating null, so
+			// it begins a new string
+			source_file_paths.push_back((const char*) &data[i]);
+		}
+	}
 
+	// Final byte before first_line_mapping must be null-terminator
+	if (data[i] != 0)
+	{
+		// TODO ERROR
+		assert(false);		
 	}
 }
 
