@@ -1,8 +1,12 @@
 /* All mame debug info headers derive from this */
 struct mame_debug_info_header_base
 {
+	/* Must be "MDbI" to identify itself as a MAME debug info file */
 	char magic[4];
+
+	/* For now, only "simp" is supported */
 	char type[4];
+
 	unsigned char version;
 };
 
@@ -39,6 +43,7 @@ struct mdi_line_mapping
 	mame_debug_info_simple format:
 	
 	mame_debug_info_simple_header   header
+	{any compiler padding necessary to end mame_debug_info_simple before a 4-byte boundary}
 	char                            source_file_paths[][]
 	mdi_line_mapping                line_mappings[]      
 
