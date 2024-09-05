@@ -117,21 +117,22 @@ template <typename T> static void read_field(T& var, std::vector<uint8_t>& data,
 	i += sizeof(T);
 }
 
-debug_info_simple::debug_info_simple(running_machine & machine, std::vector<uint8_t> & data) :
+debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8_t>& data) :
 	debug_info_provider_base(),
 	source_file_paths()
 {
-	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
+	m_data = std::move(data);
+	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &m_data[0];
 	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
 	if (strncmp(header_base->type, "simp", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
 	if (header_base->version != 1) { assert(false); };						// TODO: ERROR
 
 	u32 i = 0;
 	mame_debug_info_simple_header header;
-	read_field<mame_debug_info_simple_header>(header, data, i);
+	read_field<mame_debug_info_simple_header>(header, m_data, i);
 
 	u32 first_line_mapping = i + header.source_file_paths_size;
-	if (data.size() <= first_line_mapping - 1)
+	if (m_data.size() <= first_line_mapping - 1)
 	{
 		// TODO ERROR
 		assert(false);
@@ -139,21 +140,21 @@ debug_info_simple::debug_info_simple(running_machine & machine, std::vector<uint
 
 	// Final byte before first_line_mapping must be null-terminator.
 	// Ensuring this now makes it safe to read the strings later without going past the end.
-	if (data[first_line_mapping - 1] != 0)
+	if (m_data[first_line_mapping - 1] != 0)
 	{
 		// TODO ERROR
 		assert(false);		
 	}
 
 	// Read the starting char address for each source file path into vector
-	source_file_paths.push_back((const char*) &data[i++]);     // First string starts immediately
+	source_file_paths.push_back((const char*) &m_data[i++]);     // First string starts immediately
 	for (; i < first_line_mapping - 1; i++)                    // Exclude first_line_mapping - 1; it is final null-terminator
 	{
-		if (data[i-1] == 0)
+		if (m_data[i-1] == 0)
 		{
 			// i points to character immediately following null terminator, so
 			// i begins a new string
-			source_file_paths.push_back((const char*) &data[i]);
+			source_file_paths.push_back((const char*) &m_data[i]);
 		}
 	}
 }

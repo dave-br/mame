@@ -45,8 +45,8 @@ public:
 	virtual const char * file_index_to_path(int file_index) const = 0;
 	virtual u16 file_line_to_address (const char * file_path, int line_number) const = 0;
 
-// protected:
-	// mame_debug_info_header * m_mdi;
+protected:
+	std::vector<uint8_t> m_data;
 };
 
 // debug-info provider for the simple format
@@ -54,7 +54,7 @@ public:
 class debug_info_simple : public debug_info_provider_base
 {
 public:
-	debug_info_simple(running_machine & machine, std::vector<uint8_t> & data);
+	debug_info_simple(running_machine& machine, std::vector<uint8_t>& data);
 	~debug_info_simple() { }
 	virtual const char * file_index_to_path(int file_index) const override { return source_file_paths[file_index]; };
 	virtual u16 file_line_to_address (const char * file_path, int line_number) const override { return 44; };
