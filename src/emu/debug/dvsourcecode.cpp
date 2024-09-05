@@ -117,6 +117,14 @@ template <typename T> static void read_field(T& var, std::vector<uint8_t>& data,
 	i += sizeof(T);
 }
 
+struct mdi_line_mapping_comparable : mdi_line_mapping
+{
+	bool operator < (mdi_line_mapping_comparable& that)
+	{
+		return this->address < that.address;
+	}
+};
+
 debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8_t>& data) :
 	debug_info_provider_base(),
 	source_file_paths()
@@ -163,7 +171,48 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		mdi_line_mapping line_map;
 		read_field<mdi_line_mapping>(line_map, m_data, i);
 	}
+}
 
+// line_to_mapping:
+// Returns pointer to mdi_line_mapping with address matching parameter.  If no
+// such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
+
+// Assumes mdi_line_mapping structures are contiguously ordered by address.
+// Returns pointer to mdi_line_mapping with address matching parameter.  If no
+// such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
+// 
+const mdi_line_mapping * address_to_mapping(u16 address, mdi_line_mapping * start, int count)
+{
+	// I hate adding my own binary search here, but I see no way in O(1) time
+	// to initialize an STL class to wrap the C-style mdi_line_mapping[], so that
+	// the requirements of stl::lower_bound are in place.  My best hope was
+	// stl::span, but that does not appear to be compiled into MAME, as
+	// it's hidden under "#ifdef __cpp_lib_span // C++ >= 20 && concepts"
+
+	// Adapted from GCC's binary search
+
+	const mdi_line_mapping * base = start;
+	const mdi_line_mapping * cur = start;
+
+	for (; count != 0; count >>= 1)
+	{
+		cur = base + (count >> 1);	// * sizeof(mdi_line_mapping);
+		if (address == cur->address)
+		{
+			return cur;
+		}
+		else if (address > cur->address)
+		{
+			// Move right
+			base = cur + 1;
+			count--;
+		}
+		// Else, will automatically move left
+	}
+	return cur;
+
+	// TODO: Actually implement lower bound
+	// TODO: Add tests somewhere
 }
 
 
