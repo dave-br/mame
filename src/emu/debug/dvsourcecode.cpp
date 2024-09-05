@@ -157,6 +157,13 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			source_file_paths.push_back((const char*) &m_data[i]);
 		}
 	}
+
+	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
+	{
+		mdi_line_mapping line_map;
+		read_field<mdi_line_mapping>(line_map, m_data, i);
+	}
+
 }
 
 
