@@ -42,6 +42,12 @@ struct file_line
 	u32 line_number;
 };
 
+struct address_line
+{
+	u16 address;
+	u32 line;
+};
+
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
 {
@@ -68,10 +74,13 @@ public:
 	virtual std::optional<file_line> address_to_file_line (u16 address) const override;
 
 private:
-	std::vector<char> m_source_file_path_chars;       // Storage for source file path characters
-	std::vector<const char*> m_source_file_paths;     // Starting points for source file path strings
-	std::unordered_map<file_line, u16> m_file_line_to_address;
-	std::unordered_map<u16, file_line> m_address_to_file_line;
+	std::vector<char>                       m_source_file_path_chars; // Storage for source file path characters
+	std::vector<const char*>                m_source_file_paths;      // Starting points for source file path strings
+	std::vector<mdi_line_mapping>           m_line_maps_by_address;   // a list of mdi_line_mappings, sorted by address
+	std::vector<std::vector<address_line>>  m_line_maps_by_line;      // m_line_maps_by_line[i] is a list of address/line pairs,
+	                                                                  // sorted by line from file #i
+	// std::unordered_map<file_line, u16> m_file_line_to_address;
+	// std::unordered_map<u16, file_line> m_address_to_file_line;
 };
 
 // debug view for source-level debugging

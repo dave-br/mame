@@ -129,9 +129,8 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	debug_info_provider_base(),
 	m_source_file_path_chars(),
 	m_source_file_paths(),
-	m_file_line_to_address(),
-	m_address_to_file_line()
-
+	m_line_maps_by_address(),
+	m_line_maps_by_line()
 {
 	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
 	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
@@ -179,24 +178,39 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 
 std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 line_number) const
 {
-	file_line input = { file_index, line_number };
-	auto answer = m_file_line_to_address.find(input);
-	if (answer == m_file_line_to_address.end())
+	if (file_index >= m_line_maps_by_line.size())
 	{
 		return std::optional<u16>();
 	}
-	return answer->second;
+
+	const std::vector<address_line> & list = m_line_maps_by_line[file_index];
+	assert (list.size() > 0);
+
+	auto answer = std::lower_bound(list.cbegin(), list.cend(), line_number);
+	if (answer == list.cend())
+	{
+		// line_number is after the last mapped line, so just use the last mapped line
+		return (answer-1)->address;
+	}
+
+	// If there's a perfect match, lower_bound just found it.  Else, we're pointing
+	// to the address mapped to the next line.  Either way, we're good
+	return answer->address;
 }
 
 
 std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) const
 {
-	auto answer = m_address_to_file_line.find(address);
-	if (answer == m_address_to_file_line.end())
+	assert(m_line_maps_by_address.size() > 0);
+
+	auto answer = std::lower_bound(
+		m_line_maps_by_address.cbegin(), 
+		m_line_maps_by_address.cend(),
+		address);
+	if (answer == m_line_maps_by_address.cend())
 	{
-		return std::optional<file_line>();
+		answer--;
 	}
-	return answer->second;
 }
 
 
