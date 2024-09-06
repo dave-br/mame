@@ -127,20 +127,23 @@ struct mdi_line_mapping_comparable : mdi_line_mapping
 
 debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8_t>& data) :
 	debug_info_provider_base(),
-	source_file_paths()
+	m_source_file_path_chars(),
+	m_source_file_paths(),
+	m_file_line_to_address(),
+	m_address_to_file_line()
+
 {
-	m_data = std::move(data);
-	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &m_data[0];
+	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
 	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
 	if (strncmp(header_base->type, "simp", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
 	if (header_base->version != 1) { assert(false); };						// TODO: ERROR
 
 	u32 i = 0;
 	mame_debug_info_simple_header header;
-	read_field<mame_debug_info_simple_header>(header, m_data, i);
+	read_field<mame_debug_info_simple_header>(header, data, i);
 
 	u32 first_line_mapping = i + header.source_file_paths_size;
-	if (m_data.size() <= first_line_mapping - 1)
+	if (data.size() <= first_line_mapping - 1)
 	{
 		// TODO ERROR
 		assert(false);
@@ -148,72 +151,96 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 
 	// Final byte before first_line_mapping must be null-terminator.
 	// Ensuring this now makes it safe to read the strings later without going past the end.
-	if (m_data[first_line_mapping - 1] != 0)
+	if (data[first_line_mapping - 1] != 0)
 	{
 		// TODO ERROR
 		assert(false);		
 	}
 
 	// Read the starting char address for each source file path into vector
-	source_file_paths.push_back((const char*) &m_data[i++]);     // First string starts immediately
-	for (; i < first_line_mapping - 1; i++)                    // Exclude first_line_mapping - 1; it is final null-terminator
+	m_source_file_paths.push_back((const char*) &data[i++]);     // First string starts immediately
+	for (; i < first_line_mapping - 1; i++)                        // Exclude first_line_mapping - 1; it is final null-terminator
 	{
-		if (m_data[i-1] == 0)
+		if (data[i-1] == 0)
 		{
 			// i points to character immediately following null terminator, so
 			// i begins a new string
-			source_file_paths.push_back((const char*) &m_data[i]);
+			m_source_file_paths.push_back((const char*) &data[i]);
 		}
 	}
 
 	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
 	{
 		mdi_line_mapping line_map;
-		read_field<mdi_line_mapping>(line_map, m_data, i);
+		read_field<mdi_line_mapping>(line_map, data, i);
 	}
 }
 
-// line_to_mapping:
-// Returns pointer to mdi_line_mapping with address matching parameter.  If no
-// such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
 
-// Assumes mdi_line_mapping structures are contiguously ordered by address.
-// Returns pointer to mdi_line_mapping with address matching parameter.  If no
-// such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
-// 
-const mdi_line_mapping * address_to_mapping(u16 address, mdi_line_mapping * start, int count)
+std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 line_number) const
 {
-	// I hate adding my own binary search here, but I see no way in O(1) time
-	// to initialize an STL class to wrap the C-style mdi_line_mapping[], so that
-	// the requirements of stl::lower_bound are in place.  My best hope was
-	// stl::span, but that does not appear to be compiled into MAME, as
-	// it's hidden under "#ifdef __cpp_lib_span // C++ >= 20 && concepts"
-
-	// Adapted from GCC's binary search
-
-	const mdi_line_mapping * base = start;
-	const mdi_line_mapping * cur = start;
-
-	for (; count != 0; count >>= 1)
+	file_line input = { file_index, line_number };
+	auto answer = m_file_line_to_address.find(input);
+	if (answer == m_file_line_to_address.end())
 	{
-		cur = base + (count >> 1);	// * sizeof(mdi_line_mapping);
-		if (address == cur->address)
-		{
-			return cur;
-		}
-		else if (address > cur->address)
-		{
-			// Move right
-			base = cur + 1;
-			count--;
-		}
-		// Else, will automatically move left
+		return std::optional<u16>();
 	}
-	return cur;
-
-	// TODO: Actually implement lower bound
-	// TODO: Add tests somewhere
+	return answer->second;
 }
+
+
+std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) const
+{
+	auto answer = m_address_to_file_line.find(address);
+	if (answer == m_address_to_file_line.end())
+	{
+		return std::optional<file_line>();
+	}
+	return answer->second;
+}
+
+
+// // line_to_mapping:
+// // Returns pointer to mdi_line_mapping with address matching parameter.  If no
+// // such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
+
+// // Assumes mdi_line_mapping structures are contiguously ordered by address.
+// // Returns pointer to mdi_line_mapping with address matching parameter.  If no
+// // such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
+// // 
+// const mdi_line_mapping * address_to_mapping(u16 address, mdi_line_mapping * start, int count)
+// {
+// 	// I hate adding my own binary search here, but I see no way in O(1) time
+// 	// to initialize an STL class to wrap the C-style mdi_line_mapping[], so that
+// 	// the requirements of stl::lower_bound are in place.  My best hope was
+// 	// stl::span, but that does not appear to be compiled into MAME, as
+// 	// it's hidden under "#ifdef __cpp_lib_span // C++ >= 20 && concepts"
+
+// 	// Adapted from GCC's binary search
+
+// 	const mdi_line_mapping * base = start;
+// 	const mdi_line_mapping * cur = start;
+
+// 	for (; count != 0; count >>= 1)
+// 	{
+// 		cur = base + (count >> 1);	// * sizeof(mdi_line_mapping);
+// 		if (address == cur->address)
+// 		{
+// 			return cur;
+// 		}
+// 		else if (address > cur->address)
+// 		{
+// 			// Move right
+// 			base = cur + 1;
+// 			count--;
+// 		}
+// 		// Else, will automatically move left
+// 	}
+// 	return cur;
+
+// 	// TODO: Actually implement lower bound
+// 	// TODO: Add tests somewhere
+// }
 
 
 //-------------------------------------------------
