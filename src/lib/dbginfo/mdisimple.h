@@ -1,5 +1,5 @@
 /* All mame debug info headers derive from this */
-struct mame_debug_info_header_base
+typedef struct mame_debug_info_header_base
 {
 	/* Must be "MDbI" to identify itself as a MAME debug info file */
 	char magic[4];
@@ -8,25 +8,25 @@ struct mame_debug_info_header_base
 	char type[4];
 
 	unsigned char version;
-};
+} mame_debug_info_header_base;
 
 
 /* mame's simple debug info format uses this as its complete header */
-struct mame_debug_info_simple_header : mame_debug_info_header_base
+typedef struct mame_debug_info_simple_header : mame_debug_info_header_base
 {
 	/* size in bytes of source_file_paths[][] */
 	unsigned int source_file_paths_size;
 
 	/* number of elements of line_mappings[] */
 	unsigned int num_line_mappings;
-};
+} mame_debug_info_simple_header;
 
 
 /* 
 	A single mapping FROM a CPU address corresponding to the first byte of a machine-language
 	instruction TO the line number of a source file that assembled into that instruction
 */
-struct mdi_line_mapping
+typedef struct mdi_line_mapping
 {
 	/* address in CPU space of first instruction for this line */
 	unsigned short address;
@@ -36,7 +36,7 @@ struct mdi_line_mapping
 
 	/* 1-based line number in source file */
 	unsigned int line_number;
-};
+} mdi_line_mapping;
 
 
 /*
@@ -50,7 +50,7 @@ struct mdi_line_mapping
 	Description:
 	- Each source_file_paths[i] is a null-terminated string path to a source file.  The
 	  first dimension index fits into an unsigned short.
-	- line_mappings are ordered by (non-contiguous) address.  Only one entry per source
+	- line_mappings are unordered.  Only one entry per source
 	  file line number, and only for line numbers corresponding to the first byte of a
 	  machine-language instruction.  The dimension index fits into an unsigned int.
 

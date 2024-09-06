@@ -36,6 +36,12 @@ private:
 	std::vector<u32> m_line_starts;
 };
 
+struct file_line
+{
+	u16 file_index;
+	u32 line_number;
+};
+
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
 {
@@ -43,10 +49,11 @@ public:
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual const char * file_index_to_path(int file_index) const = 0;
-	virtual u16 file_line_to_address (const char * file_path, int line_number) const = 0;
+	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const = 0;
+	virtual std::optional<file_line> address_to_file_line (u16 address) const = 0;
 
-protected:
-	std::vector<uint8_t> m_data;
+// protected:
+// 	std::vector<uint8_t> m_data;
 };
 
 // debug-info provider for the simple format
@@ -56,11 +63,15 @@ class debug_info_simple : public debug_info_provider_base
 public:
 	debug_info_simple(running_machine& machine, std::vector<uint8_t>& data);
 	~debug_info_simple() { }
-	virtual const char * file_index_to_path(int file_index) const override { return source_file_paths[file_index]; };
-	virtual u16 file_line_to_address (const char * file_path, int line_number) const override { return 44; };
+	virtual const char * file_index_to_path(int file_index) const override { return m_source_file_paths[file_index]; };
+	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const override;
+	virtual std::optional<file_line> address_to_file_line (u16 address) const override;
 
 private:
-	std::vector<const char*> source_file_paths;
+	std::vector<char> m_source_file_path_chars;       // Storage for source file path characters
+	std::vector<const char*> m_source_file_paths;     // Starting points for source file path strings
+	std::unordered_map<file_line, u16> m_file_line_to_address;
+	std::unordered_map<u16, file_line> m_address_to_file_line;
 };
 
 // debug view for source-level debugging
