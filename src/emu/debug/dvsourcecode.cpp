@@ -189,7 +189,7 @@ std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 
 	auto answer = std::lower_bound(list.cbegin(), list.cend(), line_number);
 	if (answer == list.cend())
 	{
-		// line_number is after the last mapped line, so just use the last mapped line
+		// line_number > last mapped line, so just use the last mapped line
 		return (answer-1)->address;
 	}
 
@@ -203,14 +203,17 @@ std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) c
 {
 	assert(m_line_maps_by_address.size() > 0);
 
-	auto answer = std::lower_bound(
+	auto guess = std::lower_bound(
 		m_line_maps_by_address.cbegin(), 
 		m_line_maps_by_address.cend(),
 		address);
-	if (answer == m_line_maps_by_address.cend())
+	if (guess == m_line_maps_by_address.cend())
 	{
-		answer--;
+		// address > last mapped address, so consider the last mapped address
+		guess--;
 	}
+
+	answer->
 }
 
 
