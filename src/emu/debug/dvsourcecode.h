@@ -46,7 +46,15 @@ struct address_line
 {
 	u16 address;
 	u32 line;
+
+	bool operator < (const address_line& that) { return this->line < that.line; }
 };
+
+struct mdi_line_mapping_comparable : mdi_line_mapping
+{
+	bool operator < (const mdi_line_mapping_comparable& that) { return this->address < that.address; }
+};
+
 
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
@@ -74,10 +82,10 @@ public:
 	virtual std::optional<file_line> address_to_file_line (u16 address) const override;
 
 private:
-	std::vector<char>                       m_source_file_path_chars; // Storage for source file path characters
-	std::vector<const char*>                m_source_file_paths;      // Starting points for source file path strings
-	std::vector<mdi_line_mapping>           m_line_maps_by_address;   // a list of mdi_line_mappings, sorted by address
-	std::vector<std::vector<address_line>>  m_line_maps_by_line;      // m_line_maps_by_line[i] is a list of address/line pairs,
+	std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
+	std::vector<const char*>                 m_source_file_paths;      // Starting points for source file path strings
+	std::vector<mdi_line_mapping_comparable> m_line_maps_by_address;   // a list of mdi_line_mappings, sorted by address
+	std::vector<std::vector<address_line>>   m_line_maps_by_line;      // m_line_maps_by_line[i] is a list of address/line pairs,
 	                                                                  // sorted by line from file #i
 	// std::unordered_map<file_line, u16> m_file_line_to_address;
 	// std::unordered_map<u16, file_line> m_address_to_file_line;
