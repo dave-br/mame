@@ -37,10 +37,10 @@ typedef struct mame_debug_info_simple_header : mame_debug_info_header_base
 */
 typedef struct mdi_line_mapping
 {
-	/* address in CPU space of first instruction for this line */
+	/* address in CPU space of first byte of first instruction for this line */
 	unsigned short address_first;
 
-	/* address in CPU space of last instruction (inclusive) for this line */
+	/* address in CPU space of first byte of last instruction (inclusive) for this line */
 	unsigned short address_last;
 
 	/* 0-based index of source file (from source_file_paths) containing this line */
