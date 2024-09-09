@@ -1598,10 +1598,20 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	parse_number(linenum_token, linenum_buffer.c_str() + 1, 10, expression_error::INVALID_NUMBER);
 
 	// Convert file path and line number to an address
-	u16 address = symbols().machine().debugger().debug_info().file_line_to_address(file_path.c_str(), linenum_token.value());
+	const debug_info_provider_base & debug_info = symbols().machine().debugger().debug_info();
+	std::optional<int> file_index = debug_info.file_path_to_index(file_path.c_str());
+	if (!file_index.has_value())
+	{
+		// TODO: ERROR
+	}
+	std::optional<u16> address = debug_info.file_line_to_address(file_index.value(), linenum_token.value());
+	if (!address.has_value())
+	{
+		// TODO: ERROR
+	}
 
 	// make the token
-	token.configure_number(address);
+	token.configure_number(address.value());
 }
 
 
