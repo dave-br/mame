@@ -117,14 +117,6 @@ template <typename T> static void read_field(T& var, std::vector<uint8_t>& data,
 	i += sizeof(T);
 }
 
-struct mdi_line_mapping_comparable : mdi_line_mapping
-{
-	bool operator < (mdi_line_mapping_comparable& that)
-	{
-		return this->address < that.address;
-	}
-};
-
 debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8_t>& data) :
 	debug_info_provider_base(),
 	m_source_file_path_chars(),
@@ -175,7 +167,23 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	}
 }
 
+std::optional<int> debug_info_simple::file_path_to_index(const char * file_path) const
+{
+	// TODO: Fancy heuristics to match full paths of source file from
+	// dbginfo and local machine
+	for (int i=0; i < this->m_source_file_paths.size(); i++)
+	{
+		// TODO: Use path helpers to deal with case-insensitivity on other platforms
+		if (stricmp(m_source_file_paths[i], file_path) == 0)
+		{
+			return i;
+		}
+	}
+	return std::optional<int>();
+}
 
+// Given a source file & line number, return the address of the first byte of
+// the first instruction of the range of instructions attributable to that line
 std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 line_number) const
 {
 	if (file_index >= m_line_maps_by_line.size())
@@ -186,19 +194,27 @@ std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 
 	const std::vector<address_line> & list = m_line_maps_by_line[file_index];
 	assert (list.size() > 0);
 
-	auto answer = std::lower_bound(list.cbegin(), list.cend(), line_number);
+	auto answer = std::lower_bound(
+		list.cbegin(), 
+		list.cend(), 
+		line_number,
+		[] (auto const &adrline, u32 line) { return adrline.line_number < line; });
 	if (answer == list.cend())
 	{
 		// line_number > last mapped line, so just use the last mapped line
-		return (answer-1)->address;
+		return (answer-1)->address_first;
 	}
 
-	// If there's a perfect match, lower_bound just found it.  Else, we're pointing
-	// to the address mapped to the next line.  Either way, we're good
-	return answer->address;
+	// m_line_maps_by_line is sorted by line.  answer is the leftmost entry
+	// with line_number <= answer->line_number.  If they're equal, answer
+	// is clearly correct.  If line_number < answer->line_number, then
+	// using answer bumps us forward to the next mapped line after the 
+	// line specified by the user.
+	return answer->address_first;
 }
 
-
+// Given an address, return the source file & line number attributable to the
+// range of addresses that includes the specified address
 std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) const
 {
 	assert(m_line_maps_by_address.size() > 0);
@@ -206,14 +222,29 @@ std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) c
 	auto guess = std::lower_bound(
 		m_line_maps_by_address.cbegin(), 
 		m_line_maps_by_address.cend(),
-		address);
+		address,
+		[] (auto const &linemap, u16 addr) { return linemap.address_first < addr; });
 	if (guess == m_line_maps_by_address.cend())
 	{
-		// address > last mapped address, so consider the last mapped address
+		// address > last mapped address_first, so consider the last address range
 		guess--;
 	}
 
-	answer->
+	// m_line_maps_by_address is sorted by address_first.  guess is
+	// the leftmost entry with address <= guess->address_first.  If they're
+	// equal, guess is our answer.  Otherwise, check the preceding entry.
+	if (guess->address_first <= address && address <= guess->address_last)
+	{
+		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
+	}
+	guess--;
+	if (guess >= m_line_maps_by_address.cbegin() &&
+		guess->address_first <= address && address <= guess->address_last)
+	{
+		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
+	}
+
+	return std::optional<file_line>();
 }
 
 
