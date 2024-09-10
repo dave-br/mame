@@ -71,7 +71,7 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 	// (SOME OF THIS MAY BE REPURPOSED TO THE HELPER WRITE FUNCTIONS USED BY TOOLS)
 	FILE * testfptr = fopen(di_path, "w");
 
-	const char * source_file_paths[] = { "D:\\coco\\asm\\moon\\Final\\mpE.asm", "test" };
+	const char * source_file_paths[] = { "D:\\coco\\asm\\moon\\Final\\mpE.asm", "D:\\coco\\asm\\sd.asm", "test" };
 	mame_debug_info_simple_header hdr;
 	strncpy(&hdr.magic[0], "MDbI", 4);
 	strncpy(&hdr.type[0], "simp", 4);
@@ -81,11 +81,28 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 	{
 		hdr.source_file_paths_size += strlen(source_file_paths[i]) + 1;
 	}
-	hdr.num_line_mappings = 0;
+	std::pair<u16,u32> line_mappings[] =
+	{
+		{0x3F02, 17},
+		{0x3F0D, 52},
+		{0x3F07, 26},
+		{0x3F06, 25},
+		{0x3F0A, 34},
+		{0x3F00, 14},
+		{0x3F09, 33},
+		{0x3F0C, 39},
+		{0x3F04, 24},
+	};
+	hdr.num_line_mappings = _countof(line_mappings);
 	fwrite(&hdr, sizeof(mame_debug_info_simple_header), 1, testfptr);
 	for (int i=0; i < _countof(source_file_paths); i++)
 	{
 		fwrite(source_file_paths[i], strlen(source_file_paths[i])+1, 1, testfptr);
+	}
+	for (int i=0; i < _countof(line_mappings); i++)
+	{
+		mdi_line_mapping mapping = { line_mappings[i].first, line_mappings[i].first, 1, line_mappings[i].second };
+		fwrite(&mapping, sizeof(mapping), 1, testfptr);
 	}
 	fclose(testfptr);
 
