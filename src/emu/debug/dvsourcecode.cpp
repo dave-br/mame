@@ -69,7 +69,7 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 
 	// TODO: TEMP CODE TO CREATE TEST DI
 	// (SOME OF THIS MAY BE REPURPOSED TO THE HELPER WRITE FUNCTIONS USED BY TOOLS)
-	FILE * testfptr = fopen(di_path, "w");
+	FILE * testfptr = fopen(di_path, "wb");
 
 	const char * source_file_paths[] = { "D:\\coco\\asm\\moon\\Final\\mpE.asm", "D:\\coco\\asm\\sd.asm", "test" };
 	mame_debug_info_simple_header hdr;
@@ -150,6 +150,12 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	mame_debug_info_simple_header header;
 	read_field<mame_debug_info_simple_header>(header, data, i);
 
+	if (header.source_file_paths_size == 0)
+	{
+		// TODO ERROR
+		assert(false);
+	}
+
 	u32 first_line_mapping = i + header.source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
 	{
@@ -165,32 +171,40 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		assert(false);		
 	}
 
-	// Read the starting char address for each source file path into vector
-	m_source_file_paths.push_back((const char*) &data[i++]);     // First string starts immediately
-	for (; i < first_line_mapping - 1; i++)                      // Exclude first_line_mapping - 1; it is final null-terminator
+	// m_source_file_path_chars to own memory containing path characters
+	m_source_file_path_chars.reserve(header.source_file_paths_size);
+	m_source_file_path_chars.resize(header.source_file_paths_size);
+	std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
+
+	// Read the starting char address for each source file path into m_source_file_paths
+	m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
+	for (u32 j = 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
 	{
-		if (data[i-1] == '\0')
+		if (m_source_file_path_chars[j-1] == '\0')
 		{
-			// i points to character immediately following null terminator, so
-			// i begins a new string
-			m_source_file_paths.push_back((const char*) &data[i]);
+			// j points to character immediately following null terminator, so
+			// j begins a new string
+			m_source_file_paths.push_back((const char*) &m_source_file_path_chars[j]);
 		}
 	}
+	i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
 
 	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
 	// entries from debug info
 	m_linemaps_by_line.reserve(m_source_file_paths.size());
+	m_linemaps_by_line.resize(m_source_file_paths.size());
 	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
 	{
 		mdi_line_mapping line_map;
 		read_field<mdi_line_mapping>(line_map, data, i);
 		m_linemaps_by_address.push_back(line_map);
-		if (line_map.source_file_index >= m_linemaps_by_line.size())
+		if (line_map.source_file_index >= m_source_file_paths.size())
 		{
 			// TODO ERROR
 			assert(false);		
 		}
-		m_linemaps_by_line[line_map.source_file_index].push_back({line_map.address_first, line_map.line_number});
+		address_line addrline = {line_map.address_first, line_map.line_number};
+		m_linemaps_by_line[line_map.source_file_index].push_back(addrline);
 	}
 
 	std::sort(
@@ -198,12 +212,12 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		m_linemaps_by_address.end(), 
 		[] (const mdi_line_mapping &linemap1, const mdi_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
 	
-	for (u16 i = 0; i < m_source_file_paths.size(); i++)
+	for (u16 file_idx = 0; file_idx < m_source_file_paths.size(); file_idx++)
 	{
 		std::sort(
-			m_linemaps_by_line[i].begin(),
-			m_linemaps_by_line[i].end(), 
-			[] (const address_line& adrline1, const address_line &adrline2) { return adrline1.line_number < adrline1.line_number; });
+			m_linemaps_by_line[file_idx].begin(),
+			m_linemaps_by_line[file_idx].end(), 
+			[] (const address_line& adrline1, const address_line &adrline2) { return adrline1.line_number < adrline2.line_number; });
 	}
 }
 
