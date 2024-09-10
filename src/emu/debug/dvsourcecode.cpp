@@ -121,8 +121,8 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	debug_info_provider_base(),
 	m_source_file_path_chars(),
 	m_source_file_paths(),
-	m_line_maps_by_address(),
-	m_line_maps_by_line()
+	m_linemaps_by_address(),
+	m_linemaps_by_line()
 {
 	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
 	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
@@ -141,7 +141,7 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	}
 
 	// Final byte before first_line_mapping must be null-terminator.
-	// Ensuring this now makes it safe to read the strings later without going past the end.
+	// Ensuring this now avoids buffer overruns when reading the strings
 	if (data[first_line_mapping - 1] != 0)
 	{
 		// TODO ERROR
@@ -150,9 +150,9 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 
 	// Read the starting char address for each source file path into vector
 	m_source_file_paths.push_back((const char*) &data[i++]);     // First string starts immediately
-	for (; i < first_line_mapping - 1; i++)                        // Exclude first_line_mapping - 1; it is final null-terminator
+	for (; i < first_line_mapping - 1; i++)                      // Exclude first_line_mapping - 1; it is final null-terminator
 	{
-		if (data[i-1] == 0)
+		if (data[i-1] == '\0')
 		{
 			// i points to character immediately following null terminator, so
 			// i begins a new string
@@ -160,10 +160,33 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		}
 	}
 
+	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
+	// entries from debug info
+	m_linemaps_by_line.reserve(m_source_file_paths.size());
 	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
 	{
 		mdi_line_mapping line_map;
 		read_field<mdi_line_mapping>(line_map, data, i);
+		m_linemaps_by_address.push_back(line_map);
+		if (line_map.source_file_index >= m_linemaps_by_line.size())
+		{
+			// TODO ERROR
+			assert(false);		
+		}
+		m_linemaps_by_line[line_map.source_file_index].push_back({line_map.address_first, line_map.line_number});
+	}
+
+	std::sort(
+		m_linemaps_by_address.begin(),
+		m_linemaps_by_address.end(), 
+		[] (const mdi_line_mapping &linemap1, const mdi_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
+	
+	for (u16 i = 0; i < m_source_file_paths.size(); i++)
+	{
+		std::sort(
+			m_linemaps_by_line[i].begin(),
+			m_linemaps_by_line[i].end(), 
+			[] (const address_line& adrline1, const address_line &adrline2) { return adrline1.line_number < adrline1.line_number; });
 	}
 }
 
@@ -186,12 +209,12 @@ std::optional<int> debug_info_simple::file_path_to_index(const char * file_path)
 // the first instruction of the range of instructions attributable to that line
 std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 line_number) const
 {
-	if (file_index >= m_line_maps_by_line.size())
+	if (file_index >= m_linemaps_by_line.size())
 	{
 		return std::optional<u16>();
 	}
 
-	const std::vector<address_line> & list = m_line_maps_by_line[file_index];
+	const std::vector<address_line> & list = m_linemaps_by_line[file_index];
 	assert (list.size() > 0);
 
 	auto answer = std::lower_bound(
@@ -217,20 +240,20 @@ std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 
 // range of addresses that includes the specified address
 std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) const
 {
-	assert(m_line_maps_by_address.size() > 0);
+	assert(m_linemaps_by_address.size() > 0);
 
 	auto guess = std::lower_bound(
-		m_line_maps_by_address.cbegin(), 
-		m_line_maps_by_address.cend(),
+		m_linemaps_by_address.cbegin(), 
+		m_linemaps_by_address.cend(),
 		address,
 		[] (auto const &linemap, u16 addr) { return linemap.address_first < addr; });
-	if (guess == m_line_maps_by_address.cend())
+	if (guess == m_linemaps_by_address.cend())
 	{
 		// address > last mapped address_first, so consider the last address range
 		guess--;
 	}
 
-	// m_line_maps_by_address is sorted by address_first.  guess is
+	// m_linemaps_by_address is sorted by address_first.  guess is
 	// the leftmost entry with address <= guess->address_first.  If they're
 	// equal, guess is our answer.  Otherwise, check the preceding entry.
 	if (guess->address_first <= address && address <= guess->address_last)
@@ -238,7 +261,7 @@ std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) c
 		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
 	}
 	guess--;
-	if (guess >= m_line_maps_by_address.cbegin() &&
+	if (guess >= m_linemaps_by_address.cbegin() &&
 		guess->address_first <= address && address <= guess->address_last)
 	{
 		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
