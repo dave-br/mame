@@ -5,6 +5,10 @@
 
 #pragma pack(push, 1)
 
+// TODO: ALL NUMBERS NATURALLY STORED AS LITTLE-ENDIAN ON WINDOWS AND
+// MOST MODERN DESKTOP CPUS.  DO I NEED TO BE EXPLICIT ABOUT THIS?
+// C:\GitHub\mame\src\osd\osdcomm.h
+
 /* All mame debug info headers derive from this */
 typedef struct _mame_debug_info_header_base
 {
