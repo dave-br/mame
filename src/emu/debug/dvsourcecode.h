@@ -13,7 +13,6 @@
 #pragma once
 
 #include "emu.h"
-//#include "debugcpu.h"
 #include "dvdisasm.h"
 #include "mdisimple.h"
 
@@ -46,14 +45,7 @@ struct address_line
 {
 	u16 address_first;
 	u32 line_number;
-
-	// bool operator < (const address_line& that) const { return this->line_number < that.line_number; }
 };
-
-// struct mdi_line_mapping_comparable : public mdi_line_mapping
-// {
-// 	bool operator < (const mdi_line_mapping_comparable& that) const { return this->address_first < that.address_first; }
-// };
 
 
 // abstract base class for debug-info (symbols) file readers
@@ -66,9 +58,6 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const = 0;
 	virtual std::optional<file_line> address_to_file_line (u16 address) const = 0;
-
-// protected:
-// 	std::vector<uint8_t> m_data;
 };
 
 // debug-info provider for the simple format
@@ -86,11 +75,9 @@ public:
 private:
 	std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
 	std::vector<const char*>                 m_source_file_paths;      // Starting points for source file path strings
-	std::vector<mdi_line_mapping> m_line_maps_by_address;   // a list of mdi_line_mappings, sorted by address
-	std::vector<std::vector<address_line>>   m_line_maps_by_line;      // m_line_maps_by_line[i] is a list of address/line pairs,
-	                                                                  // sorted by line from file #i
-	// std::unordered_map<file_line, u16> m_file_line_to_address;
-	// std::unordered_map<u16, file_line> m_address_to_file_line;
+	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
+	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
+	                                                                   // sorted by line, from file #i
 };
 
 // debug view for source-level debugging
@@ -118,16 +105,6 @@ private:
 	std::unique_ptr<line_indexed_file>  m_displayed_src_file;    // File object currently printed to the view
 	u32                                 m_highlighted_line;      // Line number to be highlighted
 	u32                                 m_first_visible_line;    // Line number to show at top of scrolled view
-
-// 	// internal helpers
-// 	void enumerate_sources();
-// 	void pad_ostream_to_length(std::ostream& str, int len);
-// 	void gather_watchpoints();
-
-
-// 	// internal state
-// 	bool (*m_sortType)(const debug_watchpoint *, const debug_watchpoint *);
-// 	std::vector<debug_watchpoint *> m_buffer;
 };
 
 #endif // MAME_EMU_DEBUG_DVSOURCE_H
