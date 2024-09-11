@@ -401,10 +401,14 @@ void debug_view_sourcecode::view_update()
 		m_displayed_src_index = m_cur_src_index;
 	}
 
-	if (!is_visible(m_highlighted_line))
-	{
-		adjust_visible_lines();
-	}
+	// TODO: MOVE this to run ONLY when we hit a bp or step, NOT
+	// every update, like when the scrollbar is clicked
+	// if (!is_visible(m_highlighted_line))
+	// {
+	// 	adjust_visible_lines();
+	// }
+
+	m_first_visible_line = m_topleft.y + 1;
 
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
