@@ -91,6 +91,8 @@ class debug_view_sourcecode : public debug_view_disasm
 public:
 	// getters
 	const debug_info_provider_base & debug_info() const { return m_debug_info; }
+	u32 cur_src_index() const { return m_cur_src_index; }
+	
 
 protected:
 	// view overrides
@@ -109,7 +111,7 @@ private:
 	void adjust_visible_lines();
 
 	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
-	u32                                 m_cur_src_index;         // Identifies which source file we show show now
+	u32                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u32                                 m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>  m_displayed_src_file;    // File object currently printed to the view
 	u32                                 m_highlighted_line;      // Line number to be highlighted

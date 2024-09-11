@@ -40,30 +40,25 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
 
 	// populate the combobox with source file paths
-	const debug_info_provider_base & debug_info = view<debug_view_sourcecode>()->debug_info();
+	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
+	const debug_info_provider_base & debug_info = dv_source->debug_info();
 	std::size_t num_files = debug_info.num_files();
+
+
+	size_t maxlength = 0;
 	for (std::size_t i = 0; i < num_files; i++)
 	{
+		size_t const length = strlen(debug_info.file_index_to_path(i));
+		if (length > maxlength)
+		{
+			maxlength = length;
+		}
 		auto t_name = osd::text::to_tstring(debug_info.file_index_to_path(i));
 		SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
 	}
 
-	// debug_view_source const *const cursource = m_view->source();
-	// int maxlength = 0;
-	// for (auto &source : m_view->source_list())
-	// {
-	// 	int const length = strlen(source->name());
-	// 	if (length > maxlength)
-	// 		maxlength = length;
-	// 	auto t_name = osd::text::to_tstring(source->name());
-	// 	SendMessage(result, CB_ADDSTRING, 0, (LPARAM)t_name.c_str());
-	// }
-	// if (cursource)
-	// {
-	// 	SendMessage(result, CB_SETCURSEL, m_view->source_index(*cursource), 0);
-	// 	SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
-	// 	m_view->set_source(*cursource);
-	// }
+	SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
+	SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
 
 	return result;
 }
