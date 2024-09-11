@@ -8,13 +8,16 @@
 
 #include "emu.h"
 #include "sourcewininfo.h"
+#include "uimetrics.h"
+
 
 #include "sourceviewinfo.h"
 
 namespace osd::debugger::win {
 
 sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
-	disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr)
+	disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
+	m_combownd(nullptr)
 {
 	if (!window())
 		return;
@@ -26,6 +29,8 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 		return;
 	}
 
+	m_combownd = downcast<sourceview_info *>(m_views[0].get())->create_source_file_combobox(window(), (LONG_PTR)this);
+
 	// create the options menu
 	// HMENU const optionsmenu = CreatePopupMenu();
 	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_BREAKPOINTS, TEXT("Breakpoints\tCtrl+1"));
@@ -33,24 +38,82 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_REGISTERPOINTS, TEXT("Registerpoints\tCtrl+3"));
 	// AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)optionsmenu, TEXT("Options"));
 
+	// recompute the children once to get the maxwidth
+	recompute_children();
+
+	// position the window and recompute children again
+	debugger.stagger_window(window(), maxwidth(), 200);
+	recompute_children();
+
+	// // compute a client rect
+	// RECT bounds;
+	// bounds.top = bounds.left = 0;
+	// bounds.right = m_views[0]->maxwidth() + (2 * EDGE_WIDTH);
+	// bounds.bottom = 200;
+	// AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
+
+	// // clamp the min/max size
+	// set_maxwidth(bounds.right - bounds.left);
+
+	// // position the window and recompute children
+	// debugger.stagger_window(window(), bounds.right - bounds.left, bounds.bottom - bounds.top);
+	// recompute_children();
+}
+
+
+sourcewin_info::~sourcewin_info()
+{
+}
+
+
+void sourcewin_info::recompute_children()
+{
 	// compute a client rect
 	RECT bounds;
 	bounds.top = bounds.left = 0;
-	bounds.right = m_views[0]->maxwidth() + (2 * EDGE_WIDTH);
+	bounds.right = m_views[0]->prefwidth() + (2 * EDGE_WIDTH);
 	bounds.bottom = 200;
 	AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
 
 	// clamp the min/max size
 	set_maxwidth(bounds.right - bounds.left);
 
-	// position the window and recompute children
-	debugger.stagger_window(window(), bounds.right - bounds.left, bounds.bottom - bounds.top);
-	recompute_children();
+	// get the parent's dimensions
+	RECT parent;
+	GetClientRect(window(), &parent);
+
+	// // edit box gets half of the width
+	// RECT editrect;
+	// editrect.top = parent.top + EDGE_WIDTH;
+	// editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
+	// editrect.left = parent.left + EDGE_WIDTH;
+	// editrect.right = parent.left + ((parent.right - parent.left) / 2) - EDGE_WIDTH;
+
+	// combo box gets full width
+	RECT comborect;
+	comborect.top = parent.top + EDGE_WIDTH;
+	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
+	comborect.left = parent.left + EDGE_WIDTH;
+	comborect.right = parent.right - EDGE_WIDTH;
+
+	// disasm view gets the rest
+	RECT srcrect;
+	srcrect.top = comborect.bottom + (2 * EDGE_WIDTH);
+	srcrect.bottom = parent.bottom - EDGE_WIDTH;
+	srcrect.left = parent.left + EDGE_WIDTH;
+	srcrect.right = parent.right - EDGE_WIDTH;
+
+	// set the bounds of things
+	m_views[0]->set_bounds(srcrect);
+	// set_editwnd_bounds(editrect);
+	smart_set_window_bounds(m_combownd, window(), comborect);
 }
 
-
-sourcewin_info::~sourcewin_info()
+void sourcewin_info::draw_contents(HDC dc)
 {
+	disasmbasewin_info::draw_contents(dc);
+	if (m_combownd)
+		draw_border(dc, m_combownd);
 }
 
 

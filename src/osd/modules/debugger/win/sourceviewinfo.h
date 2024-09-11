@@ -20,6 +20,7 @@ class sourceview_info : public disasmview_info
 public:
 	sourceview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent);
 	virtual ~sourceview_info() {}
+	HWND create_source_file_combobox(HWND parent, LONG_PTR userdata);
 };
 
 } // namespace osd::debugger::win

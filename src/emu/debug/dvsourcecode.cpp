@@ -389,10 +389,12 @@ void debug_view_sourcecode::view_update()
 		// 	m_displayed_src_file.close();
 		// }
 
-		std::error_condition err = m_displayed_src_file->open(this->m_debug_info.file_index_to_path(m_cur_src_index));
+		std::error_condition err = m_displayed_src_file->open(m_debug_info.file_index_to_path(m_cur_src_index));
 		if (err)
 		{
-			// TODO LOG ERROR
+			print_line(0, "Error opening file", DCA_NORMAL);
+			print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
+			print_line(2, err.message().c_str(), DCA_NORMAL);
 			return;
 		}
 
@@ -403,11 +405,6 @@ void debug_view_sourcecode::view_update()
 	{
 		adjust_visible_lines();
 	}
-
-	// TODO: line_indexed_file class should not include newlines in the buffer, but
-	// null-terminators instead
-
-	// 
 
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
@@ -424,22 +421,11 @@ void debug_view_sourcecode::view_update()
 				(line == m_highlighted_line) ? DCA_CURRENT : DCA_NORMAL);
 		}
 	}
-
-	// std::string textE = "I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     I am the ZA.  abcdefghijklmnopqrstuvwxyz 0123456789     ";
-	// std::string textO = " ";
-	// for(u32 row = 0; row < m_visible.y; row++)
-	// {
-	// 	if (row % 2 == 0)
-	// 		print_line(row, textE);
-	// 	else
-	// 		print_line(row, textO);
-	// }
-
 }
 
 void debug_view_sourcecode::adjust_visible_lines()
 {
-	// Generally center visible line in view, but there are corner cases
+	// Generally center m_highlighted_line vertically in view, but there are corner cases
 
 	if (m_displayed_src_file->num_lines() <= m_visible.y)
 	{
