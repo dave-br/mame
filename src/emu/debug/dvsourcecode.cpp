@@ -469,14 +469,16 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 
 	for(s32 visible_col=m_topleft.x + LINE_NUMBER_WIDTH; visible_col < m_topleft.x + m_visible.x; visible_col++)
 	{
-		int viewdata_col = visible_col - m_topleft.x;
-		if (visible_col >= strlen(text))
+		s32 viewdata_col = visible_col - m_topleft.x;
+		s32 text_idx = visible_col - LINE_NUMBER_WIDTH;
+
+		if (text_idx >= strlen(text))
 		{
 			m_viewdata[row * m_visible.x + viewdata_col] = { ' ', attrib };
 		}
 		else
 		{
-			m_viewdata[row * m_visible.x + viewdata_col] = { u8(text[visible_col - LINE_NUMBER_WIDTH]), attrib };
+			m_viewdata[row * m_visible.x + viewdata_col] = { u8(text[text_idx]), attrib };
 		}
 	}
 }
