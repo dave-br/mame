@@ -14,7 +14,8 @@
 
 #include "emu.h"
 #include "dvdisasm.h"
-#include "mdisimple.h"
+
+#include "dbginfo/mdisimple.h"
 
 
 //**************************************************************************
@@ -54,6 +55,7 @@ class debug_info_provider_base
 public:
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
+	virtual std::size_t num_files() const = 0;
 	virtual const char * file_index_to_path(int file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const = 0;
@@ -67,6 +69,7 @@ class debug_info_simple : public debug_info_provider_base
 public:
 	debug_info_simple(running_machine& machine, std::vector<uint8_t>& data);
 	~debug_info_simple() { }
+	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
 	virtual const char * file_index_to_path(int file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const override;
@@ -84,6 +87,10 @@ private:
 class debug_view_sourcecode : public debug_view_disasm
 {
 	friend class debug_view_manager;
+
+public:
+	// getters
+	const debug_info_provider_base & debug_info() const { return m_debug_info; }
 
 protected:
 	// view overrides
