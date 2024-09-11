@@ -92,7 +92,9 @@ public:
 	// getters
 	const debug_info_provider_base & debug_info() const { return m_debug_info; }
 	u32 cur_src_index() const { return m_cur_src_index; }
-	
+
+	// setters
+	void set_src_index(u32 new_src_index);
 
 protected:
 	// view overrides

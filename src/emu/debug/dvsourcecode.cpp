@@ -22,6 +22,8 @@ line_indexed_file::line_indexed_file() :
 
 std::error_condition line_indexed_file::open(const char * file_path)
 {
+	m_data.resize(0);
+	m_line_starts.resize(0);
 	std::error_condition err = util::core_file::load(file_path, m_data);
 	if (err)
 	{
@@ -302,55 +304,11 @@ std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) c
 }
 
 
-// // line_to_mapping:
-// // Returns pointer to mdi_line_mapping with address matching parameter.  If no
-// // such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
-
-// // Assumes mdi_line_mapping structures are contiguously ordered by address.
-// // Returns pointer to mdi_line_mapping with address matching parameter.  If no
-// // such mdi_line_mapping exists, returns pointer to mdi_line_mapping with
-// // 
-// const mdi_line_mapping * address_to_mapping(u16 address, mdi_line_mapping * start, int count)
-// {
-// 	// I hate adding my own binary search here, but I see no way in O(1) time
-// 	// to initialize an STL class to wrap the C-style mdi_line_mapping[], so that
-// 	// the requirements of stl::lower_bound are in place.  My best hope was
-// 	// stl::span, but that does not appear to be compiled into MAME, as
-// 	// it's hidden under "#ifdef __cpp_lib_span // C++ >= 20 && concepts"
-
-// 	// Adapted from GCC's binary search
-
-// 	const mdi_line_mapping * base = start;
-// 	const mdi_line_mapping * cur = start;
-
-// 	for (; count != 0; count >>= 1)
-// 	{
-// 		cur = base + (count >> 1);	// * sizeof(mdi_line_mapping);
-// 		if (address == cur->address)
-// 		{
-// 			return cur;
-// 		}
-// 		else if (address > cur->address)
-// 		{
-// 			// Move right
-// 			base = cur + 1;
-// 			count--;
-// 		}
-// 		// Else, will automatically move left
-// 	}
-// 	return cur;
-
-// 	// TODO: Actually implement lower bound
-// 	// TODO: Add tests somewhere
-// }
-
-
 //-------------------------------------------------
 //  debug_view_sourcecode - constructor
 //-------------------------------------------------
 
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
-	// debug_view(machine, DVT_SOURCE, osdupdate, osdprivate),
 	debug_view_disasm(machine, osdupdate, osdprivate, DVT_SOURCE),
 	m_debug_info(machine.debugger().debug_info()),
 	m_cur_src_index(0),
@@ -487,6 +445,22 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 		}
 	}
 }
+
+void debug_view_sourcecode::set_src_index(u32 new_src_index)
+{
+	if (m_cur_src_index == new_src_index || 
+		new_src_index >= m_debug_info.num_files())
+	{
+		return;
+	}
+
+	begin_update();
+	m_cur_src_index = new_src_index;
+	m_update_pending = true;
+	// No need to call view_notify()
+	end_update();
+}
+
 
 
 
