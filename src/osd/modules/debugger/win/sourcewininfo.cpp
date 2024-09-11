@@ -82,18 +82,18 @@ void sourcewin_info::recompute_children()
 	RECT parent;
 	GetClientRect(window(), &parent);
 
-	// // edit box gets half of the width
-	// RECT editrect;
-	// editrect.top = parent.top + EDGE_WIDTH;
-	// editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
-	// editrect.left = parent.left + EDGE_WIDTH;
-	// editrect.right = parent.left + ((parent.right - parent.left) / 2) - EDGE_WIDTH;
+	// edit box gets one quarter of the width
+	RECT editrect;
+	editrect.top = parent.top + EDGE_WIDTH;
+	editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
+	editrect.left = parent.left + EDGE_WIDTH;
+	editrect.right = parent.left + ((parent.right - parent.left) / 4) - EDGE_WIDTH;
 
-	// combo box gets full width
+	// combo box gets rest of the width
 	RECT comborect;
-	comborect.top = parent.top + EDGE_WIDTH;
-	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
-	comborect.left = parent.left + EDGE_WIDTH;
+	comborect.top = editrect.top;
+	comborect.bottom = editrect.bottom;
+	comborect.left = editrect.right + (2 * EDGE_WIDTH);
 	comborect.right = parent.right - EDGE_WIDTH;
 
 	// disasm view gets the rest
@@ -105,7 +105,7 @@ void sourcewin_info::recompute_children()
 
 	// set the bounds of things
 	m_views[0]->set_bounds(srcrect);
-	// set_editwnd_bounds(editrect);
+	set_editwnd_bounds(editrect);
 	smart_set_window_bounds(m_combownd, window(), comborect);
 }
 
