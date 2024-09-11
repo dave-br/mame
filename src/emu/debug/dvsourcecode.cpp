@@ -398,6 +398,7 @@ void debug_view_sourcecode::view_update()
 			return;
 		}
 
+		m_total.y = m_displayed_src_file->num_lines();
 		m_displayed_src_index = m_cur_src_index;
 	}
 
