@@ -95,7 +95,9 @@ private:
 	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
 	virtual ~debug_view_sourcecode();
 
-	void print_line(u32 row, const char * text, u8 attrib);
+	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
+	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
+
 	bool is_visible(u32 line) { return (m_first_visible_line <= line && line < m_first_visible_line + m_visible.y); }
 	void adjust_visible_lines();
 
