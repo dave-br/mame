@@ -10,8 +10,9 @@
 #include "sourcewininfo.h"
 #include "uimetrics.h"
 
-
 #include "sourceviewinfo.h"
+
+#include "debug/dvsourcecode.h"
 
 namespace osd::debugger::win {
 
@@ -145,8 +146,28 @@ void sourcewin_info::draw_contents(HDC dc)
 // 	return debugwin_info::handle_key(wparam, lparam);
 // }
 
-// bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
-// {
+bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
+{
+	switch (HIWORD(wparam))
+	{
+	// combo box selection changed
+	case CBN_SELCHANGE:
+		{
+			int const sel = SendMessage((HWND)lparam, CB_GETCURSEL, 0, 0);
+			if (sel == CB_ERR)
+				break;
+
+			downcast<sourceview_info *>(m_views[0].get())->set_src_index(sel);
+			// update_caption();
+	// m_combownd = downcast<sourceview_info *>(m_views[0].get())->create_source_file_combobox(window(), (LONG_PTR)this);
+
+			// reset the focus
+			set_default_focus();
+			return true;
+		}
+	}
+	return disasmbasewin_info::handle_command(wparam, lparam);
+}
 // 	// auto *const dasmview = downcast<disasmview_info *>(m_views[0].get());
 
 // 	switch (HIWORD(wparam))
@@ -256,8 +277,6 @@ void sourcewin_info::draw_contents(HDC dc)
 // 		}
 // 		break;
 // 	}
-// 	return editwin_info::handle_command(wparam, lparam);
-// }
 
 
 // void sourcewin_info::update_menu()
