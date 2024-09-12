@@ -353,6 +353,10 @@ void debug_view_sourcecode::view_update()
 			print_line(0, "Error opening file", DCA_NORMAL);
 			print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
 			print_line(2, err.message().c_str(), DCA_NORMAL);
+			for (u32 row = 3; row < m_visible.y; row++)
+			{
+				print_line(row, " ", DCA_NORMAL);
+			}
 			return;
 		}
 
@@ -415,21 +419,22 @@ void debug_view_sourcecode::adjust_visible_lines()
 
 void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib)
 {
-	const s32 LINE_NUMBER_WIDTH = 5;
-	if (line_number.has_value())
+	const char LINE_NUMBER_PADDING[] = "     ";
+	const s32 LINE_NUMBER_WIDTH = sizeof(LINE_NUMBER_PADDING)-1;
+
+	// Left side shows line number (or space padding)
+	std::string line_str = 	(line_number.has_value()) ? std::to_string(line_number.value()) : LINE_NUMBER_PADDING;
+	for(s32 visible_col=m_topleft.x; visible_col < m_topleft.x + std::min(LINE_NUMBER_WIDTH, m_visible.x); visible_col++)
 	{
-		std::string line_str = std::to_string(line_number.value());
-		for(s32 visible_col=m_topleft.x; visible_col < m_topleft.x + std::min(LINE_NUMBER_WIDTH, m_visible.x); visible_col++)
+		int viewdata_col = visible_col - m_topleft.x;
+		m_viewdata[row * m_visible.x + viewdata_col] = 
 		{
-			int viewdata_col = visible_col - m_topleft.x;
-			m_viewdata[row * m_visible.x + viewdata_col] = 
-			{
-				(viewdata_col < line_str.size()) ? u8(line_str[viewdata_col]) : u8(' '),
-				DCA_DISABLED
-			};
-		}
+			(viewdata_col < line_str.size()) ? u8(line_str[viewdata_col]) : u8(' '),
+			DCA_DISABLED
+		};
 	}
 
+	// Right side shows line from file
 	for(s32 visible_col=m_topleft.x + LINE_NUMBER_WIDTH; visible_col < m_topleft.x + m_visible.x; visible_col++)
 	{
 		s32 viewdata_col = visible_col - m_topleft.x;
