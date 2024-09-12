@@ -205,7 +205,7 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			// TODO ERROR
 			assert(false);		
 		}
-		address_line addrline = {line_map.address_first, line_map.line_number};
+		address_line addrline = {line_map.address_first, line_map.address_last, line_map.line_number};
 		m_linemaps_by_line[line_map.source_file_index].push_back(addrline);
 	}
 
@@ -240,15 +240,18 @@ std::optional<int> debug_info_simple::file_path_to_index(const char * file_path)
 
 // Given a source file & line number, return the address of the first byte of
 // the first instruction of the range of instructions attributable to that line
-std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 line_number) const
+std::optional<debug_info_simple::address_range> debug_info_simple::file_line_to_address_range (u16 file_index, u32 line_number) const
 {
 	if (file_index >= m_linemaps_by_line.size())
 	{
-		return std::optional<u16>();
+		return std::optional<address_range>();
 	}
 
 	const std::vector<address_line> & list = m_linemaps_by_line[file_index];
-	assert (list.size() > 0);
+	if (list.size() == 0)
+	{
+		return std::optional<address_range>();
+	}
 
 	auto answer = std::lower_bound(
 		list.cbegin(), 
@@ -258,7 +261,7 @@ std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 
 	if (answer == list.cend())
 	{
 		// line_number > last mapped line, so just use the last mapped line
-		return (answer-1)->address_first;
+		return address_range((answer-1)->address_first, (answer-1)->address_last);
 	}
 
 	// m_line_maps_by_line is sorted by line.  answer is the leftmost entry
@@ -266,7 +269,7 @@ std::optional<u16> debug_info_simple::file_line_to_address (u16 file_index, u32 
 	// is clearly correct.  If line_number < answer->line_number, then
 	// using answer bumps us forward to the next mapped line after the 
 	// line specified by the user.
-	return answer->address_first;
+	return address_range(answer->address_first, answer->address_last);
 }
 
 // Given an address, return the source file & line number attributable to the
@@ -382,13 +385,53 @@ void debug_view_sourcecode::view_update()
 		}
 		else
 		{
+			u8 attrib = DCA_NORMAL;
+
+			if (line == m_highlighted_line)
+			{
+				// on the line with the PC: highlight
+				attrib = DCA_CURRENT;
+			}
+			else if (exists_bp_for_line(m_cur_src_index, line))
+			{
+				// on a line with a breakpoint: tag it changed
+				attrib = DCA_CHANGED;
+			}
+
+			if (m_cursor_visible && row == m_cursor.y)
+			{
+				// We're on the cursored row and cursor is visible: highlight
+				attrib |= DCA_SELECTED;
+			}
+
 			print_line(
 				row,
 				line,
 				m_displayed_src_file->get_line_text(line),
-				(line == m_highlighted_line) ? DCA_CURRENT : DCA_NORMAL);
+				attrib);
 		}
 	}
+}
+
+bool debug_view_sourcecode::exists_bp_for_line(u32 src_index, u32 line)
+{
+	std::optional<debug_info_provider_base::address_range> addrs = 
+		debug_info().file_line_to_address_range(m_cur_src_index, line);
+	if (!addrs.has_value())
+	{
+		return false;
+	}
+
+	const device_debug * debug = source()->device()->debug();
+	debug_info_provider_base::address_range addrs_val = addrs.value();
+	for (u16 addr = addrs_val.first; addr <= addrs_val.second; addr++)
+	{
+		if (debug->breakpoint_find(addr) != nullptr)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void debug_view_sourcecode::adjust_visible_lines()
