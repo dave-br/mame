@@ -1604,14 +1604,15 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	{
 		// TODO: ERROR
 	}
-	std::optional<u16> address = debug_info.file_line_to_address(file_index.value(), linenum_token.value());
-	if (!address.has_value())
+	std::optional<debug_info_provider_base::address_range> addresses = 
+		debug_info.file_line_to_address_range(file_index.value(), linenum_token.value());
+	if (!addresses.has_value())
 	{
 		// TODO: ERROR
 	}
 
 	// make the token
-	token.configure_number(address.value());
+	token.configure_number(addresses.value().first);
 }
 
 

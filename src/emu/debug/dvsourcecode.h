@@ -45,6 +45,7 @@ struct file_line
 struct address_line
 {
 	u16 address_first;
+	u16 address_last;
 	u32 line_number;
 };
 
@@ -53,12 +54,13 @@ struct address_line
 class debug_info_provider_base
 {
 public:
+	typedef std::pair<u16,u16> address_range;
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual std::size_t num_files() const = 0;
 	virtual const char * file_index_to_path(int file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
-	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const = 0;
+	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
 	virtual std::optional<file_line> address_to_file_line (u16 address) const = 0;
 };
 
@@ -72,7 +74,7 @@ public:
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
 	virtual const char * file_index_to_path(int file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
-	virtual std::optional<u16> file_line_to_address (u16 file_index, u32 line_number) const override;
+	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
 	virtual std::optional<file_line> address_to_file_line (u16 address) const override;
 
 private:
@@ -111,6 +113,7 @@ private:
 
 	bool is_visible(u32 line) { return (m_first_visible_line <= line && line < m_first_visible_line + m_visible.y); }
 	void adjust_visible_lines();
+	bool exists_bp_for_line(u32 src_index, u32 line);
 
 	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
 	u32                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
