@@ -99,15 +99,15 @@ public:
 	void set_src_index(u32 new_src_index);
 
 protected:
+	// construction/destruction
+	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
+	virtual ~debug_view_sourcecode();
+
 	// view overrides
 	virtual void view_update() override;
 	virtual void view_click(const int button, const debug_view_xy& pos) override;
 
 private:
-	// construction/destruction
-	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
-	virtual ~debug_view_sourcecode();
-
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
 
@@ -115,6 +115,7 @@ private:
 	void adjust_visible_lines();
 	bool exists_bp_for_line(u32 src_index, u32 line);
 
+	device_state_interface *   m_state;                 // state interface, if present
 	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
 	u32                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u32                                 m_displayed_src_index;   // Identifies which source file is currently shown

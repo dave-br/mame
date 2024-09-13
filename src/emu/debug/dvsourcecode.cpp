@@ -320,6 +320,8 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_highlighted_line(4),
 	m_first_visible_line(1)
 {
+	device_t * live_cpu = machine.debugger().cpu().live_cpu();
+	live_cpu->interface(m_state);
 }
 
 
@@ -339,6 +341,14 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 void debug_view_sourcecode::view_update()
 {
+	u16 pc = u16(m_state->pcbase());
+	std::optional<file_line> file_line = debug_info().address_to_file_line(pc);
+	if (file_line.has_value())
+	{
+		m_cur_src_index = file_line.value().file_index;
+		m_highlighted_line = file_line.value().line_number;
+	}
+
 	if (m_cur_src_index != m_displayed_src_index)
 	{
 		// Displaying different source file.
