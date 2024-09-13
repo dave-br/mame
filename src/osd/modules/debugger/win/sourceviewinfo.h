@@ -24,6 +24,7 @@ public:
 
 	// Helpers to access portions of debug_view_sourcecode
 	void set_src_index(u32 new_src_index);
+	u32 cur_src_index();
 
 };
 

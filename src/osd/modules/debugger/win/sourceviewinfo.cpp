@@ -34,6 +34,10 @@ void sourceview_info::set_src_index(u32 new_src_index)
 	view<debug_view_sourcecode>()->set_src_index(new_src_index);
 }
 
+u32 sourceview_info::cur_src_index()
+{
+	return view<debug_view_sourcecode>()->cur_src_index();
+}
 
 HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata)
 {

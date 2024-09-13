@@ -367,8 +367,13 @@ bool debug_view_sourcecode::update_opened_file()
 
 void debug_view_sourcecode::view_update()
 {
-	offs_t pc = m_state->pcbase();
-	bool pc_changed = update_previous_pc(pc);
+	bool pc_changed = false;
+	offs_t pc = 0;
+	if (m_state != nullptr)
+	{
+		pc = m_state->pcbase();
+		pc_changed = update_previous_pc(pc);
+	}
 
 	// Ensure correct file is opened
 
