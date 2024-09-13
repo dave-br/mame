@@ -274,7 +274,7 @@ std::optional<debug_info_simple::address_range> debug_info_simple::file_line_to_
 
 // Given an address, return the source file & line number attributable to the
 // range of addresses that includes the specified address
-std::optional<file_line> debug_info_simple::address_to_file_line (u16 address) const
+std::optional<file_line> debug_info_simple::address_to_file_line (offs_t address) const
 {
 	assert(m_linemaps_by_address.size() > 0);
 
@@ -341,7 +341,7 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 void debug_view_sourcecode::view_update()
 {
-	u16 pc = u16(m_state->pcbase());
+	offs_t pc = m_state->pcbase();
 	std::optional<file_line> file_line = debug_info().address_to_file_line(pc);
 	if (file_line.has_value())
 	{
@@ -377,14 +377,7 @@ void debug_view_sourcecode::view_update()
 		m_displayed_src_index = m_cur_src_index;
 	}
 
-	// TODO: MOVE this to run ONLY when we hit a bp or step, NOT
-	// every update, like when the scrollbar is clicked
-	// if (!is_visible(m_highlighted_line))
-	// {
-	// 	adjust_visible_lines();
-	// }
-
-	m_first_visible_line = m_topleft.y + 1;
+	adjust_visible_lines(pc);
 
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
@@ -434,7 +427,7 @@ bool debug_view_sourcecode::exists_bp_for_line(u32 src_index, u32 line)
 
 	const device_debug * debug = source()->device()->debug();
 	debug_info_provider_base::address_range addrs_val = addrs.value();
-	for (u16 addr = addrs_val.first; addr <= addrs_val.second; addr++)
+	for (offs_t addr = addrs_val.first; addr <= addrs_val.second; addr++)
 	{
 		if (debug->breakpoint_find(addr) != nullptr)
 		{
@@ -444,10 +437,29 @@ bool debug_view_sourcecode::exists_bp_for_line(u32 src_index, u32 line)
 	return false;
 }
 
-void debug_view_sourcecode::adjust_visible_lines()
+void debug_view_sourcecode::adjust_visible_lines(offs_t pc)
 {
-	// Generally center m_highlighted_line vertically in view, but there are corner cases
+	// If user adjusted the view (scrolling / resizing), reflect that
+	// adjustment in which lines are shown.  Otherwise, if the PC
+	// changed, center m_highlighted_line vertically in view (with
+	// corner cases to account for file size and to minimize unnecessary
+	// movement).
 
+	bool pc_changed =  set_previous_pc(pc);
+	if (!pc_changed)
+	{
+		// User adjustment of window or view
+		m_first_visible_line = m_topleft.y + 1;
+		return;
+	}
+
+	if (is_visible(m_highlighted_line))
+	{
+		// User is stepping, but current pc line is still in view.
+		return;
+	}
+
+	// Stepping, but current pc line has gone out of view
 	if (m_displayed_src_file->num_lines() <= m_visible.y)
 	{
 		// Entire file fits in visible view.  Start at begining
