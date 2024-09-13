@@ -92,6 +92,9 @@ protected:
 	virtual void view_char(int chval) override;
 	virtual void view_click(const int button, const debug_view_xy& pos) override;
 
+	// helpers
+	bool set_previous_pc(offs_t pc);
+
 private:
 	// The information of one disassembly line. May become the actual
 	// external interface at one point.

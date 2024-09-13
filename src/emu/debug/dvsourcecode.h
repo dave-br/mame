@@ -42,30 +42,24 @@ struct file_line
 	u32 line_number;
 };
 
-struct address_line
-{
-	u16 address_first;
-	u16 address_last;
-	u32 line_number;
-};
-
 
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
 {
 public:
-	typedef std::pair<u16,u16> address_range;
+	typedef std::pair<offs_t,offs_t> address_range;
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual std::size_t num_files() const = 0;
 	virtual const char * file_index_to_path(int file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
-	virtual std::optional<file_line> address_to_file_line (u16 address) const = 0;
+	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
 };
 
 // debug-info provider for the simple format
 // TODO: NAME?  MOVE TO ANOTHER FILE?
+
 class debug_info_simple : public debug_info_provider_base
 {
 public:
@@ -75,9 +69,16 @@ public:
 	virtual const char * file_index_to_path(int file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
-	virtual std::optional<file_line> address_to_file_line (u16 address) const override;
+	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
 
 private:
+	struct address_line
+	{
+		u16 address_first;
+		u16 address_last;
+		u32 line_number;
+	};
+
 	std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
 	std::vector<const char*>                 m_source_file_paths;      // Starting points for source file path strings
 	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
@@ -112,7 +113,7 @@ private:
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
 
 	bool is_visible(u32 line) { return (m_first_visible_line <= line && line < m_first_visible_line + m_visible.y); }
-	void adjust_visible_lines();
+	void adjust_visible_lines(offs_t pc);
 	bool exists_bp_for_line(u32 src_index, u32 line);
 
 	device_state_interface *   m_state;                 // state interface, if present
