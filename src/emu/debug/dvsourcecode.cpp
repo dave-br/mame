@@ -317,8 +317,8 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
-	m_highlighted_line(4),
-	m_first_visible_line(1)
+	m_line_for_cur_pc(4)
+	// m_first_visible_line(1)
 {
 	device_t * live_cpu = machine.debugger().cpu().live_cpu();
 	live_cpu->interface(m_state);
@@ -334,6 +334,32 @@ debug_view_sourcecode::~debug_view_sourcecode()
 }
 
 
+bool debug_view_sourcecode::update_opened_file()
+{
+	if (m_cur_src_index == m_displayed_src_index)
+	{
+		return true;
+	}
+
+	std::error_condition err = m_displayed_src_file->open(m_debug_info.file_index_to_path(m_cur_src_index));
+	m_displayed_src_index = m_cur_src_index;
+	//zaza
+	if (err)
+	{
+		print_line(0, "Error opening file", DCA_NORMAL);
+		print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
+		print_line(2, err.message().c_str(), DCA_NORMAL);
+		for (u32 row = 3; row < m_visible.y; row++)
+		{
+			print_line(row, " ", DCA_NORMAL);
+		}
+		return false;
+	}
+
+	m_total.y = m_displayed_src_file->num_lines();
+	return true;
+}
+
 //-------------------------------------------------
 //  view_update - update the contents of the
 //  source code view
@@ -342,46 +368,37 @@ debug_view_sourcecode::~debug_view_sourcecode()
 void debug_view_sourcecode::view_update()
 {
 	offs_t pc = m_state->pcbase();
-	std::optional<file_line> file_line = debug_info().address_to_file_line(pc);
-	if (file_line.has_value())
+	bool pc_changed = update_previous_pc(pc);
+
+	// Ensure correct file is opened
+
+	if (pc_changed)
 	{
-		m_cur_src_index = file_line.value().file_index;
-		m_highlighted_line = file_line.value().line_number;
-	}
-
-	if (m_cur_src_index != m_displayed_src_index)
-	{
-		// Displaying different source file.
-
-		// TODO: Put this directly in open
-		//   Close old file, open new file.
-		// if (m_displayed_src_file.is_open())
-		// {
-		// 	m_displayed_src_file.close();
-		// }
-
-		std::error_condition err = m_displayed_src_file->open(m_debug_info.file_index_to_path(m_cur_src_index));
-		if (err)
+		std::optional<file_line> file_line = debug_info().address_to_file_line(pc);
+		if (file_line.has_value())
 		{
-			print_line(0, "Error opening file", DCA_NORMAL);
-			print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
-			print_line(2, err.message().c_str(), DCA_NORMAL);
-			for (u32 row = 3; row < m_visible.y; row++)
-			{
-				print_line(row, " ", DCA_NORMAL);
-			}
-			return;
+			m_cur_src_index = file_line.value().file_index;
+			m_line_for_cur_pc = file_line.value().line_number;
 		}
-
-		m_total.y = m_displayed_src_file->num_lines();
-		m_displayed_src_index = m_cur_src_index;
 	}
 
-	adjust_visible_lines(pc);
+	if (!update_opened_file())
+	{
+		return;
+	}
+
+	// Ensure correct set of lines to print
+
+	if (pc_changed)
+	{
+		update_visible_lines(pc);
+	}
+
+	// Print
 
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
-		u32 line = row + m_first_visible_line;
+		u32 line = row + m_topleft.y + 1;
 		if (line > m_displayed_src_file->num_lines())
 		{
 			print_line(row, " ", DCA_NORMAL);
@@ -390,7 +407,7 @@ void debug_view_sourcecode::view_update()
 		{
 			u8 attrib = DCA_NORMAL;
 
-			if (line == m_highlighted_line)
+			if (line == m_line_for_cur_pc)
 			{
 				// on the line with the PC: highlight
 				attrib = DCA_CURRENT;
@@ -437,48 +454,35 @@ bool debug_view_sourcecode::exists_bp_for_line(u32 src_index, u32 line)
 	return false;
 }
 
-void debug_view_sourcecode::adjust_visible_lines(offs_t pc)
+// Center m_line_for_cur_pc vertically in view (with
+// corner cases to account for file size and to minimize unnecessary
+// movement).
+void debug_view_sourcecode::update_visible_lines(offs_t pc)
 {
-	// If user adjusted the view (scrolling / resizing), reflect that
-	// adjustment in which lines are shown.  Otherwise, if the PC
-	// changed, center m_highlighted_line vertically in view (with
-	// corner cases to account for file size and to minimize unnecessary
-	// movement).
-
-	bool pc_changed =  set_previous_pc(pc);
-	if (!pc_changed)
+	if (is_visible(m_line_for_cur_pc))
 	{
-		// User adjustment of window or view
-		m_first_visible_line = m_topleft.y + 1;
 		return;
 	}
 
-	if (is_visible(m_highlighted_line))
-	{
-		// User is stepping, but current pc line is still in view.
-		return;
-	}
-
-	// Stepping, but current pc line has gone out of view
 	if (m_displayed_src_file->num_lines() <= m_visible.y)
 	{
 		// Entire file fits in visible view.  Start at begining
-		m_first_visible_line = 1;
+		m_topleft.y = 0;
 	}
-	else if (m_highlighted_line <= m_visible.y / 2)
+	else if (m_line_for_cur_pc <= m_visible.y / 2)
 	{
-		// m_highlighted_line close to top, start at top
-		m_first_visible_line = 1;
+		// m_line_for_cur_pc close to top, start at top
+		m_topleft.y = 0;
 	}
-	else if (m_highlighted_line + m_visible.y / 2 > m_displayed_src_file->num_lines())
+	else if (m_line_for_cur_pc + m_visible.y / 2 > m_displayed_src_file->num_lines())
 	{
-		// m_highlighted_line close to bottom, so bottom line at bottom
-		m_first_visible_line = m_displayed_src_file->num_lines() - m_visible.y;
+		// m_line_for_cur_pc close to bottom, so bottom line at bottom
+		m_topleft.y = m_displayed_src_file->num_lines() - 1 - m_visible.y;
 	}
 	else
 	{
-		// Main case, center visible line in view
-		m_first_visible_line = m_highlighted_line - m_visible.y / 2;
+		// Main case, center m_line_for_cur_pc in view
+		m_topleft.y = m_line_for_cur_pc - 1 - m_visible.y / 2;
 	}
 }
 
