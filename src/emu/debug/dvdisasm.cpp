@@ -314,7 +314,7 @@ int debug_view_disasm::address_position(offs_t pc) const
 	return -1;
 }
 
-bool debug_view_disasm::set_previous_pc(offs_t pc)
+bool debug_view_disasm::update_previous_pc(offs_t pc)
 {
 	bool pc_changed = pc != m_previous_pc;
 	m_previous_pc = pc;
@@ -323,7 +323,7 @@ bool debug_view_disasm::set_previous_pc(offs_t pc)
 
 void debug_view_disasm::generate_dasm(debug_disasm_buffer &buffer, offs_t pc)
 {
-	bool pc_changed = set_previous_pc(pc);
+	bool pc_changed = update_previous_pc(pc);
 	if(strcmp(m_expression.string(), "curpc")) {
 		if(m_expression.dirty()) {
 			m_topleft.x = 0;
