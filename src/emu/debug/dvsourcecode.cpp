@@ -15,19 +15,20 @@
 #include "mdisimple.h"
 
 line_indexed_file::line_indexed_file() :
+	m_err(),
 	m_data(),
 	m_line_starts()
 {
 }
 
-std::error_condition line_indexed_file::open(const char * file_path)
+const std::error_condition & line_indexed_file::open(const char * file_path)
 {
 	m_data.resize(0);
 	m_line_starts.resize(0);
-	std::error_condition err = util::core_file::load(file_path, m_data);
-	if (err)
+	m_err = util::core_file::load(file_path, m_data);
+	if (m_err)
 	{
-		return err;
+		return m_err;
 	}
 
 	u32 cur_line_start = 0;
@@ -54,7 +55,7 @@ std::error_condition line_indexed_file::open(const char * file_path)
 		cur_line_start = i+1;                                   // Prepare for next line
 	}
 	m_data[m_data.size()-1] = '\0';
-	return std::error_condition();
+	return m_err;
 }
 
 
@@ -334,30 +335,21 @@ debug_view_sourcecode::~debug_view_sourcecode()
 }
 
 
-bool debug_view_sourcecode::update_opened_file()
+void debug_view_sourcecode::update_opened_file()
 {
 	if (m_cur_src_index == m_displayed_src_index)
 	{
-		return true;
+		return;
 	}
 
 	std::error_condition err = m_displayed_src_file->open(m_debug_info.file_index_to_path(m_cur_src_index));
 	m_displayed_src_index = m_cur_src_index;
-	//zaza
 	if (err)
 	{
-		print_line(0, "Error opening file", DCA_NORMAL);
-		print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
-		print_line(2, err.message().c_str(), DCA_NORMAL);
-		for (u32 row = 3; row < m_visible.y; row++)
-		{
-			print_line(row, " ", DCA_NORMAL);
-		}
-		return false;
+		return;
 	}
 
 	m_total.y = m_displayed_src_file->num_lines();
-	return true;
 }
 
 //-------------------------------------------------
@@ -387,10 +379,7 @@ void debug_view_sourcecode::view_update()
 		}
 	}
 
-	if (!update_opened_file())
-	{
-		return;
-	}
+	update_opened_file();
 
 	// Ensure correct set of lines to print
 
@@ -400,6 +389,18 @@ void debug_view_sourcecode::view_update()
 	}
 
 	// Print
+
+	if (m_displayed_src_file->last_open_error())
+	{
+		print_line(0, "Error opening file", DCA_NORMAL);
+		print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
+		print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
+		for (u32 row = 3; row < m_visible.y; row++)
+		{
+			print_line(row, " ", DCA_NORMAL);
+		}
+		return;
+	}
 
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
