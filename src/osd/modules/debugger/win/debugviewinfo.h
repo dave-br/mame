@@ -69,10 +69,10 @@ protected:
 	virtual void add_items_to_context_menu(HMENU menu);
 	virtual void update_context_menu(HMENU menu);
 	virtual void handle_context_menu(unsigned command);
+	virtual void update();
 
 private:
 	void draw_contents(HDC windc);
-	void update();
 	uint32_t process_scroll(WORD type, HWND wnd);
 	bool process_context_menu(int x, int y);
 	LRESULT view_proc(UINT message, WPARAM wparam, LPARAM lparam);

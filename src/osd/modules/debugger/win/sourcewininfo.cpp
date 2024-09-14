@@ -115,10 +115,7 @@ void sourcewin_info::draw_contents(HDC dc)
 	disasmbasewin_info::draw_contents(dc);
 	if (m_combownd)
 	{
-		u32 cur_file_idx = downcast<sourceview_info *>(m_views[0].get())->cur_src_index();
-		SendMessage(m_combownd, CB_SETCURSEL, cur_file_idx, 0);
 		draw_border(dc, m_combownd);
-		InvalidateRect(m_combownd, nullptr, FALSE);
 	}
 }
 

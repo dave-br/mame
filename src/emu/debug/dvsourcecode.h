@@ -27,11 +27,13 @@ class line_indexed_file
 public:
 	line_indexed_file();
 	~line_indexed_file() { };
-	std::error_condition open(const char * file_path);
+	const std::error_condition & open(const char * file_path);
+	const std::error_condition & last_open_error() { return m_err; };
 	u32 num_lines() { return m_line_starts.size(); };
 	const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
 
 private:
+	std::error_condition m_err;
 	std::vector<uint8_t> m_data;
 	std::vector<u32> m_line_starts;
 };
@@ -114,7 +116,7 @@ private:
 
 	u32 first_visible_line() { return m_topleft.y + 1; }
 	bool is_visible(u32 line) { return (first_visible_line() <= line && line < first_visible_line() + m_visible.y); }
-	bool update_opened_file();
+	void update_opened_file();
 	void update_visible_lines(offs_t pc);
 	bool exists_bp_for_line(u32 src_index, u32 line);
 

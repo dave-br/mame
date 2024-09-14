@@ -26,6 +26,15 @@ public:
 	void set_src_index(u32 new_src_index);
 	u32 cur_src_index();
 
+protected:
+	virtual void update() override;
+
+private:
+	// TODO: Keeping my own copy of this HWND and making update() virtual seems
+	// inconsistent with rest of dbg arch.
+	// What is the proper way to update its selection whenever the PC changes?
+	HWND    m_combownd;
+
 };
 
 } // namespace osd::debugger::win

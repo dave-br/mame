@@ -68,8 +68,20 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
 	SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
 
+	m_combownd = result;
 	return result;
 }
+
+void sourceview_info::update()
+{
+	disasmview_info::update();
+	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
+	// TODO: Keeping my own copy of m_combownd and making update() virtual seems
+	// inconsistent with rest of dbg arch.
+	// What is the proper way to update its selection whenever the PC changes?
+	SendMessage(m_combownd, CB_SETCURSEL, dv_source->cur_src_index(), 0);
+}
+
 
 
 } // namespace osd::debugger::win
