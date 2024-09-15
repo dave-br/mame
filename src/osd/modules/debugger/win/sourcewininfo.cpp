@@ -29,6 +29,7 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 		m_views[0].reset();
 		return;
 	}
+	m_views[0]->set_source_for_visible_cpu();
 
 	m_combownd = downcast<sourceview_info *>(m_views[0].get())->create_source_file_combobox(window(), (LONG_PTR)this);
 
