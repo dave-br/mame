@@ -550,6 +550,6 @@ void debug_view_sourcecode::set_src_index(u32 new_src_index)
 //  current view
 //-------------------------------------------------
 
-void debug_view_sourcecode::view_click(const int button, const debug_view_xy& pos)
-{
-}
+// void debug_view_sourcecode::view_click(const int button, const debug_view_xy& pos)
+// {
+// }
