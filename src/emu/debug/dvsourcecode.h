@@ -108,7 +108,7 @@ protected:
 
 	// view overrides
 	virtual void view_update() override;
-	virtual void view_click(const int button, const debug_view_xy& pos) override;
+	// virtual void view_click(const int button, const debug_view_xy& pos) override;
 
 private:
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
