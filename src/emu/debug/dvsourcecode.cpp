@@ -323,6 +323,7 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 {
 	device_t * live_cpu = machine.debugger().cpu().live_cpu();
 	live_cpu->interface(m_state);
+	m_supports_cursor = true;
 }
 
 
