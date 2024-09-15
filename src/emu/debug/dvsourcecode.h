@@ -108,6 +108,7 @@ protected:
 	virtual ~debug_view_sourcecode();
 
 	// view overrides
+	virtual void set_source(const debug_view_source &source) override;
 	virtual void view_update() override;
 	// virtual void view_click(const int button, const debug_view_xy& pos) override;
 
@@ -121,7 +122,7 @@ private:
 	void update_visible_lines(offs_t pc);
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
-	device_state_interface *   m_state;                 // state interface, if present
+	device_state_interface *            m_state;                 // state interface, if present
 	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
 	u16                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                 m_displayed_src_index;   // Identifies which source file is currently shown

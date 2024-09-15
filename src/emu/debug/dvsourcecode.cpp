@@ -314,6 +314,7 @@ std::optional<file_line> debug_info_simple::address_to_file_line (offs_t address
 
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
 	debug_view_disasm(machine, osdupdate, osdprivate, DVT_SOURCE),
+	m_state(nullptr),
 	m_debug_info(machine.debugger().debug_info()),
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
@@ -321,8 +322,8 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_line_for_cur_pc(4)
 	// m_first_visible_line(1)
 {
-	device_t * live_cpu = machine.debugger().cpu().live_cpu();
-	live_cpu->interface(m_state);
+	// device_t * live_cpu = machine.debugger().cpu().live_cpu();
+	// live_cpu->interface(m_state);
 	m_supports_cursor = true;
 }
 
@@ -372,6 +373,13 @@ void debug_view_sourcecode::update_opened_file()
 
 	m_total.y = m_displayed_src_file->num_lines();
 }
+
+
+void debug_view_sourcecode::set_source(const debug_view_source &source)
+{
+	source.device()->interface(m_state);
+}
+
 
 //-------------------------------------------------
 //  view_update - update the contents of the
