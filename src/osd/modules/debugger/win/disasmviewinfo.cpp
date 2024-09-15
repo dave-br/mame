@@ -36,10 +36,9 @@ disasm_right_column disasmview_info::right_column() const
 	return view<debug_view_disasm>()->right_column();
 }
 
-
-offs_t disasmview_info::selected_address() const
+std::optional<offs_t> disasmview_info::selected_address() const
 {
-	return view<debug_view_disasm>()->selected_address();
+	return std::optional<offs_t>(view<debug_view_disasm>()->selected_address());
 }
 
 

@@ -495,10 +495,10 @@ void debug_view_disasm::redraw()
 //  currently selected address in the view
 //-------------------------------------------------
 
-offs_t debug_view_disasm::selected_address()
+std::optional<offs_t> debug_view_disasm::selected_address()
 {
 	flush_updates();
-	return m_dasm[m_cursor.y].m_address;
+	return std::optional<offs_t>(m_dasm[m_cursor.y].m_address);
 }
 
 

@@ -22,8 +22,11 @@ public:
 	virtual ~sourceview_info() {}
 	HWND create_source_file_combobox(HWND parent, LONG_PTR userdata);
 
+	// Overrides to customize view behavior from disasmview_info
+	virtual std::optional<offs_t> selected_address() const override;
+
 	// Helpers to access portions of debug_view_sourcecode
-	void set_src_index(u32 new_src_index);
+	void set_src_index(u16 new_src_index);
 	u32 cur_src_index();
 
 protected:

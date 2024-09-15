@@ -335,6 +335,26 @@ debug_view_sourcecode::~debug_view_sourcecode()
 {
 }
 
+//-------------------------------------------------
+//  selected_address - return the PC of the
+//  currently selected address in the view
+//-------------------------------------------------
+
+std::optional<offs_t> debug_view_sourcecode::selected_address()
+{
+	flush_updates();
+	u32 line = m_cursor.y + 1;
+
+	std::optional<debug_info_simple::address_range> addrsopt =
+	  m_debug_info.file_line_to_address_range(m_cur_src_index, line);
+
+	if (!addrsopt.has_value())
+	{
+		return std::optional<offs_t>();
+	}
+
+	return std::optional<offs_t>(addrsopt.value().first);
+}
 
 void debug_view_sourcecode::update_opened_file()
 {
@@ -440,7 +460,7 @@ void debug_view_sourcecode::view_update()
 	}
 }
 
-bool debug_view_sourcecode::exists_bp_for_line(u32 src_index, u32 line)
+bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
 	std::optional<debug_info_provider_base::address_range> addrs = 
 		debug_info().file_line_to_address_range(m_cur_src_index, line);
@@ -527,7 +547,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	}
 }
 
-void debug_view_sourcecode::set_src_index(u32 new_src_index)
+void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
 	if (m_cur_src_index == new_src_index || 
 		new_src_index >= m_debug_info.num_files())
