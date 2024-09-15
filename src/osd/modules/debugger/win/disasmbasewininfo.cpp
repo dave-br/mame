@@ -114,11 +114,20 @@ void disasmbasewin_info::update_menu()
 	bool const disasm_cursor_visible = dasmview->cursor_visible();
 	if (disasm_cursor_visible)
 	{
-		offs_t const address = dasmview->selected_address();
-		device_debug *const debug = dasmview->source_device()->debug();
+		std::optional<offs_t> const addropt = dasmview->selected_address();
+		const debug_breakpoint *bp;
+		if (addropt.has_value())
+		{
+			offs_t address = addropt.value();
+			device_debug *const debug = dasmview->source_device()->debug();
 
-		// first find an existing breakpoint at this address
-		const debug_breakpoint *bp = debug->breakpoint_find(address);
+			// first find an existing breakpoint at this address
+			bp = debug->breakpoint_find(address);
+		}
+		else
+		{
+			bp = nullptr;
+		}
 
 		if (!bp)
 		{
@@ -165,7 +174,12 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		case ID_TOGGLE_BREAKPOINT:
 			if (dasmview->cursor_visible())
 			{
-				offs_t const address = dasmview->selected_address();
+				std::optional<offs_t> const addropt = dasmview->selected_address();
+				if (!addropt.has_value())
+				{
+					return true;
+				}
+				offs_t address = addropt.value();
 				device_debug *const debug = dasmview->source_device()->debug();
 
 				// first find an existing breakpoint at this address
@@ -203,7 +217,12 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		case ID_DISABLE_BREAKPOINT:
 			if (dasmview->cursor_visible())
 			{
-				offs_t const address = dasmview->selected_address();
+				std::optional<offs_t> const addropt = dasmview->selected_address();
+				if (!addropt.has_value())
+				{
+					return true;
+				}
+				offs_t address = addropt.value();
 				device_debug *const debug = dasmview->source_device()->debug();
 
 				// first find an existing breakpoint at this address
@@ -232,7 +251,12 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		case ID_RUN_TO_CURSOR:
 			if (dasmview->cursor_visible())
 			{
-				offs_t const address = dasmview->selected_address();
+				std::optional<offs_t> const addropt = dasmview->selected_address();
+				if (!addropt.has_value())
+				{
+					return true;
+				}
+				offs_t address = addropt.value();
 				if (dasmview->source_is_visible_cpu())
 				{
 					std::string command;

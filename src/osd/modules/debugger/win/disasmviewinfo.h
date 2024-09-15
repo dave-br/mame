@@ -27,7 +27,7 @@ public:
 
 	char const *expression() const;
 	disasm_right_column right_column() const;
-	offs_t selected_address() const;
+	virtual std::optional<offs_t> selected_address() const;
 
 	void set_expression(const std::string &expression);
 	void set_right_column(disasm_right_column contents);

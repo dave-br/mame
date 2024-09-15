@@ -29,7 +29,7 @@ sourceview_info::sourceview_info(debugger_windows_interface &debugger, debugwin_
 	
 }
 
-void sourceview_info::set_src_index(u32 new_src_index)
+void sourceview_info::set_src_index(u16 new_src_index)
 {
 	view<debug_view_sourcecode>()->set_src_index(new_src_index);
 }
@@ -37,6 +37,11 @@ void sourceview_info::set_src_index(u32 new_src_index)
 u32 sourceview_info::cur_src_index()
 {
 	return view<debug_view_sourcecode>()->cur_src_index();
+}
+
+std::optional<offs_t> sourceview_info::selected_address() const
+{
+	return view<debug_view_sourcecode>()->selected_address();
 }
 
 HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata)

@@ -75,7 +75,7 @@ public:
 	disasm_right_column right_column() const { return m_right_column; }
 	u32 backward_steps() const { return m_backwards_steps; }
 	u32 disasm_width() const { return m_dasm_width; }
-	offs_t selected_address();
+	virtual std::optional<offs_t> selected_address();
 
 	// setters
 	void set_expression(const std::string &expression);

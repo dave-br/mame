@@ -152,22 +152,21 @@ bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
 	switch (HIWORD(wparam))
 	{
-	// combo box selection changed
-	case CBN_SELCHANGE:
+		case CBN_SELCHANGE:
+		// Source file combo box selection changed
 		{
 			int const sel = SendMessage((HWND)lparam, CB_GETCURSEL, 0, 0);
 			if (sel == CB_ERR)
 				break;
 
-			downcast<sourceview_info *>(m_views[0].get())->set_src_index(sel);
-			// update_caption();
-	// m_combownd = downcast<sourceview_info *>(m_views[0].get())->create_source_file_combobox(window(), (LONG_PTR)this);
+			downcast<sourceview_info *>(m_views[0].get())->set_src_index(u16(sel));
 
 			// reset the focus
 			set_default_focus();
 			return true;
 		}
 	}
+
 	return disasmbasewin_info::handle_command(wparam, lparam);
 }
 // 	// auto *const dasmview = downcast<disasmview_info *>(m_views[0].get());

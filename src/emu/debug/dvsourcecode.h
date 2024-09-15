@@ -53,7 +53,7 @@ public:
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual std::size_t num_files() const = 0;
-	virtual const char * file_index_to_path(int file_index) const = 0;
+	virtual const char * file_index_to_path(u16 file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
@@ -68,7 +68,7 @@ public:
 	debug_info_simple(running_machine& machine, std::vector<uint8_t>& data);
 	~debug_info_simple() { }
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
-	virtual const char * file_index_to_path(int file_index) const override { return m_source_file_paths[file_index]; };
+	virtual const char * file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
@@ -96,10 +96,11 @@ class debug_view_sourcecode : public debug_view_disasm
 public:
 	// getters
 	const debug_info_provider_base & debug_info() const { return m_debug_info; }
-	u32 cur_src_index() const { return m_cur_src_index; }
+	u16 cur_src_index() const { return m_cur_src_index; }
+	virtual std::optional<offs_t> selected_address() override;
 
 	// setters
-	void set_src_index(u32 new_src_index);
+	void set_src_index(u16 new_src_index);
 
 protected:
 	// construction/destruction
@@ -118,12 +119,12 @@ private:
 	bool is_visible(u32 line) { return (first_visible_line() <= line && line < first_visible_line() + m_visible.y); }
 	void update_opened_file();
 	void update_visible_lines(offs_t pc);
-	bool exists_bp_for_line(u32 src_index, u32 line);
+	bool exists_bp_for_line(u16 src_index, u32 line);
 
 	device_state_interface *   m_state;                 // state interface, if present
 	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
-	u32                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
-	u32                                 m_displayed_src_index;   // Identifies which source file is currently shown
+	u16                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
+	u16                                 m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>  m_displayed_src_file;    // File object currently printed to the view
 	u32                                 m_line_for_cur_pc;       // Line number to be highlighted
 	// u32                                 m_first_visible_line;    // Line number to show at top of scrolled view
