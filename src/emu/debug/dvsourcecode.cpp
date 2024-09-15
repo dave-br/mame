@@ -425,9 +425,9 @@ void debug_view_sourcecode::view_update()
 				attrib = DCA_CHANGED;
 			}
 
-			if (m_cursor_visible && row == m_cursor.y)
+			if (m_cursor_visible && (line - 1) == m_cursor.y)
 			{
-				// We're on the cursored row and cursor is visible: highlight
+				// We're on the cursored line and cursor is visible: highlight
 				attrib |= DCA_SELECTED;
 			}
 
