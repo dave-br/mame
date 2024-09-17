@@ -76,9 +76,9 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 
 	const char * source_file_paths[] = { "D:\\coco\\asm\\moon\\Final\\mpE.asm", "D:\\coco\\asm\\sd.asm", "test" };
 	mame_debug_info_simple_header hdr;
-	strncpy(&hdr.magic[0], "MDbI", 4);
-	strncpy(&hdr.type[0], "simp", 4);
-	hdr.version = 1;
+	strncpy(&hdr.header_base.magic[0], "MDbI", 4);
+	strncpy(&hdr.header_base.type[0], "simp", 4);
+	hdr.header_base.version = 1;
 	hdr.source_file_paths_size = 0;
 	for (int i=0; i < _countof(source_file_paths); i++)
 	{
