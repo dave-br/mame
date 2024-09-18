@@ -837,3 +837,40 @@ if (_OPTIONS["osd"] == "sdl") then
 
 	strip()
 end
+
+
+--------------------------------------------------
+-- dbginfodump
+--------------------------------------------------
+
+project("dbginfodump")
+uuid ("80b18ed5-4f84-4e50-95c9-8f44e99c22dd")
+kind "ConsoleApp"
+
+flags {
+	"Symbols", -- always include minimum symbols for executables
+}
+
+if _OPTIONS["SEPARATE_BIN"]~="1" then
+	targetdir(MAME_DIR)
+end
+
+links {
+	"utils",
+	"ocore_" .. _OPTIONS["osd"],
+	ext_lib("utf8proc"),
+}
+
+includedirs {
+	MAME_DIR .. "src/lib/dbginfo",
+	MAME_DIR .. "src/osd",
+	MAME_DIR .. "src/lib/util",
+}
+
+files {
+	MAME_DIR .. "src/tools/dbginfodump.cpp",
+}
+
+configuration { }
+
+strip()
