@@ -151,7 +151,7 @@ end
 
 project "dbginfo"
 	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
-	kind ("SharedLib")
+	kind (LIBTYPE)
 
 	addprojectflags()
 
