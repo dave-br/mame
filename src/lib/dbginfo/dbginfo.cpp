@@ -48,7 +48,7 @@ private:
 			return;
 		}
 
-		unsigned int new_capacity = (m_capacity + 1) * 2;
+		unsigned int new_capacity = (m_capacity + 1) << 1;
 		while (new_capacity < req_capacity)
 		{
 			new_capacity <<= 1;
@@ -61,6 +61,7 @@ private:
 		}
 
 		memcpy(new_data, m_data, m_size);
+		free(m_data);
 		m_data = (unsigned char *) new_data;
 		m_capacity = new_capacity;
 	}
@@ -94,8 +95,8 @@ public:
 
 	void open(const char * file_path)
 	{
-		FILE * output = fopen(file_path, "wb");
-		if (output == nullptr)
+		m_output = fopen(file_path, "wb");
+		if (m_output == nullptr)
 		{
 			// TODO: ERROR
 			return;
