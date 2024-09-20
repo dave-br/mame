@@ -11,8 +11,12 @@
 #include "emu.h"
 #include "dvsourcecode.h"
 #include "emuopts.h"
+#include "fileio.h"
+#include "path.h"
 #include "debugger.h"
 #include "mdisimple.h"
+
+#include <filesystem>
 
 line_indexed_file::line_indexed_file() :
 	m_err(),
@@ -70,46 +74,46 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 		// return std::make_unique<debug_info_empty>(machine);
 	}
 
-	// TODO: TEMP CODE TO CREATE TEST DI
-	// (SOME OF THIS MAY BE REPURPOSED TO THE HELPER WRITE FUNCTIONS USED BY TOOLS)
-	FILE * testfptr = fopen(di_path, "wb");
+	// // TODO: TEMP CODE TO CREATE TEST DI
+	// // (SOME OF THIS MAY BE REPURPOSED TO THE HELPER WRITE FUNCTIONS USED BY TOOLS)
+	// FILE * testfptr = fopen(di_path, "wb");
 
-	const char * source_file_paths[] = { "D:\\coco\\asm\\moon\\Final\\mpE.asm", "D:\\coco\\asm\\sd.asm", "test" };
-	mame_debug_info_simple_header hdr;
-	strncpy(&hdr.header_base.magic[0], "MDbI", 4);
-	strncpy(&hdr.header_base.type[0], "simp", 4);
-	hdr.header_base.version = 1;
-	hdr.source_file_paths_size = 0;
-	for (int i=0; i < _countof(source_file_paths); i++)
-	{
-		hdr.source_file_paths_size += strlen(source_file_paths[i]) + 1;
-	}
-	std::pair<u16,u32> line_mappings[] =
-	{
-		{0x3F02, 17},
-		{0x3F0D, 52},
-		{0x3F07, 26},
-		{0x3F06, 25},
-		{0x3F0A, 34},
-		{0x3F00, 14},
-		{0x3F09, 33},
-		{0x3F0C, 39},
-		{0x3F04, 24},
-	};
-	hdr.num_line_mappings = _countof(line_mappings);
-	fwrite(&hdr, sizeof(mame_debug_info_simple_header), 1, testfptr);
-	for (int i=0; i < _countof(source_file_paths); i++)
-	{
-		fwrite(source_file_paths[i], strlen(source_file_paths[i])+1, 1, testfptr);
-	}
-	for (int i=0; i < _countof(line_mappings); i++)
-	{
-		mdi_line_mapping mapping = { line_mappings[i].first, line_mappings[i].first, 1, line_mappings[i].second };
-		fwrite(&mapping, sizeof(mapping), 1, testfptr);
-	}
-	fclose(testfptr);
+	// const char * source_file_paths[] = { "D:\\coco\\asm\\moon\\Final\\mpE.asm", "D:\\coco\\asm\\sd.asm", "test" };
+	// mame_debug_info_simple_header hdr;
+	// strncpy(&hdr.header_base.magic[0], "MDbI", 4);
+	// strncpy(&hdr.header_base.type[0], "simp", 4);
+	// hdr.header_base.version = 1;
+	// hdr.source_file_paths_size = 0;
+	// for (int i=0; i < _countof(source_file_paths); i++)
+	// {
+	// 	hdr.source_file_paths_size += strlen(source_file_paths[i]) + 1;
+	// }
+	// std::pair<u16,u32> line_mappings[] =
+	// {
+	// 	{0x3F02, 17},
+	// 	{0x3F0D, 52},
+	// 	{0x3F07, 26},
+	// 	{0x3F06, 25},
+	// 	{0x3F0A, 34},
+	// 	{0x3F00, 14},
+	// 	{0x3F09, 33},
+	// 	{0x3F0C, 39},
+	// 	{0x3F04, 24},
+	// };
+	// hdr.num_line_mappings = _countof(line_mappings);
+	// fwrite(&hdr, sizeof(mame_debug_info_simple_header), 1, testfptr);
+	// for (int i=0; i < _countof(source_file_paths); i++)
+	// {
+	// 	fwrite(source_file_paths[i], strlen(source_file_paths[i])+1, 1, testfptr);
+	// }
+	// for (int i=0; i < _countof(line_mappings); i++)
+	// {
+	// 	mdi_line_mapping mapping = { line_mappings[i].first, line_mappings[i].first, 1, line_mappings[i].second };
+	// 	fwrite(&mapping, sizeof(mapping), 1, testfptr);
+	// }
+	// fclose(testfptr);
 
-	// END TEMP CODE
+	// // END TEMP CODE
 
 	std::vector<uint8_t> data;
 	util::core_file::load(di_path, data);
@@ -139,7 +143,7 @@ template <typename T> static void read_field(T& var, std::vector<uint8_t>& data,
 
 debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8_t>& data) :
 	debug_info_provider_base(),
-	m_source_file_path_chars(),
+	// m_source_file_path_chars(),
 	m_source_file_paths(),
 	m_linemaps_by_address(),
 	m_linemaps_by_line()
@@ -168,32 +172,51 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 
 	// Final byte before first_line_mapping must be null-terminator.
 	// Ensuring this now avoids buffer overruns when reading the strings
-	if (data[first_line_mapping - 1] != 0)
+	if (data[first_line_mapping - 1] != '\0')
 	{
 		// TODO ERROR
 		assert(false);		
 	}
 
-	// m_source_file_path_chars to own memory containing path characters
-	m_source_file_path_chars.reserve(header.source_file_paths_size);
-	m_source_file_path_chars.resize(header.source_file_paths_size);
-	std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
-
-	// Read the starting char address for each source file path into m_source_file_paths
-	m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
-	for (u32 j = 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
+	u32 string_start;
+	string_start = i;
+	for (; i < first_line_mapping; i++)
 	{
-		if (m_source_file_path_chars[j-1] == '\0')
+		if (data[i] == '\0')
 		{
-			// j points to character immediately following null terminator, so
-			// j begins a new string
-			m_source_file_paths.push_back((const char*) &m_source_file_path_chars[j]);
+			// i points to character immediately following null terminator, so
+			// previous string runs from string_start through i - 1, and
+			// i begins a new string
+			std::string built((const char *) &data[string_start], i - string_start);
+			std::string local;
+			generate_local_path(machine, built, local);
+			debug_info_provider_base::source_file_path sfp(built, local);
+			m_source_file_paths.push_back(std::move(sfp));
+			string_start = i + 1;
 		}
 	}
-	i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
+
+	// m_source_file_path_chars owns the memory containing path characters
+	// m_source_file_path_chars.reserve(header.source_file_paths_size);
+	// m_source_file_path_chars.resize(header.source_file_paths_size);
+	// std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
+
+	// // Read the starting char address for each source file path into m_source_file_paths
+	// m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
+	// for (u32 j = 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
+	// {
+	// 	if (m_source_file_path_chars[j-1] == '\0')
+	// 	{
+	// 		// j points to character immediately following null terminator, so
+	// 		// j begins a new string
+	// 		m_source_file_paths.push_back((const char*) &m_source_file_path_chars[j]);
+	// 	}
+	// }
+	// i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
 
 	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
-	// entries from debug info
+	// entries from debug info.  Ensure m_linemaps_by_line is pre-sized so as
+	// we encounter a mapping, we'll always have an entry ready for its source file index.
 	m_linemaps_by_line.reserve(m_source_file_paths.size());
 	m_linemaps_by_line.resize(m_source_file_paths.size());
 	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
@@ -224,14 +247,78 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	}
 }
 
+void debug_info_simple::generate_local_path(running_machine& machine, const std::string & built, std::string & local)
+{
+	namespace fs = std::filesystem;
+	local = built;                          // Default local path to the originally built source path
+	apply_source_map(machine, local);       // Apply the source map if built matches a prefix
+	if (osd_is_absolute_path(local))        // If local is already absolute, we're done
+	{
+		return;
+	}
+
+	// Go through source search path until we can construct an
+	// absolute path to an existing file
+	path_iterator path(machine.options().debug_source_path());
+	std::string source_dir;
+	while (path.next(source_dir))
+	{
+		std::string new_local = util::path_append(source_dir, local);
+		if (fs::exists(fs::status(new_local)))
+		{
+			// Found an existing absolute path, done
+			local = std::move(new_local);
+			return;
+		}
+	}
+
+	// None found, leave local == built
+}
+
+void debug_info_simple::apply_source_map(running_machine& machine, std::string & local)
+{
+	path_iterator path(machine.options().debug_source_path_map());
+	std::string prefix_find, prefix_replace;
+	while (path.next(prefix_find))
+	{
+		if (!path.next(prefix_replace))
+		{
+			// Invalid map string (odd number of paths), so just skip last entry
+			break;
+		}
+
+		// TODO: VERIFY THIS WORKS WHEN LOCAL IS TOO SHORT
+		if (strncmp(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
+		{
+			// Found a match; replace local's prefix_find with prefix_replace
+			std::string new_local = prefix_replace;
+			new_local += &local[prefix_find.size()];
+			local = std::move(new_local);
+			return;
+		}
+	}
+
+	// If we made it here, no match.  So leave local alone
+}
+
+
+// JUST NOW:
+/*
+
+use path_iterator against src map to create vector of prefix replacement pairs
+Use replacement pairs to adjust each source file (on demand or on init?)
+use file_enumerator to search one adjusted file within a set of search paths
+*/
+
 std::optional<int> debug_info_simple::file_path_to_index(const char * file_path) const
 {
 	// TODO: Fancy heuristics to match full paths of source file from
 	// dbginfo and local machine
-	for (int i=0; i < this->m_source_file_paths.size(); i++)
+	for (int i=0; i < m_source_file_paths.size(); i++)
 	{
 		// TODO: Use path helpers to deal with case-insensitivity on other platforms
-		if (stricmp(m_source_file_paths[i], file_path) == 0)
+		if (stricmp(m_source_file_paths[i].built(), file_path) == 0 ||
+			stricmp(m_source_file_paths[i].local(), file_path) == 0)
 		{
 			return i;
 		}
@@ -269,7 +356,7 @@ std::optional<debug_info_simple::address_range> debug_info_simple::file_line_to_
 	// with line_number <= answer->line_number.  If they're equal, answer
 	// is clearly correct.  If line_number < answer->line_number, then
 	// using answer bumps us forward to the next mapped line after the 
-	// line specified by the user.
+	// line specified by the user, which is reasonable.
 	return address_range(answer->address_first, answer->address_last);
 }
 
@@ -357,6 +444,7 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 	return std::optional<offs_t>(addrsopt.value().first);
 }
 
+
 void debug_view_sourcecode::update_opened_file()
 {
 	if (m_cur_src_index == m_displayed_src_index)
@@ -364,7 +452,13 @@ void debug_view_sourcecode::update_opened_file()
 		return;
 	}
 
-	std::error_condition err = m_displayed_src_file->open(m_debug_info.file_index_to_path(m_cur_src_index));
+	const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
+	if (local_path == nullptr)
+	{
+		return;
+	}
+
+	std::error_condition err = m_displayed_src_file->open(local_path);
 	m_displayed_src_index = m_cur_src_index;
 	if (err)
 	{
@@ -412,19 +506,41 @@ void debug_view_sourcecode::view_update()
 
 	// Ensure correct set of lines to print
 
+	// TODO: MOVE THIS AFTER ERROR PRINT?
 	if (pc_changed)
 	{
 		update_visible_lines(pc);
 	}
 
 	// Print
-
-	if (m_displayed_src_file->last_open_error())
+	// const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
+	const debug_info_provider_base::source_file_path & path = m_debug_info.file_index_to_path(m_cur_src_index);
+	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_line(0, "Error opening file", DCA_NORMAL);
-		print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
-		print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
-		for (u32 row = 3; row < m_visible.y; row++)
+		if (path.local() == nullptr)
+		{
+			print_line(1, "Could not find local file matching originally built source", DCA_NORMAL);
+		}
+		else
+		{
+			print_line(1, path.local(), DCA_NORMAL);
+			print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
+		}
+		std::string s("Originally built source: ");
+		s += path.built();
+		print_line(3, s.c_str(), DCA_NORMAL);
+		s = "Source search path (";
+		s += OPTION_DEBUGSRCPATH;
+		s += "): ";
+		s += machine().options().debug_source_path();
+		print_line(4, s.c_str(), DCA_NORMAL);
+		s = "Source path prefix map (";
+		s += OPTION_DEBUGSRCPATHMAP;
+		s += "): ";
+		s += machine().options().debug_source_path_map();
+		print_line(5, s.c_str(), DCA_NORMAL);
+		for (u32 row = 6; row < m_visible.y; row++)
 		{
 			print_line(row, " ", DCA_NORMAL);
 		}
@@ -530,7 +646,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	std::string line_str = 	(line_number.has_value()) ? std::to_string(line_number.value()) : LINE_NUMBER_PADDING;
 	for(s32 visible_col=m_topleft.x; visible_col < m_topleft.x + std::min(LINE_NUMBER_WIDTH, m_visible.x); visible_col++)
 	{
-		int viewdata_col = visible_col - m_topleft.x;
+		s32 viewdata_col = visible_col - m_topleft.x;
 		m_viewdata[row * m_visible.x + viewdata_col] = 
 		{
 			(viewdata_col < line_str.size()) ? u8(line_str[viewdata_col]) : u8(' '),
@@ -554,6 +670,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 		}
 	}
 }
+
 
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {

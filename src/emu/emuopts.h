@@ -160,6 +160,8 @@
 #define OPTION_DEBUGSCRIPT          "debugscript"
 #define OPTION_DEBUGLOG             "debuglog"
 #define OPTION_DEBUGINFO            "debuginfo"
+#define OPTION_DEBUGSRCPATH         "debug_src_path"
+#define OPTION_DEBUGSRCPATHMAP      "debug_src_path_map"
 
 // core misc options
 #define OPTION_DRC                  "drc"
@@ -445,6 +447,8 @@ public:
 	bool update_in_pause() const { return bool_value(OPTION_UPDATEINPAUSE); }
 	bool debuglog() const { return bool_value(OPTION_DEBUGLOG); }
 	const char *debug_info() const { return value(OPTION_DEBUGINFO); }
+	const char *debug_source_path() const { return value(OPTION_DEBUGSRCPATH); }
+	const char *debug_source_path_map() const { return value(OPTION_DEBUGSRCPATHMAP); }
 
 	// core misc options
 	bool drc() const { return bool_value(OPTION_DRC); }

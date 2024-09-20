@@ -61,12 +61,13 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	size_t maxlength = 0;
 	for (std::size_t i = 0; i < num_files; i++)
 	{
-		size_t const length = strlen(debug_info.file_index_to_path(i));
+		const char * entry_text = debug_info.file_index_to_path(i).built();
+		size_t const length = strlen(entry_text);
 		if (length > maxlength)
 		{
 			maxlength = length;
 		}
-		auto t_name = osd::text::to_tstring(debug_info.file_index_to_path(i));
+		auto t_name = osd::text::to_tstring(entry_text);
 		SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
 	}
 

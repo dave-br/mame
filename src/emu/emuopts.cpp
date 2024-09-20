@@ -188,6 +188,8 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_DEBUGSCRIPT,                                nullptr,     core_options::option_type::PATH,       "script for debugger" },
 	{ OPTION_DEBUGLOG,                                   "0",         core_options::option_type::BOOLEAN,    "write debug console output to debug.log" },
 	{ OPTION_DEBUGINFO,                                  nullptr,     core_options::option_type::PATH,       "debugging information (symbols) for use debugging emulated machine" },
+	{ OPTION_DEBUGSRCPATH,                               nullptr,     core_options::option_type::MULTIPATH,  "search path for source files referenced by debugging information (symbols)" },
+	{ OPTION_DEBUGSRCPATHMAP,                            nullptr,     core_options::option_type::MULTIPATH,  "map of source file path prefixes from those found in debugging information (symbols) to those found on the local machine" },
 
 	// comm options
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "CORE COMM OPTIONS" },
