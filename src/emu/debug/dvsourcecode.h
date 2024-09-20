@@ -113,6 +113,7 @@ protected:
 	// virtual void view_click(const int button, const debug_view_xy& pos) override;
 
 private:
+	const char * get_local_path(u16 src_index);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
 
@@ -122,12 +123,13 @@ private:
 	void update_visible_lines(offs_t pc);
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
-	device_state_interface *            m_state;                 // state interface, if present
-	const debug_info_provider_base &    m_debug_info;		     // Interface to the loaded debugging info file
-	u16                                 m_cur_src_index;         // Identifies which source file we should now show / switch to
-	u16                                 m_displayed_src_index;   // Identifies which source file is currently shown
-	std::unique_ptr<line_indexed_file>  m_displayed_src_file;    // File object currently printed to the view
-	u32                                 m_line_for_cur_pc;       // Line number to be highlighted
+	device_state_interface *                          m_state;                 // state interface, if present
+	const debug_info_provider_base &                  m_debug_info;            // Interface to the loaded debugging info file
+	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
+	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
+	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
+	std::vector<std::pair<std::string, std::string>>  m_src_path_map;
+	u32                                               m_line_for_cur_pc;       // Line number to be highlighted
 	// u32                                 m_first_visible_line;    // Line number to show at top of scrolled view
 };
 

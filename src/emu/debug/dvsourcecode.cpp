@@ -325,6 +325,7 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	// device_t * live_cpu = machine.debugger().cpu().live_cpu();
 	// live_cpu->interface(m_state);
 	m_supports_cursor = true;
+	this->machine().debugger().debug_info();
 }
 
 
@@ -357,6 +358,30 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 	return std::optional<offs_t>(addrsopt.value().first);
 }
 
+const char * debug_view_sourcecode::get_local_path(u16 src_index)
+{
+	const char * src_path_map = machine().options().debug_source_path_map();
+	const char * orig_src_path = m_debug_info.file_index_to_path(src_index);
+
+	// TODO: Code during creation to verify syntax of src map (e.g., even number of paths)
+
+	for (size_t i = 0; i < m_src_path_map.size(); i++)
+	{
+
+	}
+
+// JUST NOW:
+/*
+
+have another config option for source search paths
+use path_iterator against src map to create vector of prefix replacement pairs
+Use replacement pairs to adjust each source file (on demand or on init?)
+use file_enumerator to search one adjusted file within a set of search paths
+
+*/
+
+}
+
 void debug_view_sourcecode::update_opened_file()
 {
 	if (m_cur_src_index == m_displayed_src_index)
@@ -364,7 +389,7 @@ void debug_view_sourcecode::update_opened_file()
 		return;
 	}
 
-	std::error_condition err = m_displayed_src_file->open(m_debug_info.file_index_to_path(m_cur_src_index));
+	std::error_condition err = m_displayed_src_file->open(get_local_path(m_cur_src_index));
 	m_displayed_src_index = m_cur_src_index;
 	if (err)
 	{
