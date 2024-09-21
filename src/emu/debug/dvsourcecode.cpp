@@ -139,7 +139,7 @@ template <typename T> static void read_field(T& var, std::vector<uint8_t>& data,
 
 debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8_t>& data) :
 	debug_info_provider_base(),
-	m_source_file_path_chars(),
+	// m_source_file_path_chars(),
 	m_source_file_paths(),
 	m_linemaps_by_address(),
 	m_linemaps_by_line()
@@ -174,23 +174,44 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		assert(false);		
 	}
 
-	// m_source_file_path_chars owns the memory containing path characters
-	m_source_file_path_chars.reserve(header.source_file_paths_size);
-	m_source_file_path_chars.resize(header.source_file_paths_size);
-	std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
+	// TODO: JUST NOW: NEW:
+	/*
 
-	// Read the starting char address for each source file path into m_source_file_paths
-	m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
-	for (u32 j = 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
-	{
-		if (m_source_file_path_chars[j-1] == '\0')
-		{
-			// j points to character immediately following null terminator, so
-			// j begins a new string
-			m_source_file_paths.push_back((const char*) &m_source_file_path_chars[j]);
-		}
-	}
-	i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
+	Read string from data into std::string
+	Add to built side of vector
+	Perform map replacement -> local
+	is local absolute?
+	yes:
+		add to local side of vector
+	no:
+		iterate through search path.  For each:
+			concat search path + local
+			use std:filesystem::status() to ask if exists
+			yes:
+				add to local side of vector, break
+			no:
+				continue
+	local is now null (no existing mappings) or filled & known to exist
+	
+	*/
+
+	// m_source_file_path_chars owns the memory containing path characters
+	// m_source_file_path_chars.reserve(header.source_file_paths_size);
+	// m_source_file_path_chars.resize(header.source_file_paths_size);
+	// std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
+
+	// // Read the starting char address for each source file path into m_source_file_paths
+	// m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
+	// for (u32 j = 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
+	// {
+	// 	if (m_source_file_path_chars[j-1] == '\0')
+	// 	{
+	// 		// j points to character immediately following null terminator, so
+	// 		// j begins a new string
+	// 		m_source_file_paths.push_back((const char*) &m_source_file_path_chars[j]);
+	// 	}
+	// }
+	// i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
 
 	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
 	// entries from debug info
@@ -231,7 +252,8 @@ std::optional<int> debug_info_simple::file_path_to_index(const char * file_path)
 	for (int i=0; i < m_source_file_paths.size(); i++)
 	{
 		// TODO: Use path helpers to deal with case-insensitivity on other platforms
-		if (stricmp(m_source_file_paths[i], file_path) == 0)
+		if (stricmp(m_source_file_paths[i].built(), file_path) == 0 ||
+			stricmp(m_source_file_paths[i].local(), file_path) == 0)
 		{
 			return i;
 		}
@@ -388,7 +410,13 @@ void debug_view_sourcecode::update_opened_file()
 		return;
 	}
 
-	std::error_condition err = m_displayed_src_file->open(debug_info().file_index_to_path(m_cur_src_index).local);
+	const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
+	if (local_path == nullptr)
+	{
+		return;
+	}
+
+	std::error_condition err = m_displayed_src_file->open(local_path);
 	m_displayed_src_index = m_cur_src_index;
 	if (err)
 	{
@@ -436,28 +464,29 @@ void debug_view_sourcecode::view_update()
 
 	// Ensure correct set of lines to print
 
+	// TODO: MOVE THIS AFTER ERROR PRINT?
 	if (pc_changed)
 	{
 		update_visible_lines(pc);
 	}
 
 	// Print
-
-	if (m_displayed_src_file->last_open_error())
+	// const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
+	debug_info_provider_base::source_file_path path = m_debug_info.file_index_to_path(m_cur_src_index);
+	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
-		source_file_paths paths = m_debug_info.file_index_to_path(m_cur_src_index);
 		print_line(0, "Error opening file", DCA_NORMAL);
-		if (paths.local == nullptr)
+		if (path.local() == nullptr)
 		{
 			print_line(1, "Could not find local file matching originally built source", DCA_NORMAL);
 		}
 		else
 		{
-			print_line(1, paths.local, DCA_NORMAL);
+			print_line(1, path.local(), DCA_NORMAL);
 			print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
 		}
 		std::string s("Originally built source: ");
-		s += paths.built;
+		s += path.built();
 		print_line(3, s.c_str(), DCA_NORMAL);
 		s = "Source search path (";
 		s += OPTION_DEBUGSRCPATH;

@@ -44,22 +44,31 @@ struct file_line
 	u32 line_number;
 };
 
-struct source_file_paths
-{
-	const char * built;
-	const char * local;
-};
-
-
 // abstract base class for debug-info (symbols) file readers
 class debug_info_provider_base
 {
 public:
+	class source_file_path
+	{
+	public:
+		source_file_path(const char * built, const char * local) :
+			m_built(built),
+			m_local(local)
+		{
+		}
+		const char * built() const { return m_built.c_str(); }
+		const char * local() const { return m_local.c_str(); }  // TODO: WORKS IF LOCAL EMPTY?
+
+	private:
+		std::string m_built;
+		std::string m_local;
+	};
+
 	typedef std::pair<offs_t,offs_t> address_range;
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual std::size_t num_files() const = 0;
-	virtual source_file_paths file_index_to_path(u16 file_index) const = 0;
+	virtual source_file_path file_index_to_path(u16 file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
@@ -74,7 +83,7 @@ public:
 	debug_info_simple(running_machine& machine, std::vector<uint8_t>& data);
 	~debug_info_simple() { }
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
-	virtual source_file_paths file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
+	virtual source_file_path file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
@@ -87,8 +96,8 @@ private:
 		u32 line_number;
 	};
 
-	std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
-	std::vector<const char*>                 m_source_file_paths;      // Starting points for source file path strings
+	// std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
+	std::vector<source_file_path>            m_source_file_paths;      // Starting points for source file path strings
 	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 	                                                                   // sorted by line, from file #i
