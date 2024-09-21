@@ -174,7 +174,7 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		assert(false);		
 	}
 
-	// m_source_file_path_chars to own memory containing path characters
+	// m_source_file_path_chars owns the memory containing path characters
 	m_source_file_path_chars.reserve(header.source_file_paths_size);
 	m_source_file_path_chars.resize(header.source_file_paths_size);
 	std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
@@ -228,7 +228,7 @@ std::optional<int> debug_info_simple::file_path_to_index(const char * file_path)
 {
 	// TODO: Fancy heuristics to match full paths of source file from
 	// dbginfo and local machine
-	for (int i=0; i < this->m_source_file_paths.size(); i++)
+	for (int i=0; i < m_source_file_paths.size(); i++)
 	{
 		// TODO: Use path helpers to deal with case-insensitivity on other platforms
 		if (stricmp(m_source_file_paths[i], file_path) == 0)
@@ -269,7 +269,7 @@ std::optional<debug_info_simple::address_range> debug_info_simple::file_line_to_
 	// with line_number <= answer->line_number.  If they're equal, answer
 	// is clearly correct.  If line_number < answer->line_number, then
 	// using answer bumps us forward to the next mapped line after the 
-	// line specified by the user.
+	// line specified by the user, which is reasonable.
 	return address_range(answer->address_first, answer->address_last);
 }
 
@@ -373,7 +373,6 @@ const char * debug_view_sourcecode::get_local_path(u16 src_index)
 // JUST NOW:
 /*
 
-have another config option for source search paths
 use path_iterator against src map to create vector of prefix replacement pairs
 Use replacement pairs to adjust each source file (on demand or on init?)
 use file_enumerator to search one adjusted file within a set of search paths
@@ -389,7 +388,7 @@ void debug_view_sourcecode::update_opened_file()
 		return;
 	}
 
-	std::error_condition err = m_displayed_src_file->open(get_local_path(m_cur_src_index));
+	std::error_condition err = m_displayed_src_file->open(debug_info().file_index_to_path(m_cur_src_index).local);
 	m_displayed_src_index = m_cur_src_index;
 	if (err)
 	{
@@ -446,9 +445,14 @@ void debug_view_sourcecode::view_update()
 
 	if (m_displayed_src_file->last_open_error())
 	{
+		source_file_paths paths = m_debug_info.file_index_to_path(m_cur_src_index);
 		print_line(0, "Error opening file", DCA_NORMAL);
+		print_line(1, , const char * text, u8 attrib)
+		print_line(1, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
+		std::string file()
 		print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
-		print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
+
+
 		for (u32 row = 3; row < m_visible.y; row++)
 		{
 			print_line(row, " ", DCA_NORMAL);
@@ -555,7 +559,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	std::string line_str = 	(line_number.has_value()) ? std::to_string(line_number.value()) : LINE_NUMBER_PADDING;
 	for(s32 visible_col=m_topleft.x; visible_col < m_topleft.x + std::min(LINE_NUMBER_WIDTH, m_visible.x); visible_col++)
 	{
-		int viewdata_col = visible_col - m_topleft.x;
+		s32 viewdata_col = visible_col - m_topleft.x;
 		m_viewdata[row * m_visible.x + viewdata_col] = 
 		{
 			(viewdata_col < line_str.size()) ? u8(line_str[viewdata_col]) : u8(' '),
@@ -564,10 +568,31 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	}
 
 	// Right side shows line from file
-	for(s32 visible_col=m_topleft.x + LINE_NUMBER_WIDTH; visible_col < m_topleft.x + m_visible.x; visible_col++)
+	print(row, LINE_NUMBER_WIDTH, text, attrib);
+
+	// for(s32 visible_col=m_topleft.x + LINE_NUMBER_WIDTH; visible_col < m_topleft.x + m_visible.x; visible_col++)
+	// {
+	// 	s32 viewdata_col = visible_col - m_topleft.x;
+	// 	s32 text_idx = visible_col - LINE_NUMBER_WIDTH;
+
+	// 	if (text_idx >= strlen(text))
+	// 	{
+	// 		m_viewdata[row * m_visible.x + viewdata_col] = { ' ', attrib };
+	// 	}
+	// 	else
+	// 	{
+	// 		m_viewdata[row * m_visible.x + viewdata_col] = { u8(text[text_idx]), attrib };
+	// 	}
+	// }
+}
+
+
+void debug_view_sourcecode::print(u32 row, s32 col_start, const char * text, u8 attrib)
+{
+	for(s32 visible_col=m_topleft.x + col_start; visible_col < m_topleft.x + m_visible.x; visible_col++)
 	{
 		s32 viewdata_col = visible_col - m_topleft.x;
-		s32 text_idx = visible_col - LINE_NUMBER_WIDTH;
+		s32 text_idx = visible_col - col_start;
 
 		if (text_idx >= strlen(text))
 		{
@@ -579,6 +604,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 		}
 	}
 }
+
 
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
