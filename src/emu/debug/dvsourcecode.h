@@ -120,7 +120,6 @@ protected:
 
 private:
 	const char * get_local_path(u16 src_index);
-	void print(u32 row, s32 col_start, const char * text, u8 attrib);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
 

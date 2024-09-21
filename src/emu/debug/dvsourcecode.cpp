@@ -447,13 +447,29 @@ void debug_view_sourcecode::view_update()
 	{
 		source_file_paths paths = m_debug_info.file_index_to_path(m_cur_src_index);
 		print_line(0, "Error opening file", DCA_NORMAL);
-		print_line(1, , const char * text, u8 attrib)
-		print_line(1, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
-		std::string file()
-		print_line(1, m_debug_info.file_index_to_path(m_cur_src_index), DCA_NORMAL);
-
-
-		for (u32 row = 3; row < m_visible.y; row++)
+		if (paths.local == nullptr)
+		{
+			print_line(1, "Could not find local file matching originally built source", DCA_NORMAL);
+		}
+		else
+		{
+			print_line(1, paths.local, DCA_NORMAL);
+			print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
+		}
+		std::string s("Originally built source: ");
+		s += paths.built;
+		print_line(3, s.c_str(), DCA_NORMAL);
+		s = "Source search path (";
+		s += OPTION_DEBUGSRCPATH;
+		s += "): ";
+		s += machine().options().debug_source_path();
+		print_line(4, s.c_str(), DCA_NORMAL);
+		s = "Source path prefix map (";
+		s += OPTION_DEBUGSRCPATHMAP;
+		s += "): ";
+		s += machine().options().debug_source_path_map();
+		print_line(5, s.c_str(), DCA_NORMAL);
+		for (u32 row = 6; row < m_visible.y; row++)
 		{
 			print_line(row, " ", DCA_NORMAL);
 		}
@@ -568,31 +584,10 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	}
 
 	// Right side shows line from file
-	print(row, LINE_NUMBER_WIDTH, text, attrib);
-
-	// for(s32 visible_col=m_topleft.x + LINE_NUMBER_WIDTH; visible_col < m_topleft.x + m_visible.x; visible_col++)
-	// {
-	// 	s32 viewdata_col = visible_col - m_topleft.x;
-	// 	s32 text_idx = visible_col - LINE_NUMBER_WIDTH;
-
-	// 	if (text_idx >= strlen(text))
-	// 	{
-	// 		m_viewdata[row * m_visible.x + viewdata_col] = { ' ', attrib };
-	// 	}
-	// 	else
-	// 	{
-	// 		m_viewdata[row * m_visible.x + viewdata_col] = { u8(text[text_idx]), attrib };
-	// 	}
-	// }
-}
-
-
-void debug_view_sourcecode::print(u32 row, s32 col_start, const char * text, u8 attrib)
-{
-	for(s32 visible_col=m_topleft.x + col_start; visible_col < m_topleft.x + m_visible.x; visible_col++)
+	for(s32 visible_col=m_topleft.x + LINE_NUMBER_WIDTH; visible_col < m_topleft.x + m_visible.x; visible_col++)
 	{
 		s32 viewdata_col = visible_col - m_topleft.x;
-		s32 text_idx = visible_col - col_start;
+		s32 text_idx = visible_col - LINE_NUMBER_WIDTH;
 
 		if (text_idx >= strlen(text))
 		{
