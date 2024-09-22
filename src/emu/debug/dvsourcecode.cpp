@@ -12,8 +12,11 @@
 #include "dvsourcecode.h"
 #include "emuopts.h"
 #include "fileio.h"
+#include "path.h"
 #include "debugger.h"
 #include "mdisimple.h"
+
+#include <filesystem>
 
 line_indexed_file::line_indexed_file() :
 	m_err(),
@@ -184,27 +187,21 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 */
 	u32 string_start;
 	string_start = i;
-	// m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
-	for (u32 j = i + 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
+	for (; i < first_line_mapping; i++)
 	{
-		if (data[j-1] == '\0')
+		if (data[i-1] == '\0')
 		{
-			// j points to character immediately following null terminator, so
-			// previous string runs from string_start through j - 1, and
-			// j begins a new string
-			std::string built((const char *) &data[string_start], j - 1 - string_start);
+			// i points to character immediately following null terminator, so
+			// previous string runs from string_start through i - 1, and
+			// i begins a new string
+			std::string built((const char *) &data[string_start], i - 1 - string_start);
 			std::string local;
-			generate_local_path(built, local);
+			generate_local_path(machine, built, local);
 			debug_info_provider_base::source_file_path sfp(built, local);
 			m_source_file_paths.push_back(sfp);
-			string_start = j;
+			string_start = i;
 		}
 	}
-	i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
-
-
-
-
 
 	// m_source_file_path_chars owns the memory containing path characters
 	// m_source_file_path_chars.reserve(header.source_file_paths_size);
@@ -259,27 +256,29 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 void debug_info_simple::generate_local_path(running_machine& machine, const std::string & built, std::string & local)
 {
 	namespace fs = std::filesystem;
-	local = built;
-	apply_source_map(machine, local);
-	if (osd_is_absolute_path(local))
+	local = built;                          // Default local path to the originally built source path
+	apply_source_map(machine, local);       // Apply the source map if built matches a prefix
+	if (osd_is_absolute_path(local))        // If local is already absolute, we're done
 	{
 		return;
 	}
 
-	/*
-	is local absolute?
-+	yes:
-+		add to local side of vector
-	no:
-		iterate through search path.  For each:
-			concat search path + local
-			use std:filesystem::status() to ask if exists
-			yes:
-				add to local side of vector, break
-			no:
-				continue
-	local is now null (no existing mappings) or filled & known to exist
-	*/
+	// Go through source search path until we can construct an
+	// absolute path to an existing file
+	path_iterator path(machine.options().debug_source_path());
+	std::string source_dir;
+	while (path.next(source_dir))
+	{
+		std::string new_local = util::path_append(source_dir, local);
+		if (fs::exists(fs::status(new_local)))
+		{
+			// Found an existing absolute path, done
+			local = std::move(new_local);
+			return;
+		}
+	}
+
+	// None found, leave local == built
 }
 
 void debug_info_simple::apply_source_map(running_machine& machine, std::string & local)
@@ -294,12 +293,13 @@ void debug_info_simple::apply_source_map(running_machine& machine, std::string &
 			break;
 		}
 
-		// TODO: VERIFY OK IF BUILT IS TOO SHORT
-		if (strncmp(prefix_find.c_str(), built.c_str(), prefix_find.size()) == 0)
+		// TODO: VERIFY THIS WORKS WHEN LOCAL IS TOO SHORT
+		if (strncmp(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
 		{
-			// Found a match
-			local = prefix_replace;
-			local += &built[prefix_find.size()];
+			// Found a match; replace local's prefix_find with prefix_replace
+			std::string new_local = prefix_replace;
+			new_local += &local[prefix_find.size()];
+			local = std::move(new_local);
 			return;
 		}
 	}
