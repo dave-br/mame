@@ -59,11 +59,11 @@ public:
 		}
 
 		// TODO: VERIFY THIS IS CALLED WHEN SFP IS PLACED IN VECTOR
-		source_file_path(source_file_path && sfp) :
-			m_built(sfp.m_built),
-			m_local(sfp.m_local)
-		{
-		}
+		// source_file_path(source_file_path && sfp) :
+		// 	m_built(sfp.m_built),
+		// 	m_local(sfp.m_local)
+		// {
+		// }
 		
 		const char * built() const { return m_built.c_str(); }
 		const char * local() const { return m_local.c_str(); }  // TODO: WORKS IF LOCAL EMPTY?
@@ -77,7 +77,7 @@ public:
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
 	virtual std::size_t num_files() const = 0;
-	virtual source_file_path file_index_to_path(u16 file_index) const = 0;
+	virtual const source_file_path & file_index_to_path(u16 file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
@@ -92,7 +92,7 @@ public:
 	debug_info_simple(running_machine& machine, std::vector<uint8_t>& data);
 	~debug_info_simple() { }
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
-	virtual source_file_path file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
+	virtual const source_file_path & file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
@@ -140,7 +140,6 @@ protected:
 	// virtual void view_click(const int button, const debug_view_xy& pos) override;
 
 private:
-	const char * get_local_path(u16 src_index);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
 

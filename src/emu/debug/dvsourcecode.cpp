@@ -178,28 +178,21 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		assert(false);		
 	}
 
-	// TODO: JUST NOW: NEW:
-	/*
-
-	+ Read string from data into std::string
-	+ Add to built side of vector
-
-*/
 	u32 string_start;
 	string_start = i;
 	for (; i < first_line_mapping; i++)
 	{
-		if (data[i-1] == '\0')
+		if (data[i] == '\0')
 		{
 			// i points to character immediately following null terminator, so
 			// previous string runs from string_start through i - 1, and
 			// i begins a new string
-			std::string built((const char *) &data[string_start], i - 1 - string_start);
+			std::string built((const char *) &data[string_start], i - string_start);
 			std::string local;
 			generate_local_path(machine, built, local);
 			debug_info_provider_base::source_file_path sfp(built, local);
-			m_source_file_paths.push_back(sfp);
-			string_start = i;
+			m_source_file_paths.push_back(std::move(sfp));
+			string_start = i + 1;
 		}
 	}
 
@@ -222,7 +215,8 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	// i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
 
 	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
-	// entries from debug info
+	// entries from debug info.  Ensure m_linemaps_by_line is pre-sized so as
+	// we encounter a mapping, we'll always have an entry ready for its source file index.
 	m_linemaps_by_line.reserve(m_source_file_paths.size());
 	m_linemaps_by_line.resize(m_source_file_paths.size());
 	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
@@ -450,20 +444,6 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 	return std::optional<offs_t>(addrsopt.value().first);
 }
 
-const char * debug_view_sourcecode::get_local_path(u16 src_index)
-{
-	const char * src_path_map = machine().options().debug_source_path_map();
-	const char * orig_src_path = m_debug_info.file_index_to_path(src_index);
-
-	// TODO: Code during creation to verify syntax of src map (e.g., even number of paths)
-
-	for (size_t i = 0; i < m_src_path_map.size(); i++)
-	{
-
-	}
-
-
-}
 
 void debug_view_sourcecode::update_opened_file()
 {
@@ -534,7 +514,7 @@ void debug_view_sourcecode::view_update()
 
 	// Print
 	// const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
-	debug_info_provider_base::source_file_path path = m_debug_info.file_index_to_path(m_cur_src_index);
+	const debug_info_provider_base::source_file_path & path = m_debug_info.file_index_to_path(m_cur_src_index);
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_line(0, "Error opening file", DCA_NORMAL);
