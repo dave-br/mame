@@ -48,14 +48,23 @@ struct file_line
 class debug_info_provider_base
 {
 public:
+	// TODO: MAKE FRIEND CLASS, AND ONLY GETTERS PUBLIC
 	class source_file_path
 	{
 	public:
-		source_file_path(const char * built, const char * local) :
-			m_built(built),
-			m_local(local)
+		source_file_path(std::string & built_p, std::string & local_p) :
+			m_built(std::move(built_p)),
+			m_local(std::move(built_p))
 		{
 		}
+
+		// TODO: VERIFY THIS IS CALLED WHEN SFP IS PLACED IN VECTOR
+		source_file_path(source_file_path && sfp) :
+			m_built(sfp.m_built),
+			m_local(sfp.m_local)
+		{
+		}
+		
 		const char * built() const { return m_built.c_str(); }
 		const char * local() const { return m_local.c_str(); }  // TODO: WORKS IF LOCAL EMPTY?
 
@@ -95,6 +104,9 @@ private:
 		u16 address_last;
 		u32 line_number;
 	};
+
+	void generate_local_path(running_machine& machine, const std::string & built, std::string & local);
+	void apply_source_map(running_machine& machine, std::string & local);
 
 	// std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
 	std::vector<source_file_path>            m_source_file_paths;      // Starting points for source file path strings

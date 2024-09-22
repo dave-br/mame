@@ -11,6 +11,7 @@
 #include "emu.h"
 #include "dvsourcecode.h"
 #include "emuopts.h"
+#include "fileio.h"
 #include "debugger.h"
 #include "mdisimple.h"
 
@@ -177,23 +178,33 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	// TODO: JUST NOW: NEW:
 	/*
 
-	Read string from data into std::string
-	Add to built side of vector
-	Perform map replacement -> local
-	is local absolute?
-	yes:
-		add to local side of vector
-	no:
-		iterate through search path.  For each:
-			concat search path + local
-			use std:filesystem::status() to ask if exists
-			yes:
-				add to local side of vector, break
-			no:
-				continue
-	local is now null (no existing mappings) or filled & known to exist
-	
-	*/
+	+ Read string from data into std::string
+	+ Add to built side of vector
+
+*/
+	u32 string_start;
+	string_start = i;
+	// m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
+	for (u32 j = i + 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
+	{
+		if (data[j-1] == '\0')
+		{
+			// j points to character immediately following null terminator, so
+			// previous string runs from string_start through j - 1, and
+			// j begins a new string
+			std::string built((const char *) &data[string_start], j - 1 - string_start);
+			std::string local;
+			generate_local_path(built, local);
+			debug_info_provider_base::source_file_path sfp(built, local);
+			m_source_file_paths.push_back(sfp);
+			string_start = j;
+		}
+	}
+	i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
+
+
+
+
 
 	// m_source_file_path_chars owns the memory containing path characters
 	// m_source_file_path_chars.reserve(header.source_file_paths_size);
@@ -244,6 +255,66 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			[] (const address_line& adrline1, const address_line &adrline2) { return adrline1.line_number < adrline2.line_number; });
 	}
 }
+
+void debug_info_simple::generate_local_path(running_machine& machine, const std::string & built, std::string & local)
+{
+	namespace fs = std::filesystem;
+	local = built;
+	apply_source_map(machine, local);
+	if (osd_is_absolute_path(local))
+	{
+		return;
+	}
+
+	/*
+	is local absolute?
++	yes:
++		add to local side of vector
+	no:
+		iterate through search path.  For each:
+			concat search path + local
+			use std:filesystem::status() to ask if exists
+			yes:
+				add to local side of vector, break
+			no:
+				continue
+	local is now null (no existing mappings) or filled & known to exist
+	*/
+}
+
+void debug_info_simple::apply_source_map(running_machine& machine, std::string & local)
+{
+	path_iterator path(machine.options().debug_source_path_map());
+	std::string prefix_find, prefix_replace;
+	while (path.next(prefix_find))
+	{
+		if (!path.next(prefix_replace))
+		{
+			// Invalid map string (odd number of paths), so just skip last entry
+			break;
+		}
+
+		// TODO: VERIFY OK IF BUILT IS TOO SHORT
+		if (strncmp(prefix_find.c_str(), built.c_str(), prefix_find.size()) == 0)
+		{
+			// Found a match
+			local = prefix_replace;
+			local += &built[prefix_find.size()];
+			return;
+		}
+	}
+
+	// If we made it here, no match.  So leave local alone
+}
+
+
+// JUST NOW:
+/*
+
+use path_iterator against src map to create vector of prefix replacement pairs
+Use replacement pairs to adjust each source file (on demand or on init?)
+use file_enumerator to search one adjusted file within a set of search paths
+*/
 
 std::optional<int> debug_info_simple::file_path_to_index(const char * file_path) const
 {
@@ -347,7 +418,6 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	// device_t * live_cpu = machine.debugger().cpu().live_cpu();
 	// live_cpu->interface(m_state);
 	m_supports_cursor = true;
-	this->machine().debugger().debug_info();
 }
 
 
@@ -392,14 +462,6 @@ const char * debug_view_sourcecode::get_local_path(u16 src_index)
 
 	}
 
-// JUST NOW:
-/*
-
-use path_iterator against src map to create vector of prefix replacement pairs
-Use replacement pairs to adjust each source file (on demand or on init?)
-use file_enumerator to search one adjusted file within a set of search paths
-
-*/
 
 }
 
