@@ -54,7 +54,7 @@ public:
 	public:
 		source_file_path(std::string & built_p, std::string & local_p) :
 			m_built(std::move(built_p)),
-			m_local(std::move(built_p))
+			m_local(std::move(local_p))
 		{
 		}
 
