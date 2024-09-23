@@ -189,7 +189,9 @@ private:
 
 	// global state
 	u32                         m_flags;                // debugging flags for this CPU
-	std::unique_ptr<symbol_table> m_symtable;           // symbol table for expression evaluation
+	std::unique_ptr<symbol_table> m_symtable_device;    // symbol table for expression evaluation
+	std::unique_ptr<symbol_table> m_symtable_debug_info;// symbol table for expression evaluation
+	symbol_table *                m_symtable;
 
 	// stepping information
 	offs_t                  m_stepaddr;                 // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH

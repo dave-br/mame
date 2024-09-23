@@ -489,7 +489,8 @@ device_debug::device_debug(device_t &device)
 	, m_state(nullptr)
 	, m_disasm(nullptr)
 	, m_flags(0)
-	, m_symtable(std::make_unique<symbol_table>(device.machine(), &device.machine().debugger().cpu().global_symtable(), &device))
+	, m_symtable_device(std::make_unique<symbol_table>(device.machine(), &device.machine().debugger().cpu().global_symtable(), &device))
+	, m_symtable_debug_info()
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
@@ -537,27 +538,29 @@ device_debug::device_debug(device_t &device)
 				m_notifiers.emplace_back();
 	}
 
+	m_symtable = m_symtable_device.get();
+
 	// set up state-related stuff
 	if (m_state != nullptr)
 	{
 		// add global symbol for cycles and totalcycles
 		if (m_exec != nullptr)
 		{
-			m_symtable->add("cycles", [this]() { return m_exec->cycles_remaining(); });
-			m_symtable->add("totalcycles", symbol_table::READ_ONLY, &m_total_cycles);
-			m_symtable->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
+			m_symtable_device->add("cycles", [this]() { return m_exec->cycles_remaining(); });
+			m_symtable_device->add("totalcycles", symbol_table::READ_ONLY, &m_total_cycles);
+			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			std::vector<debug_info_provider_base::symbol> di_symbols = device.machine().debugger().debug_info().global_symbols();
 			if (di_symbols.size() > 0)
 			{
 				// Source debugging information includes symbols, so point m_symtable to them,
 				// and set their parent to be the (old) m_symtable
-				std::unique_ptr<symbol_table> debug_info_symtable = std::make_unique<symbol_table>(device.machine(), m_symtable, &device);
+				m_symtable_debug_info = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
 				for (offs_t i = 0; i < di_symbols.size(); i++)
 				{
-					debug_info_symtable->add(di_symbols[i].name(), di_symbols[i].value());
+					m_symtable_debug_info->add(di_symbols[i].name(), di_symbols[i].value());
 				}
-				m_symtable = debug_info_symtable;
+				m_symtable = m_symtable_debug_info.get();
 			}
 		}
 
@@ -565,22 +568,22 @@ device_debug::device_debug(device_t &device)
 		if (m_memory != nullptr)
 		{
 			if (m_memory->has_space(AS_PROGRAM))
-				m_symtable->add(
+				m_symtable_device->add(
 						"logunmap",
 						[&space = m_memory->space(AS_PROGRAM)] () { return space.log_unmap(); },
 						[&space = m_memory->space(AS_PROGRAM)] (u64 value) { return space.set_log_unmap(bool(value)); });
 			if (m_memory->has_space(AS_DATA))
-				m_symtable->add(
+				m_symtable_device->add(
 						"logunmap",
 						[&space = m_memory->space(AS_DATA)] () { return space.log_unmap(); },
 						[&space = m_memory->space(AS_DATA)] (u64 value) { return space.set_log_unmap(bool(value)); });
 			if (m_memory->has_space(AS_IO))
-				m_symtable->add(
+				m_symtable_device->add(
 						"logunmap",
 						[&space = m_memory->space(AS_IO)] () { return space.log_unmap(); },
 						[&space = m_memory->space(AS_IO)] (u64 value) { return space.set_log_unmap(bool(value)); });
 			if (m_memory->has_space(AS_OPCODES))
-				m_symtable->add(
+				m_symtable_device->add(
 						"logunmap",
 						[&space = m_memory->space(AS_OPCODES)] () { return space.log_unmap(); },
 						[&space = m_memory->space(AS_OPCODES)] (u64 value) { return space.set_log_unmap(bool(value)); });
@@ -594,7 +597,7 @@ device_debug::device_debug(device_t &device)
 			{
 				using namespace std::placeholders;
 				std::string tempstr(strmakelower(entry->symbol()));
-				m_symtable->add(
+				m_symtable_device->add(
 						tempstr.c_str(),
 						std::bind(&device_state_entry::value, entry.get()),
 						entry->writeable() ? std::bind(&device_state_entry::set_value, entry.get(), _1) : symbol_table::setter_func(nullptr),
@@ -609,8 +612,8 @@ device_debug::device_debug(device_t &device)
 		m_flags = DEBUG_FLAG_OBSERVING | DEBUG_FLAG_HISTORY;
 
 		// if no curpc, add one
-		if (m_state && !m_symtable->find("curpc"))
-			m_symtable->add("curpc", std::bind(&device_state_interface::pcbase, m_state));
+		if (m_state && !m_symtable_device->find("curpc"))
+			m_symtable_device->add("curpc", std::bind(&device_state_interface::pcbase, m_state));
 	}
 
 	// set up trace

@@ -76,8 +76,18 @@ public:
 	class symbol
 	{
 	public:
+		symbol(const char * name_p, offs_t value_p) :
+			m_name(name_p),
+			m_value(value_p)
+		{
+		}
+		
 		const char * name();
 		offs_t value();
+
+	private:
+		std::string m_name;
+		offs_t m_value;
 	};
 
 	typedef std::pair<offs_t,offs_t> address_range;
@@ -104,6 +114,7 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
+	virtual const std::vector<symbol> & global_symbols() const override { return m_symbols; };
 
 private:
 	struct address_line
@@ -121,6 +132,7 @@ private:
 	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 	                                                                   // sorted by line, from file #i
+	std::vector<symbol>                      m_symbols;
 };
 
 // debug view for source-level debugging
