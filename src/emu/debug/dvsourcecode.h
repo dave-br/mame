@@ -73,6 +73,13 @@ public:
 		std::string m_local;
 	};
 
+	class symbol
+	{
+	public:
+		const char * name();
+		offs_t value();
+	};
+
 	typedef std::pair<offs_t,offs_t> address_range;
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
 	virtual ~debug_info_provider_base() {};
@@ -81,6 +88,7 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
+	virtual const std::vector<symbol> & global_symbols() const = 0;
 };
 
 // debug-info provider for the simple format

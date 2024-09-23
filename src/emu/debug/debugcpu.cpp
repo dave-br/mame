@@ -23,6 +23,7 @@
 #include "main.h"
 #include "screen.h"
 #include "uiinput.h"
+#include "dvsourcecode.h"
 
 #include "corestr.h"
 #include "osdepend.h"
@@ -545,6 +546,19 @@ device_debug::device_debug(device_t &device)
 			m_symtable->add("cycles", [this]() { return m_exec->cycles_remaining(); });
 			m_symtable->add("totalcycles", symbol_table::READ_ONLY, &m_total_cycles);
 			m_symtable->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
+
+			std::vector<debug_info_provider_base::symbol> di_symbols = device.machine().debugger().debug_info().global_symbols();
+			if (di_symbols.size() > 0)
+			{
+				// Source debugging information includes symbols, so point m_symtable to them,
+				// and set their parent to be the (old) m_symtable
+				std::unique_ptr<symbol_table> debug_info_symtable = std::make_unique<symbol_table>(device.machine(), m_symtable, &device);
+				for (offs_t i = 0; i < di_symbols.size(); i++)
+				{
+					debug_info_symtable->add(di_symbols[i].name(), di_symbols[i].value());
+				}
+				m_symtable = debug_info_symtable;
+			}
 		}
 
 		// add entries to enable/disable unmap reporting for each space
