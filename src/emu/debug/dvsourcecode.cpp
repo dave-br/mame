@@ -146,7 +146,8 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	// m_source_file_path_chars(),
 	m_source_file_paths(),
 	m_linemaps_by_address(),
-	m_linemaps_by_line()
+	m_linemaps_by_line(),
+	m_symbols()
 {
 	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
 	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
@@ -178,6 +179,24 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		assert(false);		
 	}
 
+	u32 first_symbol_name = first_line_mapping + (header.num_line_mappings * sizeof(mdi_line_mapping));
+	u32 first_symbol_address = first_symbol_name + header.symbol_names_size;
+
+	if (header.symbol_names_size > 0)
+	{
+		if (data.size() <= first_symbol_address)
+		{
+			// TODO ERROR
+			assert(false);
+		}
+
+		if (data[first_symbol_address - 1] != '\0')
+		{
+			// TODO ERROR
+			assert(false);
+		}
+	}
+
 	u32 string_start;
 	string_start = i;
 	for (; i < first_line_mapping; i++)
@@ -195,24 +214,6 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			string_start = i + 1;
 		}
 	}
-
-	// m_source_file_path_chars owns the memory containing path characters
-	// m_source_file_path_chars.reserve(header.source_file_paths_size);
-	// m_source_file_path_chars.resize(header.source_file_paths_size);
-	// std::copy(&data[i], &data[i+header.source_file_paths_size], m_source_file_path_chars.begin());
-
-	// // Read the starting char address for each source file path into m_source_file_paths
-	// m_source_file_paths.push_back((const char*) &m_source_file_path_chars[0]);     // First string starts immediately
-	// for (u32 j = 1; j < m_source_file_path_chars.size() - 1; j++)                  // Exclude m_source_file_path_chars.size() - 1; it is final null-terminator
-	// {
-	// 	if (m_source_file_path_chars[j-1] == '\0')
-	// 	{
-	// 		// j points to character immediately following null terminator, so
-	// 		// j begins a new string
-	// 		m_source_file_paths.push_back((const char*) &m_source_file_path_chars[j]);
-	// 	}
-	// }
-	// i += header.source_file_paths_size;     // Advance i to first mdi_line_mapping
 
 	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
 	// entries from debug info.  Ensure m_linemaps_by_line is pre-sized so as
@@ -244,6 +245,29 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			m_linemaps_by_line[file_idx].begin(),
 			m_linemaps_by_line[file_idx].end(), 
 			[] (const address_line& adrline1, const address_line &adrline2) { return adrline1.line_number < adrline2.line_number; });
+	}
+
+	// Symbols
+	if (header.symbol_names_size == 0)
+	{
+		return;
+	}
+	string_start = i;
+	u32 j = first_symbol_address;
+	for (; i < first_symbol_address; i++)
+	{
+		if (data[i] == '\0')
+		{
+			// i points to character immediately following null terminator, so
+			// previous string runs from string_start through i - 1, and
+			// i begins a new string
+			std::string symbol_name((const char *) &data[string_start], i - string_start);
+			u16 symbol_address;
+			read_field<u16>(symbol_address, data, j);
+			symbol sym(symbol_name.c_str(), symbol_address);
+			m_symbols.push_back(std::move(sym));
+			string_start = i + 1;
+		}
 	}
 }
 

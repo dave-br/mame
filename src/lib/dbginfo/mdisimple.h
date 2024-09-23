@@ -32,6 +32,8 @@ typedef struct
 
 	/* number of elements of line_mappings[] */
 	unsigned int num_line_mappings;
+
+	unsigned int symbol_names_size;
 } mame_debug_info_simple_header;
 
 
@@ -62,7 +64,9 @@ typedef struct
 	
 	mame_debug_info_simple_header   header
 	char                            source_file_paths[][]
-	mdi_line_mapping                line_mappings[num_line_mappings]      
+	mdi_line_mapping                line_mappings[num_line_mappings]
+	char                            symbol_names[][]
+	unsigned short                  symbol_addresses[]
 
 	Description:
 	- Each source_file_paths[i] is a null-terminated string path to a source file.  The
