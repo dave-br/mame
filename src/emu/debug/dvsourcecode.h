@@ -81,9 +81,9 @@ public:
 			m_value(value_p)
 		{
 		}
-		
-		const char * name();
-		offs_t value();
+
+		const char * name() { return m_name.c_str(); };
+		offs_t value() { return m_value; };
 
 	private:
 		std::string m_name;
