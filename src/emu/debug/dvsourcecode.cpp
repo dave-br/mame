@@ -264,7 +264,7 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			std::string symbol_name((const char *) &data[string_start], i - string_start);
 			s32 symbol_value;
 			read_field<s32>(symbol_value, data, j);
-			symbol sym(symbol_name.c_str(), symbol_value);
+			symbol sym(symbol_name, symbol_value);
 			m_symbols.push_back(std::move(sym));
 			string_start = i + 1;
 		}

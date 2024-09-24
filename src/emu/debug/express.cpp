@@ -1326,6 +1326,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 	// accumulate a lower-case version of the symbol
 	const char *stringstart = string;
 	std::string buffer;
+	std::string original_symbol_name;
 	while (1)
 	{
 		static const char valid[] = "abcdefghijklmnopqrstuvwxyz0123456789_$#.:";
@@ -1333,6 +1334,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 		if (val == 0 || strchr(valid, val) == nullptr)
 			break;
 		buffer.append(&val, 1);
+		original_symbol_name.append(string, 1);
 		string++;
 	}
 
@@ -1444,7 +1446,14 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 
 	default:
 		// check for a symbol match
-		symbol_entry *symbol = m_symtable.get().find_deep(buffer.c_str());
+		// Symbols loaded via debug info files are case-sensitive, so first try
+		// with the original case specified by user
+		symbol_entry *symbol = m_symtable.get().find_deep(original_symbol_name.c_str());
+		if (symbol == nullptr)
+		{
+			// Not found, try again with lower case
+			symbol = m_symtable.get().find_deep(buffer.c_str());
+		}
 		if (symbol != nullptr)
 		{
 			token.configure_symbol(*symbol);

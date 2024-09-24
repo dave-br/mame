@@ -76,8 +76,8 @@ public:
 	class symbol
 	{
 	public:
-		symbol(const char * name_p, offs_t value_p) :
-			m_name(name_p),
+		symbol(std::string & name_p, offs_t value_p) :
+			m_name(std::move(name_p)),
 			m_value(value_p)
 		{
 		}
