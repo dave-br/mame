@@ -83,11 +83,11 @@ public:
 		}
 
 		const char * name() { return m_name.c_str(); };
-		offs_t value() { return m_value; };
+		s64 value() { return m_value; };
 
 	private:
 		std::string m_name;
-		offs_t m_value;
+		s64 m_value;
 	};
 
 	typedef std::pair<offs_t,offs_t> address_range;

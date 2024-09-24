@@ -262,9 +262,9 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			// previous string runs from string_start through i - 1, and
 			// i begins a new string
 			std::string symbol_name((const char *) &data[string_start], i - string_start);
-			u16 symbol_address;
-			read_field<u16>(symbol_address, data, j);
-			symbol sym(symbol_name.c_str(), symbol_address);
+			s32 symbol_value;
+			read_field<s32>(symbol_value, data, j);
+			symbol sym(symbol_name.c_str(), symbol_value);
 			m_symbols.push_back(std::move(sym));
 			string_start = i + 1;
 		}
