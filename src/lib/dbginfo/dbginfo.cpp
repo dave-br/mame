@@ -80,6 +80,8 @@ public:
 		m_num_source_file_paths = 0;
 		m_source_file_paths.construct();
 		m_line_mappings.construct();
+		m_symbol_names.construct();
+		m_symbol_values.construct();
 	}
 
 	void destruct()
@@ -91,6 +93,8 @@ public:
 		}
 		m_source_file_paths.destruct();
 		m_line_mappings.destruct();
+		m_symbol_names.destruct();
+		m_symbol_values.destruct();
 	}
 
 	void open(const char * file_path)
@@ -111,14 +115,7 @@ public:
 
 	unsigned short add_source_file_path(const char * source_file_path)
 	{
-		char null_terminator = '\0';
-		for (const char * c = source_file_path; *c != '\0'; c++)
-		{
-			m_source_file_paths.push_back(c, 1);
-			m_header.source_file_paths_size++;
-		}
-		m_source_file_paths.push_back(&null_terminator, 1);
-		m_header.source_file_paths_size++;
+		add_string(m_source_file_paths, m_header.source_file_paths_size, source_file_path);
 		return m_num_source_file_paths++;
 	}
 
@@ -127,6 +124,12 @@ public:
 		m_header.num_line_mappings++;
 		mdi_line_mapping line_mapping = { address_first, address_last, source_file_index, line_number };
 		m_line_mappings.push_back(&line_mapping, sizeof(line_mapping));
+	}
+
+	void add_symbol(const char * symbol_name, int symbol_value)
+	{
+		add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
+		m_symbol_values.push_back(&symbol_value, sizeof(symbol_value));
 	}
 
 	void close()
@@ -142,16 +145,38 @@ public:
 		{
 			fwrite(m_line_mappings.get() + i, sizeof(mdi_line_mapping), 1, m_output);
 		}
+		for (int i=0; i < m_symbol_names.size(); i += sizeof(char))
+		{
+			fwrite(m_symbol_names.get() + i, sizeof(char), 1, m_output);
+		}
+		for (int i=0; i < m_symbol_values.size(); i += sizeof(int))
+		{
+			fwrite(m_symbol_values.get() + i, sizeof(int), 1, m_output);
+		}
 		fclose(m_output);
 		m_output = nullptr;
 	}
 
 private:
+	void add_string(resizeable_array & ra, unsigned int & size, const char * s)
+	{
+		char null_terminator = '\0';
+		for (const char * c = s; *c != '\0'; c++)
+		{
+			ra.push_back(c, 1);
+			size++;
+		}
+		ra.push_back(&null_terminator, 1);
+		size++;
+	}
+
 	FILE * m_output;
 	mame_debug_info_simple_header m_header;
 	unsigned short m_num_source_file_paths;
 	resizeable_array m_source_file_paths;
 	resizeable_array m_line_mappings;
+	resizeable_array m_symbol_names;
+	resizeable_array m_symbol_values;
 };
 
 
@@ -181,6 +206,12 @@ void mame_mdi_simp_add_line_mapping(void * mdi_simp_state, unsigned short addres
 {
 	((mdi_simple_generator *) mdi_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
 }
+
+void mame_mdi_simp_add_symbol(void * mdi_simp_state, const char * symbol_name, int symbol_value)
+{
+	((mdi_simple_generator *) mdi_simp_state)->add_symbol(symbol_name, symbol_value);
+}
+
 
 
 void mame_mdi_simp_close(void * mdi_simp_state)

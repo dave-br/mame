@@ -66,7 +66,7 @@ typedef struct
 	char                            source_file_paths[][]
 	mdi_line_mapping                line_mappings[num_line_mappings]
 	char                            symbol_names[][]
-	unsigned short                  symbol_addresses[]
+	int                             symbol_values[]
 
 	Description:
 	- Each source_file_paths[i] is a null-terminated string path to a source file.  The

@@ -80,13 +80,30 @@ int main(int argc, char *argv[])
 	u32 first_line_mapping = i + header.source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
 	{
-		fprintf(stderr, "File too small to contain reported source_file_paths_size\n");
+		fprintf(stderr, "File too small to contain reported source_file_paths_size=%u\n", header.source_file_paths_size);
 		return 1;
 	}
 	if (data[first_line_mapping - 1] != '\0')
 	{
 		fprintf(stderr, "null terminator missing at end of last source file\n");
 		return 1;
+	}
+
+	u32 first_symbol_name = first_line_mapping + (header.num_line_mappings * sizeof(mdi_line_mapping));
+	u32 first_symbol_address = first_symbol_name + header.symbol_names_size;
+	if (header.symbol_names_size > 0)
+	{
+		if (data.size() <= first_symbol_address)
+		{
+			fprintf(stderr, "File too small to contain reported symbol_names_size=%u\n", header.symbol_names_size);
+			return 1;
+		}
+
+		if (data[first_symbol_address - 1] != '\0')
+		{
+			fprintf(stderr, "null terminator missing at end of last symbol name\n");
+			return 1;
+		}
 	}
 
 	printf("\n**** Source file paths: ****\n");
@@ -114,5 +131,20 @@ int main(int argc, char *argv[])
 			u32(line_map.address_last),
 			u32(line_map.source_file_index),
 			line_map.line_number);
+	}
+
+	printf("\n**** Symbols: ****\n");
+	u32 j = first_symbol_address;
+	for (; i < first_symbol_address; i++)
+	{
+		if (data[i] == '\0')
+		{
+			printf("\t%d\n", *(int*) &data[j]);
+			j += sizeof(int);
+		}
+		else
+		{
+			printf("%c", data[i]);
+		}
 	}
 }
