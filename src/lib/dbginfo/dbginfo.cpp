@@ -111,6 +111,7 @@ public:
 		m_header.header_base.version = 1;
 		m_header.source_file_paths_size = 0;
 		m_header.num_line_mappings = 0;
+		m_header.symbol_names_size = 0;
 	}
 
 	unsigned short add_source_file_path(const char * source_file_path)
