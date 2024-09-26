@@ -9,6 +9,8 @@
 #include "emu.h"
 #include "sourcewininfo.h"
 #include "uimetrics.h"
+#include "debugger.h"
+#include "debugcon.h"
 
 #include "sourceviewinfo.h"
 
@@ -151,9 +153,27 @@ void sourcewin_info::draw_contents(HDC dc)
 
 bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
+	if (HIWORD(wparam) == 0)
+	{
+		switch (LOWORD(wparam))
+		{
+		case ID_STEP:
+			machine().debugger().console().get_visible_cpu()->debug()->single_step(1, true /* source stepping */);
+			return true;
+
+		case ID_STEP_OVER:
+			machine().debugger().console().get_visible_cpu()->debug()->single_step_over(1, true /* source stepping */);
+			return true;
+
+		case ID_STEP_OUT:
+			machine().debugger().console().get_visible_cpu()->debug()->single_step_out(true /* source stepping */);
+			return true;
+		}
+	}
+
 	switch (HIWORD(wparam))
 	{
-		case CBN_SELCHANGE:
+	case CBN_SELCHANGE:
 		// Source file combo box selection changed
 		{
 			int const sel = SendMessage((HWND)lparam, CB_GETCURSEL, 0, 0);

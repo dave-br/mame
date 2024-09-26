@@ -430,6 +430,7 @@ device_debug::device_debug(device_t &device)
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
+	, m_step_source_start()
 	, m_stopaddr(0)
 	, m_stoptime(attotime::zero)
 	, m_stopirq(0)
@@ -869,7 +870,31 @@ void device_debug::instruction_hook(offs_t curpc)
 
 			// if we hit 0, stop
 			if (m_stepsleft == 0)
-				debugcpu.set_execution_stopped();
+			{
+				bool should_stop = true;
+				if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0)
+				{
+					std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(curpc);
+					if (!file_line_cur.has_value() || 
+						(m_step_source_start.has_value() && file_line_cur.value() == m_step_source_start.value()))
+					{
+						should_stop = false;
+					}
+					if (m_step_source_start.has_value() && file_line_cur.has_value() &&
+						!(file_line_cur.value() == m_step_source_start.value()))
+					{
+						m_step_source_start.reset();
+					}
+				}
+				if (should_stop)
+				{
+					debugcpu.set_execution_stopped();
+				}
+				else
+				{
+					m_stepsleft++;
+				}
+			}
 
 			// update every 100 steps until we are within 200 of the end
 			else if ((m_flags & (DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH_TRUE | DEBUG_FLAG_STEPPING_BRANCH_FALSE)) == 0 && (m_stepsleft < 200 || m_stepsleft % 100 == 0))
@@ -965,6 +990,11 @@ void device_debug::instruction_hook(offs_t curpc)
 	if ((m_flags & (DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH)) != 0 && (m_flags & (DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS)) == 0)
 		prepare_for_step_overout(m_state->pcbase());
 
+	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 && !m_step_source_start.has_value())
+	{
+		m_step_source_start = machine.debugger().debug_info().address_to_file_line(curpc);
+	}
+
 	// no longer in debugger code
 	debugcpu.set_within_instruction(false);
 }
@@ -1019,7 +1049,7 @@ void device_debug::suspend(bool suspend)
 //  requested number of instructions
 //-------------------------------------------------
 
-void device_debug::single_step(int numsteps)
+void device_debug::single_step(int numsteps, bool source_stepping)
 {
 	assert(m_exec != nullptr);
 
@@ -1028,6 +1058,10 @@ void device_debug::single_step(int numsteps)
 	m_delay_steps = 0;
 	m_flags |= DEBUG_FLAG_STEPPING;
 	m_flags &= ~(DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS);
+	if (source_stepping)
+	{
+		m_flags |= DEBUG_FLAG_SOURCE_STEPPING;
+	}
 	m_device.machine().debugger().cpu().set_execution_running();
 }
 
@@ -1037,7 +1071,7 @@ void device_debug::single_step(int numsteps)
 //  the requested number of instructions
 //-------------------------------------------------
 
-void device_debug::single_step_over(int numsteps)
+void device_debug::single_step_over(int numsteps, bool source_stepping)
 {
 	assert(m_exec != nullptr);
 
@@ -1046,6 +1080,10 @@ void device_debug::single_step_over(int numsteps)
 	m_delay_steps = 0;
 	m_flags |= DEBUG_FLAG_STEPPING_OVER;
 	m_flags &= ~(DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS);
+	if (source_stepping)
+	{
+		m_flags |= DEBUG_FLAG_SOURCE_STEPPING;
+	}
 	m_device.machine().debugger().cpu().set_execution_running();
 }
 
@@ -1055,7 +1093,7 @@ void device_debug::single_step_over(int numsteps)
 //  out of the current function
 //-------------------------------------------------
 
-void device_debug::single_step_out()
+void device_debug::single_step_out(bool source_stepping)
 {
 	assert(m_exec != nullptr);
 
@@ -1065,6 +1103,10 @@ void device_debug::single_step_out()
 	m_delay_steps = 0;
 	m_flags |= DEBUG_FLAG_STEPPING_OUT;
 	m_flags &= ~(DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS);
+	if (source_stepping)
+	{
+		m_flags |= DEBUG_FLAG_SOURCE_STEPPING;
+	}
 	m_device.machine().debugger().cpu().set_execution_running();
 }
 
