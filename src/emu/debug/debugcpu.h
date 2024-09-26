@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include "dbginfo_provider.h"
+
 #include <set>
 #include <utility>
 
@@ -66,9 +68,9 @@ public:
 	bool suspended() const { return ((m_flags & DEBUG_FLAG_SUSPENDED) != 0); }
 
 	// single stepping
-	void single_step(int numsteps = 1);
-	void single_step_over(int numsteps = 1);
-	void single_step_out();
+	void single_step(int numsteps = 1, bool source_stepping = false);
+	void single_step_over(int numsteps = 1, bool source_stepping = false);
+	void single_step_out(bool source_stepping = false);
 
 	// execution
 	void go(offs_t targetpc = ~0);
@@ -197,6 +199,7 @@ private:
 	offs_t                  m_stepaddr;                 // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH
 	int                     m_stepsleft;                // number of steps left until done
 	int                     m_delay_steps;              // number of steps until target address check
+	std::optional<file_line> m_step_source_start;       // TODO
 
 	// execution information
 	offs_t                  m_stopaddr;                 // stop address for DEBUG_FLAG_STOP_PC
@@ -340,6 +343,7 @@ private:
 	static constexpr u32 DEBUG_FLAG_STEPPING_BRANCH_FALSE = 0x0080000;  // run until false branch
 	static constexpr u32 DEBUG_FLAG_CALL_IN_PROGRESS = 0x01000000;      // CPU is in the middle of a subroutine call
 	static constexpr u32 DEBUG_FLAG_TEST_IN_PROGRESS = 0x02000000;      // CPU is performing a conditional test and branch
+	static constexpr u32 DEBUG_FLAG_SOURCE_STEPPING  = 0x04000000;      // CPU is stepping in/over/out during source debugging
 
 	static constexpr u32 DEBUG_FLAG_STEPPING_BRANCH = DEBUG_FLAG_STEPPING_BRANCH_TRUE | DEBUG_FLAG_STEPPING_BRANCH_FALSE;
 	static constexpr u32 DEBUG_FLAG_STEPPING_ANY    = DEBUG_FLAG_STEPPING | DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH;
