@@ -236,6 +236,8 @@ files {
 	MAME_DIR .. "src/emu/debug/debugcpu.h",
 	MAME_DIR .. "src/emu/debug/debughlp.cpp",
 	MAME_DIR .. "src/emu/debug/debughlp.h",
+	MAME_DIR .. "src/emu/debug/dbginfo_provider.cpp",
+	MAME_DIR .. "src/emu/debug/dbginfo_provider.h",
 	MAME_DIR .. "src/emu/debug/debugvw.cpp",
 	MAME_DIR .. "src/emu/debug/debugvw.h",
 	MAME_DIR .. "src/emu/debug/dvdisasm.cpp",
