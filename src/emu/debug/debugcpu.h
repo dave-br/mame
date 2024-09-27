@@ -343,10 +343,10 @@ private:
 	static constexpr u32 DEBUG_FLAG_STEPPING_BRANCH_FALSE = 0x0080000;  // run until false branch
 	static constexpr u32 DEBUG_FLAG_CALL_IN_PROGRESS = 0x01000000;      // CPU is in the middle of a subroutine call
 	static constexpr u32 DEBUG_FLAG_TEST_IN_PROGRESS = 0x02000000;      // CPU is performing a conditional test and branch
-	static constexpr u32 DEBUG_FLAG_SOURCE_STEPPING  = 0x04000000;      // CPU is stepping in/over/out during source debugging
+	static constexpr u32 DEBUG_FLAG_SOURCE_STEPPING  = 0x04000000;      // CPU is stepping in/over/out during source debugging (set in conjunction with other DEBUG_FLAG_STEPPING* flags)
 
 	static constexpr u32 DEBUG_FLAG_STEPPING_BRANCH = DEBUG_FLAG_STEPPING_BRANCH_TRUE | DEBUG_FLAG_STEPPING_BRANCH_FALSE;
-	static constexpr u32 DEBUG_FLAG_STEPPING_ANY    = DEBUG_FLAG_STEPPING | DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH;
+	static constexpr u32 DEBUG_FLAG_STEPPING_ANY    = DEBUG_FLAG_STEPPING | DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH | DEBUG_FLAG_SOURCE_STEPPING;
 	static constexpr u32 DEBUG_FLAG_TRACING_ANY     = DEBUG_FLAG_TRACING | DEBUG_FLAG_TRACING_OVER;
 	static constexpr u32 DEBUG_FLAG_TRANSIENT       = DEBUG_FLAG_STEPPING_ANY | DEBUG_FLAG_STOP_PC |
 			DEBUG_FLAG_STOP_INTERRUPT | DEBUG_FLAG_STOP_EXCEPTION | DEBUG_FLAG_STOP_VBLANK |
