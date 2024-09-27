@@ -156,6 +156,7 @@ project "dbginfo"
 	addprojectflags()
 
 	includedirs {
+		MAME_DIR .. "src/emu/debug",
 		MAME_DIR .. "src/lib/util",
 	}
 

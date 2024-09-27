@@ -15,7 +15,7 @@
 #include "emu.h"
 #include "dvdisasm.h"
 
-#include "dbginfo/mdisimple.h"
+#include "mdisimple.h"
 
 
 //**************************************************************************
