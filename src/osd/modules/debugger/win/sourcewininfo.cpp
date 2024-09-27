@@ -10,11 +10,11 @@
 #include "sourcewininfo.h"
 #include "uimetrics.h"
 #include "debugger.h"
-#include "debugcon.h"
 
 #include "sourceviewinfo.h"
 
 #include "debug/dvsourcecode.h"
+#include "debug/debugcon.h"
 
 namespace osd::debugger::win {
 
