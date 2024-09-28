@@ -189,7 +189,14 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 		std::sort(
 			m_linemaps_by_line[file_idx].begin(),
 			m_linemaps_by_line[file_idx].end(), 
-			[] (const address_line& adrline1, const address_line &adrline2) { return adrline1.line_number < adrline2.line_number; });
+			[] (const address_line& adrline1, const address_line &adrline2)
+			{
+				if (adrline1.line_number == adrline2.line_number)
+				{
+					return adrline1.address_first < adrline2.address_first;
+				}
+				return adrline1.line_number < adrline2.line_number; 
+			});
 	}
 
 	// Symbols
