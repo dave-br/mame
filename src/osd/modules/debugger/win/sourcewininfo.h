@@ -33,9 +33,10 @@ protected:
 	// virtual void save_configuration_to_node(util::xml::data_node &node) override;
 
 private:
+	bool handle_sourcewin_command(WPARAM wparam, LPARAM lparam);
 	virtual void process_string(const std::string &string) override {};
 
-	HWND    m_combownd;
+	HWND    m_filecombownd;
 };
 
 } // namespace osd::debugger::win

@@ -210,7 +210,8 @@ void choose_image(device_image_interface &device, HWND owner, REFCLSID class_id,
 
 
 consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
-	disasmbasewin_info(debugger, true, "Debug", nullptr),
+	sourcewin_info(debugger),
+	// disasmbasewin_info(debugger, true, "Debug", nullptr),
 	m_current_cpu(nullptr),
 	m_devices_menu(nullptr)
 {
@@ -224,6 +225,7 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	m_views[VIEW_IDX_CONSOLE].reset(new debugview_info(debugger, *this, window(), DVT_CONSOLE));
 	if (!m_views[VIEW_IDX_CONSOLE]->is_valid())
 		goto cleanup;
+	m_views[VIEW_IDX_SOURCE]->hide();
 
 	{
 		// add image menu only if image devices exist
@@ -249,6 +251,9 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 		AppendMenu(settingsmenu, MF_ENABLED, ID_LIGHT_BACKGROUND, TEXT("Light Background"));
 		AppendMenu(settingsmenu, MF_ENABLED, ID_DARK_BACKGROUND, TEXT("Dark Background"));
 		AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)settingsmenu, TEXT("Settings"));
+
+		AppendMenu(m_optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
+		AppendMenu(m_optionsmenu, MF_ENABLED, ID_DEBUG_SOURCE, TEXT("Debug source files\tTODO KBD"));
 
 		// get the work bounds
 		RECT work_bounds, bounds;
@@ -453,6 +458,7 @@ void consolewin_info::update_menu()
 	CheckMenuItem(menu, ID_SAVE_WINDOWS, MF_BYCOMMAND | (debugger().get_save_window_arrangement() ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(menu, ID_LIGHT_BACKGROUND, MF_BYCOMMAND | ((ui_metrics::THEME_LIGHT_BACKGROUND == metrics().get_color_theme()) ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(menu, ID_DARK_BACKGROUND, MF_BYCOMMAND | ((ui_metrics::THEME_DARK_BACKGROUND == metrics().get_color_theme()) ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(menu, ID_DEBUG_SOURCE, MF_BYCOMMAND | (m_views[VIEW_IDX_SOURCE]->is_visible() ? MF_CHECKED : MF_UNCHECKED));
 }
 
 
@@ -525,6 +531,18 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			return true;
 		case ID_DARK_BACKGROUND:
 			debugger().set_color_theme(ui_metrics::THEME_DARK_BACKGROUND);
+			return true;
+		case ID_DEBUG_SOURCE:
+			if (m_views[VIEW_IDX_SOURCE]->is_visible())
+			{
+				m_views[VIEW_IDX_SOURCE]->hide();
+				m_views[VIEW_IDX_DISASM]->show();
+			}
+			else
+			{
+				m_views[VIEW_IDX_SOURCE]->show();
+				m_views[VIEW_IDX_DISASM]->hide();
+			}
 			return true;
 		}
 	}

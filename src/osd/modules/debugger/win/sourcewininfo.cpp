@@ -35,9 +35,6 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 
 	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->create_source_file_combobox(window(), (LONG_PTR)this);
 
-	AppendMenu(m_optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
-	AppendMenu(m_optionsmenu, MF_ENABLED, ID_DEBUG_SOURCE, TEXT("Debug source files\tTODO KBD"));
-
 	// recompute the children once to get the maxwidth
 	recompute_children();
 
@@ -183,13 +180,16 @@ bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 			return true;
 		}
 	}
+
+	return false;
 }
 
 bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	if (m_views[VIEW_IDX_SOURCE]->is_visible())
+	if (m_views[VIEW_IDX_SOURCE]->is_visible() &&
+		handle_sourcewin_command(wparam, lparam))
 	{
-		handle_sourcewin_command(wparam, lparam);
+		return true;
 	}
 
 	return disasmbasewin_info::handle_command(wparam, lparam);
