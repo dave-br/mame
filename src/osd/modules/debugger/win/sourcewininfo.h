@@ -26,16 +26,19 @@ public:
 	// virtual void restore_configuration_from_node(util::xml::data_node const &node) override;
 
 protected:
-	virtual void recompute_children() override;
 	virtual void draw_contents(HDC dc) override;
 	virtual bool handle_command(WPARAM wparam, LPARAM lparam) override;
 	// virtual void update_menu() override;
 	// virtual void save_configuration_to_node(util::xml::data_node &node) override;
+	void set_srcwnd_bounds(RECT const &bounds);
+	void show_src_window();
+	void hide_src_window();
 
 private:
+	bool handle_sourcewin_command(WPARAM wparam, LPARAM lparam);
 	virtual void process_string(const std::string &string) override {};
 
-	HWND    m_combownd;
+	HWND    m_filecombownd;
 };
 
 } // namespace osd::debugger::win

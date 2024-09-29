@@ -54,6 +54,10 @@ public:
 
 	HWND create_source_combobox(HWND parent, LONG_PTR userdata);
 
+	void show() const { smart_show_window(m_wnd, true); }
+	void hide() const { smart_show_window(m_wnd, false); }
+	bool is_visible() const {	return IsWindowVisible(m_wnd); }
+
 	virtual void restore_configuration_from_node(util::xml::data_node const &node);
 	virtual void save_configuration_to_node(util::xml::data_node &node);
 

@@ -28,27 +28,27 @@ disasmbasewin_info::disasmbasewin_info(debugger_windows_interface &debugger, boo
 	if (!window())
 		return;
 
-	m_views[0].reset(new disasmview_info(debugger, *this, window()));
-	if (!m_views[0] || !m_views[0]->is_valid())
+	m_views[VIEW_IDX_DISASM].reset(new disasmview_info(debugger, *this, window()));
+	if (!m_views[VIEW_IDX_DISASM] || !m_views[VIEW_IDX_DISASM]->is_valid())
 	{
-		m_views[0].reset();
+		m_views[VIEW_IDX_DISASM].reset();
 		return;
 	}
 
 	// create the options menu
-	HMENU const optionsmenu = CreatePopupMenu();
-	AppendMenu(optionsmenu, MF_ENABLED, ID_TOGGLE_BREAKPOINT, TEXT("Toggle breakpoint at cursor\tF9"));
-	AppendMenu(optionsmenu, MF_ENABLED, ID_DISABLE_BREAKPOINT, TEXT("Disable breakpoint at cursor\tShift+F9"));
-	AppendMenu(optionsmenu, MF_ENABLED, ID_RUN_TO_CURSOR, TEXT("Run to cursor\tF4"));
-	AppendMenu(optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
-	AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_RAW, TEXT("Raw opcodes\tCtrl+R"));
-	AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_ENCRYPTED, TEXT("Encrypted opcodes\tCtrl+E"));
-	AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_COMMENTS, TEXT("Comments\tCtrl+N"));
-	AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)optionsmenu, TEXT("Options"));
+	m_optionsmenu = CreatePopupMenu();
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_TOGGLE_BREAKPOINT, TEXT("Toggle breakpoint at cursor\tF9"));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_DISABLE_BREAKPOINT, TEXT("Disable breakpoint at cursor\tShift+F9"));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_RUN_TO_CURSOR, TEXT("Run to cursor\tF4"));
+	AppendMenu(m_optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_RAW, TEXT("Raw opcodes\tCtrl+R"));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_ENCRYPTED, TEXT("Encrypted opcodes\tCtrl+E"));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_COMMENTS, TEXT("Comments\tCtrl+N"));
+	AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)m_optionsmenu, TEXT("Options"));
 
 	// set up the view to track the initial expression
-	downcast<disasmview_info *>(m_views[0].get())->set_expression("curpc");
-	m_views[0]->set_source_for_visible_cpu();
+	downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get())->set_expression("curpc");
+	m_views[VIEW_IDX_DISASM]->set_source_for_visible_cpu();
 }
 
 
@@ -92,7 +92,7 @@ bool disasmbasewin_info::handle_key(WPARAM wparam, LPARAM lparam)
 		return true;
 
 	case VK_RETURN:
-		if (m_views[0]->cursor_visible() && m_views[0]->source_is_visible_cpu())
+		if (m_views[VIEW_IDX_DISASM]->cursor_visible() && m_views[VIEW_IDX_DISASM]->source_is_visible_cpu())
 		{
 			SendMessage(window(), WM_COMMAND, ID_STEP, 0);
 			return true;
@@ -108,7 +108,7 @@ void disasmbasewin_info::update_menu()
 {
 	editwin_info::update_menu();
 
-	auto *const dasmview = downcast<disasmview_info *>(m_views[0].get());
+	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
 	HMENU const menu = GetMenu(window());
 
 	bool const disasm_cursor_visible = dasmview->cursor_visible();
@@ -163,8 +163,58 @@ void disasmbasewin_info::update_menu()
 
 bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	auto *const dasmview = downcast<disasmview_info *>(m_views[0].get());
+	if (m_views[VIEW_IDX_DISASM]->is_visible() &&
+		handle_disasm_command(wparam, lparam))
+	{
+		return true;
+	}
 
+	if (handle_common_command(wparam, lparam))
+	{
+		return true;
+	}
+
+	return editwin_info::handle_command(wparam, lparam);
+}
+
+
+bool disasmbasewin_info::handle_disasm_command(WPARAM wparam, LPARAM lparam)
+{
+	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
+	switch (HIWORD(wparam))
+	{
+	// menu selections
+	case 0:
+		switch (LOWORD(wparam))
+		{
+		case ID_SHOW_RAW:
+			dasmview->set_right_column(DASM_RIGHTCOL_RAW);
+			recompute_children();
+			return true;
+
+		case ID_SHOW_ENCRYPTED:
+			dasmview->set_right_column(DASM_RIGHTCOL_ENCRYPTED);
+			recompute_children();
+			return true;
+
+		case ID_SHOW_COMMENTS:
+			dasmview->set_right_column(DASM_RIGHTCOL_COMMENTS);
+			recompute_children();
+			return true;
+		}
+		break;
+	}
+	return false;
+}
+
+
+bool disasmbasewin_info::handle_common_command(WPARAM wparam, LPARAM lparam)
+{
+	disasmview_info const *  dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
+	if (this->is_main_console() && !m_views[VIEW_IDX_DISASM]->is_visible())
+	{
+		dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_SOURCE].get());
+	}
 	switch (HIWORD(wparam))
 	{
 	// menu selections
@@ -268,40 +318,24 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 					dasmview->source_device()->debug()->go(address);
 				}
 			}
-			return true;
-
-		case ID_SHOW_RAW:
-			dasmview->set_right_column(DASM_RIGHTCOL_RAW);
-			recompute_children();
-			return true;
-
-		case ID_SHOW_ENCRYPTED:
-			dasmview->set_right_column(DASM_RIGHTCOL_ENCRYPTED);
-			recompute_children();
-			return true;
-
-		case ID_SHOW_COMMENTS:
-			dasmview->set_right_column(DASM_RIGHTCOL_COMMENTS);
-			recompute_children();
-			return true;
+			return true;	
 		}
-		break;
 	}
-	return editwin_info::handle_command(wparam, lparam);
+	return false;
 }
 
 
 void disasmbasewin_info::restore_configuration_from_node(util::xml::data_node const &node)
 {
 	editwin_info::restore_configuration_from_node(node);
-	m_views[0]->restore_configuration_from_node(node);
+	m_views[VIEW_IDX_DISASM]->restore_configuration_from_node(node);
 }
 
 
 void disasmbasewin_info::save_configuration_to_node(util::xml::data_node &node)
 {
 	editwin_info::save_configuration_to_node(node);
-	m_views[0]->save_configuration_to_node(node);
+	m_views[VIEW_IDX_DISASM]->save_configuration_to_node(node);
 }
 
 } // namespace osd::debugger::win

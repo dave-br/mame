@@ -58,7 +58,7 @@ protected:
 	static DWORD const  DEBUG_WINDOW_STYLE = (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & (~WS_MINIMIZEBOX & ~WS_MAXIMIZEBOX);
 	static DWORD const  DEBUG_WINDOW_STYLE_EX = 0;
 
-	static int const    MAX_VIEWS = 4;
+	// static int const    MAX_VIEWS = 4;
 	static int const    EDGE_WIDTH = 3;
 
 	enum
@@ -107,6 +107,7 @@ protected:
 		ID_SHOW_RAW,
 		ID_SHOW_ENCRYPTED,
 		ID_SHOW_COMMENTS,
+		ID_DEBUG_SOURCE,
 
 		ID_SHOW_BREAKPOINTS,
 		ID_SHOW_WATCHPOINTS,
@@ -119,6 +120,15 @@ protected:
 		ID_DARK_BACKGROUND,
 
 		ID_DEVICE_OPTIONS   // always keep this at the end
+	};
+
+	enum
+	{
+		VIEW_IDX_SOURCE,
+		VIEW_IDX_DISASM,
+		VIEW_IDX_STATE,
+		VIEW_IDX_CONSOLE,
+		MAX_VIEWS
 	};
 
 	debugwin_info(debugger_windows_interface &debugger, bool is_main_console, LPCSTR title, WNDPROC handler);
