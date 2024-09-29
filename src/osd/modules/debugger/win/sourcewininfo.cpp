@@ -20,27 +20,23 @@ namespace osd::debugger::win {
 
 sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 	disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
-	m_combownd(nullptr)
+	m_filecombownd(nullptr)
 {
 	if (!window())
 		return;
 
-	m_views[0].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
-	if ((m_views[0] == nullptr) || !m_views[0]->is_valid())
+	m_views[VIEW_IDX_SOURCE].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
+	if ((m_views[VIEW_IDX_SOURCE] == nullptr) || !m_views[VIEW_IDX_SOURCE]->is_valid())
 	{
-		m_views[0].reset();
+		m_views[VIEW_IDX_SOURCE].reset();
 		return;
 	}
-	m_views[0]->set_source_for_visible_cpu();
+	m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
 
-	m_combownd = downcast<sourceview_info *>(m_views[0].get())->create_source_file_combobox(window(), (LONG_PTR)this);
+	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->create_source_file_combobox(window(), (LONG_PTR)this);
 
-	// create the options menu
-	// HMENU const optionsmenu = CreatePopupMenu();
-	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_BREAKPOINTS, TEXT("Breakpoints\tCtrl+1"));
-	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_WATCHPOINTS, TEXT("Watchpoints\tCtrl+2"));
-	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_REGISTERPOINTS, TEXT("Registerpoints\tCtrl+3"));
-	// AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)optionsmenu, TEXT("Options"));
+	AppendMenu(m_optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_DEBUG_SOURCE, TEXT("Debug source files\tTODO KBD"));
 
 	// recompute the children once to get the maxwidth
 	recompute_children();
@@ -75,7 +71,7 @@ void sourcewin_info::recompute_children()
 	// compute a client rect
 	RECT bounds;
 	bounds.top = bounds.left = 0;
-	bounds.right = m_views[0]->prefwidth() + (2 * EDGE_WIDTH);
+	bounds.right = m_views[VIEW_IDX_SOURCE]->prefwidth() + (2 * EDGE_WIDTH);
 	bounds.bottom = 200;
 	AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
 
@@ -108,17 +104,17 @@ void sourcewin_info::recompute_children()
 	srcrect.right = parent.right - EDGE_WIDTH;
 
 	// set the bounds of things
-	m_views[0]->set_bounds(srcrect);
+	m_views[VIEW_IDX_SOURCE]->set_bounds(srcrect);
 	set_editwnd_bounds(editrect);
-	smart_set_window_bounds(m_combownd, window(), comborect);
+	smart_set_window_bounds(m_filecombownd, window(), comborect);
 }
 
 void sourcewin_info::draw_contents(HDC dc)
 {
 	disasmbasewin_info::draw_contents(dc);
-	if (m_combownd)
+	if (m_filecombownd)
 	{
-		draw_border(dc, m_combownd);
+		draw_border(dc, m_filecombownd);
 	}
 }
 
@@ -151,7 +147,7 @@ void sourcewin_info::draw_contents(HDC dc)
 // 	return debugwin_info::handle_key(wparam, lparam);
 // }
 
-bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
+bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 {
 	if (HIWORD(wparam) == 0)
 	{
@@ -180,12 +176,20 @@ bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			if (sel == CB_ERR)
 				break;
 
-			downcast<sourceview_info *>(m_views[0].get())->set_src_index(u16(sel));
+			downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->set_src_index(u16(sel));
 
 			// reset the focus
 			set_default_focus();
 			return true;
 		}
+	}
+}
+
+bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
+{
+	if (m_views[VIEW_IDX_SOURCE]->is_visible())
+	{
+		handle_sourcewin_command(wparam, lparam);
 	}
 
 	return disasmbasewin_info::handle_command(wparam, lparam);
