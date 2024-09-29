@@ -1613,15 +1613,15 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	{
 		// TODO: ERROR
 	}
-	std::optional<debug_info_provider_base::address_range> addresses = 
-		debug_info.file_line_to_address_range(file_index.value(), linenum_token.value());
-	if (!addresses.has_value())
+	std::vector<debug_info_provider_base::address_range> ranges;
+	debug_info.file_line_to_address_ranges(file_index.value(), linenum_token.value(), ranges);
+	if (ranges.size() == 0)
 	{
 		// TODO: ERROR
 	}
 
 	// make the token
-	token.configure_number(addresses.value().first);
+	token.configure_number(ranges[0].first);
 }
 
 

@@ -80,7 +80,7 @@ public:
 	virtual std::size_t num_files() const = 0;
 	virtual const source_file_path & file_index_to_path(u16 file_index) const = 0;
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
-	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const = 0;
+	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
 	virtual const std::vector<symbol> & global_symbols() const = 0;
 };
@@ -96,7 +96,7 @@ public:
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
 	virtual const source_file_path & file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
-	virtual std::optional<address_range> file_line_to_address_range (u16 file_index, u32 line_number) const override;
+	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
 	virtual const std::vector<symbol> & global_symbols() const override { return m_symbols; };
 
