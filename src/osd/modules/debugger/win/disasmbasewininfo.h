@@ -30,6 +30,13 @@ protected:
 	virtual void update_menu() override;
 	virtual bool handle_command(WPARAM wparam, LPARAM lparam) override;
 	virtual void save_configuration_to_node(util::xml::data_node &node) override;
+
+private:
+	bool handle_common_command(WPARAM wparam, LPARAM lparam);
+	bool handle_disasm_command(WPARAM wparam, LPARAM lparam);
+
+protected:
+	HMENU m_optionsmenu;
 };
 
 } // namespace osd::debugger::win

@@ -19,35 +19,30 @@
 namespace osd::debugger::win {
 
 sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
-	disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
-	m_combownd(nullptr)
+	// disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
+	disasmbasewin_info(debugger, true, "Debug", nullptr),
+	m_filecombownd(nullptr)
 {
 	if (!window())
 		return;
 
-	m_views[0].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
-	if ((m_views[0] == nullptr) || !m_views[0]->is_valid())
+	m_views[VIEW_IDX_SOURCE].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
+	if ((m_views[VIEW_IDX_SOURCE] == nullptr) || !m_views[VIEW_IDX_SOURCE]->is_valid())
 	{
-		m_views[0].reset();
+		m_views[VIEW_IDX_SOURCE].reset();
 		return;
 	}
-	m_views[0]->set_source_for_visible_cpu();
+	m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
 
-	m_combownd = downcast<sourceview_info *>(m_views[0].get())->create_source_file_combobox(window(), (LONG_PTR)this);
+	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->create_source_file_combobox(window(), (LONG_PTR)this);
 
-	// create the options menu
-	// HMENU const optionsmenu = CreatePopupMenu();
-	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_BREAKPOINTS, TEXT("Breakpoints\tCtrl+1"));
-	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_WATCHPOINTS, TEXT("Watchpoints\tCtrl+2"));
-	// AppendMenu(optionsmenu, MF_ENABLED, ID_SHOW_REGISTERPOINTS, TEXT("Registerpoints\tCtrl+3"));
-	// AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)optionsmenu, TEXT("Options"));
+	// recently commented out!
+	// // recompute the children once to get the maxwidth
+	// recompute_children();
 
-	// recompute the children once to get the maxwidth
-	recompute_children();
-
-	// position the window and recompute children again
-	debugger.stagger_window(window(), maxwidth(), 200);
-	recompute_children();
+	// // position the window and recompute children again
+	// debugger.stagger_window(window(), maxwidth(), 200);
+	// recompute_children();
 
 	// // compute a client rect
 	// RECT bounds;
@@ -70,55 +65,64 @@ sourcewin_info::~sourcewin_info()
 }
 
 
-void sourcewin_info::recompute_children()
+void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 {
-	// compute a client rect
-	RECT bounds;
-	bounds.top = bounds.left = 0;
-	bounds.right = m_views[0]->prefwidth() + (2 * EDGE_WIDTH);
-	bounds.bottom = 200;
-	AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
+	// smart_set_window_bounds(m_editwnd, window(), bounds);
 
 	// clamp the min/max size
-	set_maxwidth(bounds.right - bounds.left);
+	// set_maxwidth(bounds.right - bounds.left);
 
-	// get the parent's dimensions
-	RECT parent;
-	GetClientRect(window(), &parent);
+	// // get the parent's dimensions
+	// RECT parent;
+	// GetClientRect(window(), &parent);
 
 	// edit box gets one quarter of the width
-	RECT editrect;
-	editrect.top = parent.top + EDGE_WIDTH;
-	editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
-	editrect.left = parent.left + EDGE_WIDTH;
-	editrect.right = parent.left + ((parent.right - parent.left) / 4) - EDGE_WIDTH;
+	// RECT editrect;
+	// editrect.top = parent.top + EDGE_WIDTH;
+	// editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
+	// editrect.left = parent.left + EDGE_WIDTH;
+	// editrect.right = parent.left + ((parent.right - parent.left) / 4) - EDGE_WIDTH;
 
-	// combo box gets rest of the width
+	// combo box gets full width
 	RECT comborect;
-	comborect.top = editrect.top;
-	comborect.bottom = editrect.bottom;
-	comborect.left = editrect.right + (2 * EDGE_WIDTH);
-	comborect.right = parent.right - EDGE_WIDTH;
+	comborect.top = bounds.top + EDGE_WIDTH;
+	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
+	comborect.left = bounds.left + EDGE_WIDTH;
+	comborect.right = bounds.right - EDGE_WIDTH;
 
-	// disasm view gets the rest
+	// source view gets the rest
 	RECT srcrect;
 	srcrect.top = comborect.bottom + (2 * EDGE_WIDTH);
-	srcrect.bottom = parent.bottom - EDGE_WIDTH;
-	srcrect.left = parent.left + EDGE_WIDTH;
-	srcrect.right = parent.right - EDGE_WIDTH;
+	srcrect.bottom = bounds.bottom - EDGE_WIDTH;
+	srcrect.left = bounds.left + EDGE_WIDTH;
+	srcrect.right = bounds.right - EDGE_WIDTH;
 
 	// set the bounds of things
-	m_views[0]->set_bounds(srcrect);
-	set_editwnd_bounds(editrect);
-	smart_set_window_bounds(m_combownd, window(), comborect);
+	smart_set_window_bounds(m_filecombownd, window(), comborect);
+	m_views[VIEW_IDX_SOURCE]->set_bounds(srcrect);
 }
+
+
+void sourcewin_info::show_src_window()
+{
+	m_views[VIEW_IDX_SOURCE]->show(); 
+	smart_show_window(m_filecombownd, true);  
+}
+
+
+void sourcewin_info::hide_src_window()
+{
+	 m_views[VIEW_IDX_SOURCE]->hide(); 
+	 smart_show_window(m_filecombownd, false);  
+}
+
 
 void sourcewin_info::draw_contents(HDC dc)
 {
 	disasmbasewin_info::draw_contents(dc);
-	if (m_combownd)
+	if (m_filecombownd)
 	{
-		draw_border(dc, m_combownd);
+		draw_border(dc, m_filecombownd);
 	}
 }
 
@@ -151,7 +155,7 @@ void sourcewin_info::draw_contents(HDC dc)
 // 	return debugwin_info::handle_key(wparam, lparam);
 // }
 
-bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
+bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 {
 	if (HIWORD(wparam) == 0)
 	{
@@ -180,12 +184,25 @@ bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			if (sel == CB_ERR)
 				break;
 
-			downcast<sourceview_info *>(m_views[0].get())->set_src_index(u16(sel));
+			downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->set_src_index(u16(sel));
 
 			// reset the focus
 			set_default_focus();
 			return true;
 		}
+	}
+
+	return false;
+}
+
+
+
+bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
+{
+	if (m_views[VIEW_IDX_SOURCE]->is_visible() &&
+		handle_sourcewin_command(wparam, lparam))
+	{
+		return true;
 	}
 
 	return disasmbasewin_info::handle_command(wparam, lparam);

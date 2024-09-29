@@ -300,7 +300,6 @@ HWND debugview_info::create_source_combobox(HWND parent, LONG_PTR userdata)
 	return result;
 }
 
-
 void debugview_info::restore_configuration_from_node(util::xml::data_node const &node)
 {
 	if (m_view->cursor_supported())
