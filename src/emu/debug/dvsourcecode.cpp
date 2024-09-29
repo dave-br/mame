@@ -72,7 +72,7 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
-	m_line_for_cur_pc(4)
+	m_line_for_cur_pc(u32(-1))
 	// m_first_visible_line(1)
 {
 	// device_t * live_cpu = machine.debugger().cpu().live_cpu();
@@ -99,15 +99,15 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 	flush_updates();
 	u32 line = m_cursor.y + 1;
 
-	std::optional<debug_info_simple::address_range> addrsopt =
-	  m_debug_info.file_line_to_address_range(m_cur_src_index, line);
+	std::vector<debug_info_provider_base::address_range> ranges;
+	m_debug_info.file_line_to_address_ranges(m_cur_src_index, line, ranges);
 
-	if (!addrsopt.has_value())
+	if (ranges.size() == 0)
 	{
 		return std::optional<offs_t>();
 	}
 
-	return std::optional<offs_t>(addrsopt.value().first);
+	return std::optional<offs_t>(ranges[0].first);
 }
 
 
@@ -252,20 +252,17 @@ void debug_view_sourcecode::view_update()
 
 bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
-	std::optional<debug_info_provider_base::address_range> addrs = 
-		debug_info().file_line_to_address_range(m_cur_src_index, line);
-	if (!addrs.has_value())
-	{
-		return false;
-	}
-
+	std::vector<debug_info_provider_base::address_range> ranges;
+	m_debug_info.file_line_to_address_ranges(m_cur_src_index, line, ranges);
 	const device_debug * debug = source()->device()->debug();
-	debug_info_provider_base::address_range addrs_val = addrs.value();
-	for (offs_t addr = addrs_val.first; addr <= addrs_val.second; addr++)
+	for (offs_t i = 0; i < ranges.size(); i++)
 	{
-		if (debug->breakpoint_find(addr) != nullptr)
+		for (offs_t addr = ranges[i].first; addr <= ranges[i].second; addr++)
 		{
-			return true;
+			if (debug->breakpoint_find(addr) != nullptr)
+			{
+				return true;
+			}
 		}
 	}
 	return false;

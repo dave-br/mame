@@ -304,17 +304,17 @@ std::optional<int> debug_info_simple::file_path_to_index(const char * file_path)
 
 // Given a source file & line number, return the address of the first byte of
 // the first instruction of the range of instructions attributable to that line
-std::optional<debug_info_simple::address_range> debug_info_simple::file_line_to_address_range (u16 file_index, u32 line_number) const
+void debug_info_simple::file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
 	if (file_index >= m_linemaps_by_line.size())
 	{
-		return std::optional<address_range>();
+		return;
 	}
 
 	const std::vector<address_line> & list = m_linemaps_by_line[file_index];
 	if (list.size() == 0)
 	{
-		return std::optional<address_range>();
+		return;
 	}
 
 	auto answer = std::lower_bound(
@@ -325,15 +325,16 @@ std::optional<debug_info_simple::address_range> debug_info_simple::file_line_to_
 	if (answer == list.cend())
 	{
 		// line_number > last mapped line, so just use the last mapped line
-		return address_range((answer-1)->address_first, (answer-1)->address_last);
+		return ranges.push_back(address_range((answer-1)->address_first, (answer-1)->address_last));
 	}
 
-	// m_line_maps_by_line is sorted by line.  answer is the leftmost entry
-	// with line_number <= answer->line_number.  If they're equal, answer
-	// is clearly correct.  If line_number < answer->line_number, then
-	// using answer bumps us forward to the next mapped line after the 
-	// line specified by the user, which is reasonable.
-	return address_range(answer->address_first, answer->address_last);
+	// m_line_maps_by_line is sorted by line, then address.  answer is the leftmost entry
+	// with line_number <= answer->line_number.  Add all ranges with matching line number
+	while (answer->line_number == line_number)
+	{
+		ranges.push_back(address_range(answer->address_first, answer->address_last));
+		answer++;
+	}
 }
 
 // Given an address, return the source file & line number attributable to the
