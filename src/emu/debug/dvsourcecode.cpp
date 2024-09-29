@@ -72,7 +72,7 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
-	m_line_for_cur_pc(u32(-1))
+	m_line_for_cur_pc()
 	// m_first_visible_line(1)
 {
 	// device_t * live_cpu = machine.debugger().cpu().live_cpu();
@@ -224,7 +224,7 @@ void debug_view_sourcecode::view_update()
 		{
 			u8 attrib = DCA_NORMAL;
 
-			if (line == m_line_for_cur_pc)
+			if (m_line_for_cur_pc.has_value() && line == m_line_for_cur_pc.value())
 			{
 				// on the line with the PC: highlight
 				attrib = DCA_CURRENT;
@@ -273,30 +273,32 @@ bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 // movement).
 void debug_view_sourcecode::update_visible_lines(offs_t pc)
 {
-	if (is_visible(m_line_for_cur_pc))
+	if (!m_line_for_cur_pc.has_value() || is_visible(m_line_for_cur_pc.value()))
 	{
 		return;
 	}
+
+	u32 line_for_cur_pc = m_line_for_cur_pc.value();
 
 	if (m_displayed_src_file->num_lines() <= m_visible.y)
 	{
 		// Entire file fits in visible view.  Start at begining
 		m_topleft.y = 0;
 	}
-	else if (m_line_for_cur_pc <= m_visible.y / 2)
+	else if (line_for_cur_pc <= m_visible.y / 2)
 	{
-		// m_line_for_cur_pc close to top, start at top
+		// line_for_cur_pc close to top, start at top
 		m_topleft.y = 0;
 	}
-	else if (m_line_for_cur_pc + m_visible.y / 2 > m_displayed_src_file->num_lines())
+	else if (line_for_cur_pc + m_visible.y / 2 > m_displayed_src_file->num_lines())
 	{
-		// m_line_for_cur_pc close to bottom, so bottom line at bottom
+		// line_for_cur_pc close to bottom, so bottom line at bottom
 		m_topleft.y = m_displayed_src_file->num_lines() - 1 - m_visible.y;
 	}
 	else
 	{
-		// Main case, center m_line_for_cur_pc in view
-		m_topleft.y = m_line_for_cur_pc - 1 - m_visible.y / 2;
+		// Main case, center line_for_cur_pc in view
+		m_topleft.y = line_for_cur_pc - 1 - m_visible.y / 2;
 	}
 }
 

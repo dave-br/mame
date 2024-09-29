@@ -79,7 +79,7 @@ private:
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
 	std::vector<std::pair<std::string, std::string>>  m_src_path_map;
-	u32                                               m_line_for_cur_pc;       // Line number to be highlighted
+	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
 	// u32                                 m_first_visible_line;    // Line number to show at top of scrolled view
 };
 
