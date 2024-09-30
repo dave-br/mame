@@ -19,7 +19,8 @@
 namespace osd::debugger::win {
 
 sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
-	disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
+	// disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
+	disasmbasewin_info(debugger, true, "Debug", nullptr),
 	m_filecombownd(nullptr)
 {
 	if (!window())
@@ -89,7 +90,7 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 	comborect.left = bounds.left + EDGE_WIDTH;
 	comborect.right = bounds.right - EDGE_WIDTH;
 
-	// disasm view gets the rest
+	// source view gets the rest
 	RECT srcrect;
 	srcrect.top = comborect.bottom + (2 * EDGE_WIDTH);
 	srcrect.bottom = bounds.bottom - EDGE_WIDTH;
@@ -97,10 +98,24 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 	srcrect.right = bounds.right - EDGE_WIDTH;
 
 	// set the bounds of things
-	m_views[VIEW_IDX_SOURCE]->set_bounds(srcrect);
-	// set_editwnd_bounds(editrect);
 	smart_set_window_bounds(m_filecombownd, window(), comborect);
+	m_views[VIEW_IDX_SOURCE]->set_bounds(srcrect);
 }
+
+
+void sourcewin_info::show_src_window()
+{
+	m_views[VIEW_IDX_SOURCE]->show(); 
+	smart_show_window(m_filecombownd, true);  
+}
+
+
+void sourcewin_info::hide_src_window()
+{
+	 m_views[VIEW_IDX_SOURCE]->hide(); 
+	 smart_show_window(m_filecombownd, false);  
+}
+
 
 void sourcewin_info::draw_contents(HDC dc)
 {

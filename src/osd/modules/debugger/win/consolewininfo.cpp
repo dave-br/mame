@@ -225,7 +225,6 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	m_views[VIEW_IDX_CONSOLE].reset(new debugview_info(debugger, *this, window(), DVT_CONSOLE));
 	if (!m_views[VIEW_IDX_CONSOLE]->is_valid())
 		goto cleanup;
-	m_views[VIEW_IDX_SOURCE]->hide();
 
 	{
 		// add image menu only if image devices exist
@@ -284,6 +283,8 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 
 	// mark the edit box as the default focus and set it
 	editwin_info::set_default_focus();
+
+	hide_src_window();
 	return;
 
 cleanup:
@@ -366,7 +367,7 @@ void consolewin_info::recompute_children()
 
 void consolewin_info::update_menu()
 {
-	disasmbasewin_info::update_menu();
+	sourcewin_info::update_menu();
 
 	if (m_devices_menu)
 	{
@@ -536,12 +537,12 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		case ID_DEBUG_SOURCE:
 			if (m_views[VIEW_IDX_SOURCE]->is_visible())
 			{
-				m_views[VIEW_IDX_SOURCE]->hide();
+				hide_src_window();
 				m_views[VIEW_IDX_DISASM]->show();
 			}
 			else
 			{
-				m_views[VIEW_IDX_SOURCE]->show();
+				show_src_window();
 				m_views[VIEW_IDX_DISASM]->hide();
 			}
 			return true;
@@ -550,13 +551,13 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 
 	// TODO: Explicitly pass to source window?
 
-	return disasmbasewin_info::handle_command(wparam, lparam);
+	return sourcewin_info::handle_command(wparam, lparam);
 }
 
 
 void consolewin_info::save_configuration_to_node(util::xml::data_node &node)
 {
-	disasmbasewin_info::save_configuration_to_node(node);
+	sourcewin_info::save_configuration_to_node(node);
 	node.set_attribute_int(ATTR_WINDOW_TYPE, WINDOW_TYPE_CONSOLE);
 }
 

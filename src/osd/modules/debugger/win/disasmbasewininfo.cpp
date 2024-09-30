@@ -164,7 +164,12 @@ void disasmbasewin_info::update_menu()
 bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
 	if (m_views[VIEW_IDX_DISASM]->is_visible() &&
-		handle_disasmbasewin_command(wparam, lparam))
+		handle_disasm_command(wparam, lparam))
+	{
+		return true;
+	}
+
+	if (handle_common_command(wparam, lparam))
 	{
 		return true;
 	}
@@ -173,7 +178,7 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 }
 
 
-bool disasmbasewin_info::handle_disasmbasewin_command(WPARAM wparam, LPARAM lparam)
+bool disasmbasewin_info::handle_disasm_command(WPARAM wparam, LPARAM lparam)
 {
 	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
 	switch (HIWORD(wparam))
@@ -182,6 +187,34 @@ bool disasmbasewin_info::handle_disasmbasewin_command(WPARAM wparam, LPARAM lpar
 	case 0:
 		switch (LOWORD(wparam))
 		{
+		case ID_SHOW_RAW:
+			dasmview->set_right_column(DASM_RIGHTCOL_RAW);
+			recompute_children();
+			return true;
+
+		case ID_SHOW_ENCRYPTED:
+			dasmview->set_right_column(DASM_RIGHTCOL_ENCRYPTED);
+			recompute_children();
+			return true;
+
+		case ID_SHOW_COMMENTS:
+			dasmview->set_right_column(DASM_RIGHTCOL_COMMENTS);
+			recompute_children();
+			return true;
+		}
+		break;
+	}
+	return false;
+}
+
+
+bool disasmbasewin_info::handle_common_command(WPARAM wparam, LPARAM lparam)
+{
+	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
+	switch (HIWORD(wparam))
+	{
+	// menu selections
+	case 0:
 		case ID_TOGGLE_BREAKPOINT:
 			if (dasmview->cursor_visible())
 			{
@@ -279,24 +312,7 @@ bool disasmbasewin_info::handle_disasmbasewin_command(WPARAM wparam, LPARAM lpar
 					dasmview->source_device()->debug()->go(address);
 				}
 			}
-			return true;
-
-		case ID_SHOW_RAW:
-			dasmview->set_right_column(DASM_RIGHTCOL_RAW);
-			recompute_children();
-			return true;
-
-		case ID_SHOW_ENCRYPTED:
-			dasmview->set_right_column(DASM_RIGHTCOL_ENCRYPTED);
-			recompute_children();
-			return true;
-
-		case ID_SHOW_COMMENTS:
-			dasmview->set_right_column(DASM_RIGHTCOL_COMMENTS);
-			recompute_children();
-			return true;
-		}
-		break;
+			return true;	
 	}
 	return false;
 }

@@ -32,7 +32,8 @@ protected:
 	virtual void save_configuration_to_node(util::xml::data_node &node) override;
 
 private:
-	bool handle_disasmbasewin_command(WPARAM wparam, LPARAM lparam);
+	bool handle_common_command(WPARAM wparam, LPARAM lparam);
+	bool handle_disasm_command(WPARAM wparam, LPARAM lparam);
 
 protected:
 	HMENU m_optionsmenu;
