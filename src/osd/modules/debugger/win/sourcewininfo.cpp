@@ -35,12 +35,13 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
 
 	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->create_source_file_combobox(window(), (LONG_PTR)this);
 
-	// recompute the children once to get the maxwidth
-	recompute_children();
+	// recently commented out!
+	// // recompute the children once to get the maxwidth
+	// recompute_children();
 
-	// position the window and recompute children again
-	debugger.stagger_window(window(), maxwidth(), 200);
-	recompute_children();
+	// // position the window and recompute children again
+	// debugger.stagger_window(window(), maxwidth(), 200);
+	// recompute_children();
 
 	// // compute a client rect
 	// RECT bounds;
@@ -63,46 +64,41 @@ sourcewin_info::~sourcewin_info()
 }
 
 
-void sourcewin_info::recompute_children()
+void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 {
-	// compute a client rect
-	RECT bounds;
-	bounds.top = bounds.left = 0;
-	bounds.right = m_views[VIEW_IDX_SOURCE]->prefwidth() + (2 * EDGE_WIDTH);
-	bounds.bottom = 200;
-	AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
+	// smart_set_window_bounds(m_editwnd, window(), bounds);
 
 	// clamp the min/max size
-	set_maxwidth(bounds.right - bounds.left);
+	// set_maxwidth(bounds.right - bounds.left);
 
-	// get the parent's dimensions
-	RECT parent;
-	GetClientRect(window(), &parent);
+	// // get the parent's dimensions
+	// RECT parent;
+	// GetClientRect(window(), &parent);
 
 	// edit box gets one quarter of the width
-	RECT editrect;
-	editrect.top = parent.top + EDGE_WIDTH;
-	editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
-	editrect.left = parent.left + EDGE_WIDTH;
-	editrect.right = parent.left + ((parent.right - parent.left) / 4) - EDGE_WIDTH;
+	// RECT editrect;
+	// editrect.top = parent.top + EDGE_WIDTH;
+	// editrect.bottom = editrect.top + metrics().debug_font_height() + 4;
+	// editrect.left = parent.left + EDGE_WIDTH;
+	// editrect.right = parent.left + ((parent.right - parent.left) / 4) - EDGE_WIDTH;
 
-	// combo box gets rest of the width
+	// combo box gets full width
 	RECT comborect;
-	comborect.top = editrect.top;
-	comborect.bottom = editrect.bottom;
-	comborect.left = editrect.right + (2 * EDGE_WIDTH);
-	comborect.right = parent.right - EDGE_WIDTH;
+	comborect.top = bounds.top + EDGE_WIDTH;
+	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
+	comborect.left = bounds.left + EDGE_WIDTH;
+	comborect.right = bounds.right - EDGE_WIDTH;
 
 	// disasm view gets the rest
 	RECT srcrect;
 	srcrect.top = comborect.bottom + (2 * EDGE_WIDTH);
-	srcrect.bottom = parent.bottom - EDGE_WIDTH;
-	srcrect.left = parent.left + EDGE_WIDTH;
-	srcrect.right = parent.right - EDGE_WIDTH;
+	srcrect.bottom = bounds.bottom - EDGE_WIDTH;
+	srcrect.left = bounds.left + EDGE_WIDTH;
+	srcrect.right = bounds.right - EDGE_WIDTH;
 
 	// set the bounds of things
 	m_views[VIEW_IDX_SOURCE]->set_bounds(srcrect);
-	set_editwnd_bounds(editrect);
+	// set_editwnd_bounds(editrect);
 	smart_set_window_bounds(m_filecombownd, window(), comborect);
 }
 
@@ -183,6 +179,8 @@ bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 
 	return false;
 }
+
+
 
 bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {

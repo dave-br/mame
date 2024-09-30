@@ -355,7 +355,8 @@ void consolewin_info::recompute_children()
 	conrect.right = parent.right - EDGE_WIDTH;
 
 	// set the bounds of things
-	m_views[VIEW_IDX_SOURCE]->set_bounds(disrect);
+	// m_views[VIEW_IDX_SOURCE]->set_bounds(disrect);
+	set_srcwnd_bounds(disrect);
 	m_views[VIEW_IDX_DISASM]->set_bounds(disrect);
 	m_views[VIEW_IDX_STATE]->set_bounds(regrect);
 	m_views[VIEW_IDX_CONSOLE]->set_bounds(conrect);
