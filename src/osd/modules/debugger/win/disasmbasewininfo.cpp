@@ -163,8 +163,19 @@ void disasmbasewin_info::update_menu()
 
 bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
+	if (m_views[VIEW_IDX_DISASM]->is_visible() &&
+		handle_disasmbasewin_command(wparam, lparam))
+	{
+		return true;
+	}
 
+	return editwin_info::handle_command(wparam, lparam);
+}
+
+
+bool disasmbasewin_info::handle_disasmbasewin_command(WPARAM wparam, LPARAM lparam)
+{
+	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
 	switch (HIWORD(wparam))
 	{
 	// menu selections
@@ -287,7 +298,7 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		}
 		break;
 	}
-	return editwin_info::handle_command(wparam, lparam);
+	return false;
 }
 
 
