@@ -39,7 +39,8 @@ private:
 };
 
 
-// debug view for source-level debugging
+// debug view for source-level debugging.  Shares code with debug_view_disasm, especially
+// for cursor handling, clicks, and navigational keypresses
 class debug_view_sourcecode : public debug_view_disasm
 {
 	friend class debug_view_manager;

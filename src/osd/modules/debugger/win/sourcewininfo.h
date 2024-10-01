@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Aaron Giles, Vas Crabb
+// copyright-holders:David Broman
 //============================================================
 //
 //  sourcewininfo.h - Win32 debug window handling
@@ -16,6 +16,8 @@
 
 namespace osd::debugger::win {
 
+// Manages source-code-level debugging window.  Derives from disasmbasewin_info to reuse
+// breakpoint handling and more, though with customizations.
 class sourcewin_info : public disasmbasewin_info
 {
 public:
