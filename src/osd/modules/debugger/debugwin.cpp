@@ -19,7 +19,6 @@
 #include "win/logwininfo.h"
 #include "win/memorywininfo.h"
 #include "win/pointswininfo.h"
-#include "win/sourcewininfo.h"
 #include "win/uimetrics.h"
 
 // emu
@@ -85,7 +84,6 @@ protected:
 	virtual void create_disasm_window() override { create_window<debugger::win::disasmwin_info>(); }
 	virtual void create_log_window() override { create_window<debugger::win::logwin_info>(); }
 	virtual void create_points_window() override { create_window<debugger::win::pointswin_info>(); }
-	virtual void create_source_window() override { create_window<debugger::win::sourcewin_info>(); }
 	virtual void remove_window(debugger::win::debugwin_info &info) override;
 
 	virtual void show_all() override;

@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Aaron Giles, Vas Crabb
+// copyright-holders:David Broman
 //============================================================
 //
 //  sourcewininfo.cpp - Win32 debug window handling
@@ -18,9 +18,8 @@
 
 namespace osd::debugger::win {
 
-sourcewin_info::sourcewin_info(debugger_windows_interface &debugger) :
-	// disasmbasewin_info(debugger, false, std::string("Source").c_str(), nullptr),
-	disasmbasewin_info(debugger, true, "Debug", nullptr),
+sourcewin_info::sourcewin_info(debugger_windows_interface &debugger, bool is_main_console, LPCSTR title, WNDPROC handler) :
+	disasmbasewin_info(debugger, is_main_console, title, handler),
 	m_filecombownd(nullptr)
 {
 	if (!window())

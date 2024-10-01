@@ -48,7 +48,6 @@ public:
 	virtual void create_disasm_window() = 0;
 	virtual void create_log_window() = 0;
 	virtual void create_points_window() = 0;
-	virtual void create_source_window() = 0;
 	virtual void remove_window(debugwin_info &info) = 0;
 
 	virtual void show_all() = 0;
