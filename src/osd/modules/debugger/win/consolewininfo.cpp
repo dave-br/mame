@@ -210,8 +210,7 @@ void choose_image(device_image_interface &device, HWND owner, REFCLSID class_id,
 
 
 consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
-	sourcewin_info(debugger),
-	// disasmbasewin_info(debugger, true, "Debug", nullptr),
+	sourcewin_info(debugger, true, "Debug", nullptr),
 	m_current_cpu(nullptr),
 	m_devices_menu(nullptr)
 {
