@@ -152,7 +152,7 @@ void disasmwin_info::update_caption()
 
 void disasmwin_info::restore_configuration_from_node(util::xml::data_node const &node)
 {
-	m_views[VIEW_IDX_DISASM]->set_source_index(node.get_attribute_int(ATTR_WINDOW_DISASSEMBLY_CPU, m_views[0]->source_index()));
+	m_views[VIEW_IDX_DISASM]->set_source_index(node.get_attribute_int(ATTR_WINDOW_DISASSEMBLY_CPU, m_views[VIEW_IDX_DISASM]->source_index()));
 	int const cursource = m_views[VIEW_IDX_DISASM]->source_index();
 	if (0 <= cursource)
 		SendMessage(m_combownd, CB_SETCURSEL, cursource, 0);
