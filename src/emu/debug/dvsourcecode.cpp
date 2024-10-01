@@ -66,7 +66,7 @@ const std::error_condition & line_indexed_file::open(const char * file_path)
 //-------------------------------------------------
 
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
-	debug_view_disasm(machine, osdupdate, osdprivate, DVT_SOURCE),
+	debug_view_disasm(machine, osdupdate, osdprivate, true /* source_code_debugging */),
 	m_state(nullptr),
 	m_debug_info(machine.debugger().debug_info()),
 	m_cur_src_index(0),

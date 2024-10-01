@@ -66,7 +66,7 @@ class debug_view_disasm : public debug_view
 
 protected:
 	// construction/destruction
-	debug_view_disasm(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate, debug_view_type type = DVT_DISASSEMBLY);
+	debug_view_disasm(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate, bool source_code_debugging = false);
 	virtual ~debug_view_disasm();
 
 public:
