@@ -210,11 +210,17 @@ bool disasmbasewin_info::handle_disasm_command(WPARAM wparam, LPARAM lparam)
 
 bool disasmbasewin_info::handle_common_command(WPARAM wparam, LPARAM lparam)
 {
-	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
+	disasmview_info const *  dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
+	if (this->is_main_console() && !m_views[VIEW_IDX_DISASM]->is_visible())
+	{
+		dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_SOURCE].get());
+	}
 	switch (HIWORD(wparam))
 	{
 	// menu selections
 	case 0:
+		switch (LOWORD(wparam))
+		{
 		case ID_TOGGLE_BREAKPOINT:
 			if (dasmview->cursor_visible())
 			{
@@ -313,6 +319,7 @@ bool disasmbasewin_info::handle_common_command(WPARAM wparam, LPARAM lparam)
 				}
 			}
 			return true;	
+		}
 	}
 	return false;
 }
