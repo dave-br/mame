@@ -271,26 +271,35 @@ class local_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
-	local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression);
+	local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
+	local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression);
 
 // 	// getters
 // 	u16 minparams() const { return m_minparams; }
 // 	u16 maxparams() const { return m_maxparams; }
 
-// 	// symbol access
-// 	virtual bool is_lval() const override { return false; }
-// 	virtual u64 value() const override;
-// 	virtual void set_value(u64 newvalue) override;
+	// symbol access
+	virtual bool is_lval() const override { return false; }
+	virtual u64 value() const override;
+	virtual void set_value(u64 newvalue) override;
+	virtual bool is_in_scope() const override;
+
 
 // 	// execution helper
 // 	virtual u64 execute(int numparams, const u64 *paramlist);
 
-// private:
-// 	// internal state
-// 	u16                         m_minparams;
-// 	u16                         m_maxparams;
-// 	symbol_table::execute_func  m_execute;
+private:
+	using Type = debug_info_provider_base::local_symbol::Type;
+
+	// internal state
+	symbol_table::getter_func m_get_pc;
+	std::vector<std::pair<offs_t,offs_t>> m_scope_ranges;
+	Type m_type;
+	union
+	{
+		s64 m_value_integer;
+		std::string m_value_expression;
+	};
 };
 
 
@@ -301,17 +310,37 @@ public:
 //-------------------------------------------------
 //-------------------------------------------------
 
-local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
 {
 	
 }
 
-local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
+local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
 {
 
 }
 
+u64 local_symbol_entry::value() const
+{
+	if (m_type == Type::CONSTANT_INTEGER)
+	{
+		return m_value_integer;
+	}
 
+	return parsed_expression(m_table, m_value_expression).execute();
+}
+
+
+void local_symbol_entry::set_value(u64 newvalue)
+{
+	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
+}
+
+
+bool local_symbol_entry::is_in_scope() const
+{
+	m_table.
+}
 
 
 
@@ -513,7 +542,7 @@ symbol_entry *symbol_table::find_deep(const char *symbol)
 	for (symbol_table *symtable = this; symtable != nullptr; symtable = symtable->m_parent)
 	{
 		symbol_entry *entry = symtable->find(symbol);
-		if (entry != nullptr)
+		if (entry != nullptr && entry->is_in_scope())
 			return entry;
 	}
 	return nullptr;
@@ -1537,6 +1566,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 				parse_token &newtoken = m_tokenlist.back();
 				newtoken.configure_operator(TVL_EXECUTEFUNC, 0);
 			}
+			// TODO: SHOULD i ADD AN "EVAL" TOKEN
 			return;
 		}
 
