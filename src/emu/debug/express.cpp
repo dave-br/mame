@@ -262,6 +262,59 @@ u64 function_symbol_entry::execute(int numparams, const u64 *paramlist)
 
 
 
+//**************************************************************************
+//  LOCAL SYMBOL ENTRY
+//**************************************************************************
+
+// a symbol entry representing a lexically-scoped local symbol obtained from source-debugging info
+class local_symbol_entry : public symbol_entry
+{
+public:
+	// construction/destruction
+	local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
+	local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression);
+
+// 	// getters
+// 	u16 minparams() const { return m_minparams; }
+// 	u16 maxparams() const { return m_maxparams; }
+
+// 	// symbol access
+// 	virtual bool is_lval() const override { return false; }
+// 	virtual u64 value() const override;
+// 	virtual void set_value(u64 newvalue) override;
+
+// 	// execution helper
+// 	virtual u64 execute(int numparams, const u64 *paramlist);
+
+// private:
+// 	// internal state
+// 	u16                         m_minparams;
+// 	u16                         m_maxparams;
+// 	symbol_table::execute_func  m_execute;
+};
+
+
+//-------------------------------------------------
+//  local_symbol_entry - constructor
+//-------------------------------------------------
+
+//-------------------------------------------------
+//-------------------------------------------------
+
+local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+{
+	
+}
+
+local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
+{
+
+}
+
+
+
+
+
 /***************************************************************************
     INLINE FUNCTIONS
 ***************************************************************************/
@@ -428,6 +481,25 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 	m_symlist.erase(name);
 	return *m_symlist.emplace(name, std::make_unique<function_symbol_entry>(*this, name, minparams, maxparams, execute)).first->second;
 }
+
+
+//-------------------------------------------------
+//-------------------------------------------------
+
+symbol_entry &symbol_table::add(const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+{
+	return *m_symlist.emplace(name, std::make_unique<local_symbol_entry>(*this, name, scope_ranges, value)).first->second;
+}
+
+
+//-------------------------------------------------
+//-------------------------------------------------
+
+symbol_entry &symbol_table::add(const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
+{
+	return *m_symlist.emplace(name, std::make_unique<local_symbol_entry>(*this, name, scope_ranges, expression)).first->second;
+}
+
 
 
 //-------------------------------------------------
