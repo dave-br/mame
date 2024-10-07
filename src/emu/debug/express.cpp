@@ -1446,7 +1446,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 
 	default:
 		// check for a symbol match
-		// Symbols loaded via debug info files are case-sensitive, so first try
+		// Symbols loaded via source-debugging info are case-sensitive, so first try
 		// with the original case specified by user
 		symbol_entry *symbol = m_symtable.get().find_deep(original_symbol_name.c_str());
 		if (symbol == nullptr)

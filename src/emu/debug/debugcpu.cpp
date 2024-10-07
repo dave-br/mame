@@ -551,17 +551,35 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("totalcycles", symbol_table::READ_ONLY, &m_total_cycles);
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
-			std::vector<debug_info_provider_base::symbol> di_symbols = device.machine().debugger().debug_info().global_symbols();
-			if (di_symbols.size() > 0)
+			// Add symbols from source debugging info, if any.  First, globals
+			std::vector<debug_info_provider_base::global_symbol> srcdbg_global_symbols = device.machine().debugger().debug_info().global_symbols();
+			// if (srcdbg_global_symbols.size() > 0)
+			// {
+			// Source debugging information includes symbols, so point m_symtable to them,
+			// and set their parent to be the (old) m_symtable
+			m_symtable_srcdbg_globals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
+			for (offs_t i = 0; i < srcdbg_global_symbols.size(); i++)
 			{
-				// Source debugging information includes symbols, so point m_symtable to them,
-				// and set their parent to be the (old) m_symtable
-				m_symtable_debug_info = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-				for (offs_t i = 0; i < di_symbols.size(); i++)
+				m_symtable_srcdbg_globals->add(srcdbg_global_symbols[i].name(), srcdbg_global_symbols[i].value());
+			}
+				// m_symtable = m_symtable_srcdbg_globals.get();
+			// }
+
+			// Next, lexically-scoped (local) symbols from source debugging info
+			std::vector<debug_info_provider_base::local_symbol> srcdbg_local_symbols = device.machine().debugger().debug_info().local_symbols();
+			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
+			for (offs_t i = 0; i < srcdbg_local_symbols.size(); i++)
+			{
+				const debug_info_provider_base::local_symbol & symbol = srcdbg_local_symbols[i];
+				if (symbol.type() == debug_info_provider_base::local_symbol::CONSTANT_INTEGER)
 				{
-					m_symtable_debug_info->add(di_symbols[i].name(), di_symbols[i].value());
+					m_symtable_srcdbg_locals->add(symbol.name(), symbol.scope_ranges(), symbol.value_integer());
 				}
-				m_symtable = m_symtable_debug_info.get();
+				else
+				{
+					assert (symbol.type() == debug_info_provider_base::local_symbol::EXPRESSION);
+					m_symtable_srcdbg_locals->add(symbol.name(), symbol.scope_ranges(), symbol.value_expression());
+				}
 			}
 		}
 

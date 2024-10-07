@@ -57,10 +57,10 @@ public:
 		std::string m_local;
 	};
 
-	class symbol
+	class global_symbol
 	{
 	public:
-		symbol(std::string & name_p, offs_t value_p) :
+		global_symbol(std::string & name_p, offs_t value_p) :
 			m_name(std::move(name_p)),
 			m_value(value_p)
 		{
@@ -72,6 +72,38 @@ public:
 	private:
 		std::string m_name;
 		s64 m_value;
+	};
+
+	class local_symbol
+	{
+	public:
+		enum Type
+		{
+			CONSTANT_INTEGER,
+			EXPRESSION,
+		};
+
+		local_symbol(std::string & name_p, offs_t value_p) :
+			m_name(std::move(name_p)),
+			m_value(value_p)
+		{
+		}
+
+		const char * name() const { return m_name.c_str(); };
+		const std::vector<std::pair<offs_t,offs_t>> & const scope_ranges() { return m_scope_ranges; };
+		Type type() const { return m_type; };
+		s64 value_integer() const { return m_value_integer; };
+		const std::string & value_expression() const { return m_value_expression; };
+
+	private:
+		std::string m_name;
+		std::vector<std::pair<offs_t,offs_t>> m_scope_ranges;
+		Type m_type;
+		union
+		{
+			s64 m_value_integer;
+			std::string m_value_expression;
+		};
 	};
 
 	typedef std::pair<offs_t,offs_t> address_range;

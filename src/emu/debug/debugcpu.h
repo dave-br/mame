@@ -192,7 +192,8 @@ private:
 	// global state
 	u32                         m_flags;                // debugging flags for this CPU
 	std::unique_ptr<symbol_table> m_symtable_device;    // symbol table for expression evaluation
-	std::unique_ptr<symbol_table> m_symtable_debug_info;// symbol table for expression evaluation
+	std::unique_ptr<symbol_table> m_symtable_srcdbg_globals;// symbol table for expression evaluation
+	std::unique_ptr<symbol_table> m_symtable_srcdbg_locals;
 	symbol_table *                m_symtable;
 
 	// stepping information
