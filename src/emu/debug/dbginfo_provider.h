@@ -90,7 +90,7 @@ public:
 		}
 
 		const char * name() const { return m_name.c_str(); };
-		const std::vector<std::pair<offs_t,offs_t>> & const scope_ranges() { return m_scope_ranges; };
+		const std::vector<std::pair<offs_t,offs_t>> & scope_ranges() const { return m_scope_ranges; };
 		Type type() const { return m_type; };
 		s64 value_integer() const { return m_value_integer; };
 		const std::string & value_expression() const { return m_value_expression; };

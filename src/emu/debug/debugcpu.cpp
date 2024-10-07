@@ -571,14 +571,19 @@ device_debug::device_debug(device_t &device)
 			for (offs_t i = 0; i < srcdbg_local_symbols.size(); i++)
 			{
 				const debug_info_provider_base::local_symbol & symbol = srcdbg_local_symbols[i];
+
+				// local symbols require a PC getter function so they can test if they're
+				// currently in scope
+				auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
+
 				if (symbol.type() == debug_info_provider_base::local_symbol::CONSTANT_INTEGER)
 				{
-					m_symtable_srcdbg_locals->add(symbol.name(), symbol.scope_ranges(), symbol.value_integer());
+					m_symtable_srcdbg_locals->add(symbol.name(), pc_getter_binding, symbol.scope_ranges(), symbol.value_integer());
 				}
 				else
 				{
 					assert (symbol.type() == debug_info_provider_base::local_symbol::EXPRESSION);
-					m_symtable_srcdbg_locals->add(symbol.name(), symbol.scope_ranges(), symbol.value_expression());
+					m_symtable_srcdbg_locals->add(symbol.name(), pc_getter_binding, symbol.scope_ranges(), symbol.value_expression());
 				}
 			}
 		}
