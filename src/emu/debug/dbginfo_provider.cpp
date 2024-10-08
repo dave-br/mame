@@ -92,7 +92,8 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	m_source_file_paths(),
 	m_linemaps_by_address(),
 	m_linemaps_by_line(),
-	m_symbols()
+	m_global_symbols(),
+	m_local_symbols()
 {
 	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
 	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
@@ -216,11 +217,13 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 			std::string symbol_name((const char *) &data[string_start], i - string_start);
 			s32 symbol_value;
 			read_field<s32>(symbol_value, data, j);
-			symbol sym(symbol_name, symbol_value);
-			m_symbols.push_back(std::move(sym));
+			global_symbol sym(symbol_name, symbol_value);
+			m_global_symbols.push_back(std::move(sym));
 			string_start = i + 1;
 		}
-	}
+	}	
+
+	// TODO: init local_symbols
 }
 
 void debug_info_simple::generate_local_path(running_machine& machine, const std::string & built, std::string & local)

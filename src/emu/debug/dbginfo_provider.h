@@ -66,12 +66,12 @@ public:
 		{
 		}
 
-		const char * name() { return m_name.c_str(); };
-		s64 value() { return m_value; };
+		const char * name() const { return m_name.c_str(); };
+		u64 value() const { return m_value; };
 
 	private:
 		std::string m_name;
-		s64 m_value;
+		u64 m_value;
 	};
 
 	class local_symbol
@@ -83,10 +83,29 @@ public:
 			EXPRESSION,
 		};
 
-		local_symbol(std::string & name_p, offs_t value_p) :
-			m_name(std::move(name_p)),
-			m_value(value_p)
+		local_symbol(std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, offs_t value) :
+			m_name(std::move(name)),
+			m_scope_ranges(scope_ranges),
+			m_type(CONSTANT_INTEGER),
+			m_value_integer(value)
 		{
+		}
+
+		local_symbol(std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, const std::string & value) :
+			m_name(std::move(name)),
+			m_scope_ranges(scope_ranges),
+			m_type(EXPRESSION)
+		{
+			new (&m_value_expression) std::string(std::move(value));
+		}
+
+		~local_symbol()
+		{
+			using std::string;
+			if (m_type == EXPRESSION)
+			{
+				m_value_expression.~string();
+			}
 		}
 
 		const char * name() const { return m_name.c_str(); };
@@ -101,7 +120,7 @@ public:
 		Type m_type;
 		union
 		{
-			s64 m_value_integer;
+			u64 m_value_integer;
 			std::string m_value_expression;
 		};
 	};
@@ -114,7 +133,8 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
-	virtual const std::vector<symbol> & global_symbols() const = 0;
+	virtual const std::vector<global_symbol> & global_symbols() const = 0;
+	virtual const std::vector<local_symbol> & local_symbols() const = 0;
 };
 
 // debug-info provider for the simple format
@@ -130,7 +150,8 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
-	virtual const std::vector<symbol> & global_symbols() const override { return m_symbols; };
+	virtual const std::vector<global_symbol> & global_symbols() const override { return m_global_symbols; };
+	virtual const std::vector<local_symbol> & local_symbols() const override { return m_local_symbols; };
 
 private:
 	struct address_line
@@ -148,7 +169,8 @@ private:
 	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 	                                                                   // sorted by line, from file #i
-	std::vector<symbol>                      m_symbols;
+	std::vector<global_symbol>                      m_global_symbols;
+	std::vector<local_symbol>						 m_local_symbols;
 };
 
 

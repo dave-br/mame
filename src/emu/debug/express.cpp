@@ -273,6 +273,7 @@ public:
 	// construction/destruction
 	local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
 	local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression);
+	~local_symbol_entry();
 
 // 	// getters
 // 	u16 minparams() const { return m_minparams; }
@@ -311,14 +312,32 @@ private:
 //-------------------------------------------------
 
 local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
-{
-	
+	: symbol_entry(table, SMT_INTEGER, name, ""),
+	  m_get_pc(get_pc),
+	  m_scope_ranges(std::move(scope_ranges)),
+	  m_type(Type::CONSTANT_INTEGER),
+	  m_value_integer(value)
+{	
 }
 
 local_symbol_entry::local_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
+	: symbol_entry(table, SMT_INTEGER, name, ""),
+	  m_get_pc(get_pc),
+	  m_scope_ranges(std::move(scope_ranges)),
+	  m_type(Type::EXPRESSION)
 {
-
+	new (&m_value_expression) std::string(std::move(expression));
 }
+
+local_symbol_entry::~local_symbol_entry()
+{
+	using std::string;
+	if (m_type == Type::EXPRESSION)
+	{
+		m_value_expression.~string();
+	}
+}
+
 
 u64 local_symbol_entry::value() const
 {
@@ -339,7 +358,15 @@ void local_symbol_entry::set_value(u64 newvalue)
 
 bool local_symbol_entry::is_in_scope() const
 {
-	m_table.
+	u64 pc = m_get_pc();
+	for (offs_t i = 0; i < m_scope_ranges.size(); i++)
+	{
+		if (m_scope_ranges[i].first <= pc && pc <= m_scope_ranges[i].second)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 
@@ -515,18 +542,18 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 //-------------------------------------------------
 //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
 {
-	return *m_symlist.emplace(name, std::make_unique<local_symbol_entry>(*this, name, scope_ranges, value)).first->second;
+	return *m_symlist.emplace(name, std::make_unique<local_symbol_entry>(*this, name, get_pc, scope_ranges, value)).first->second;
 }
 
 
 //-------------------------------------------------
 //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
+symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, const std::string & expression)
 {
-	return *m_symlist.emplace(name, std::make_unique<local_symbol_entry>(*this, name, scope_ranges, expression)).first->second;
+	return *m_symlist.emplace(name, std::make_unique<local_symbol_entry>(*this, name, get_pc, scope_ranges, expression)).first->second;
 }
 
 
