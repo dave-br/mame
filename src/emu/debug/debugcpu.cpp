@@ -490,7 +490,8 @@ device_debug::device_debug(device_t &device)
 	, m_disasm(nullptr)
 	, m_flags(0)
 	, m_symtable_device(std::make_unique<symbol_table>(device.machine(), &device.machine().debugger().cpu().global_symtable(), &device))
-	, m_symtable_debug_info()
+	, m_symtable_srcdbg_globals()
+	, m_symtable_srcdbg_locals()
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
@@ -552,38 +553,34 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			// Add symbols from source debugging info, if any.  First, globals
-			std::vector<debug_info_provider_base::global_symbol> srcdbg_global_symbols = device.machine().debugger().debug_info().global_symbols();
-			// if (srcdbg_global_symbols.size() > 0)
-			// {
+			const std::vector<debug_info_provider_base::global_symbol> & srcdbg_global_symbols = device.machine().debugger().debug_info().global_symbols();
+
+			// TODO: FIX COMMENT
 			// Source debugging information includes symbols, so point m_symtable to them,
 			// and set their parent to be the (old) m_symtable
 			m_symtable_srcdbg_globals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-			for (offs_t i = 0; i < srcdbg_global_symbols.size(); i++)
+			for (const debug_info_provider_base::global_symbol & sym : srcdbg_global_symbols)
 			{
-				m_symtable_srcdbg_globals->add(srcdbg_global_symbols[i].name(), srcdbg_global_symbols[i].value());
+				m_symtable_srcdbg_globals->add(sym.name(), sym.value());
 			}
-				// m_symtable = m_symtable_srcdbg_globals.get();
-			// }
 
 			// Next, lexically-scoped (local) symbols from source debugging info
-			std::vector<debug_info_provider_base::local_symbol> srcdbg_local_symbols = device.machine().debugger().debug_info().local_symbols();
+			const std::vector<debug_info_provider_base::local_symbol> & srcdbg_local_symbols = device.machine().debugger().debug_info().local_symbols();
 			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-			for (offs_t i = 0; i < srcdbg_local_symbols.size(); i++)
+			for (const debug_info_provider_base::local_symbol & sym : srcdbg_local_symbols)
 			{
-				const debug_info_provider_base::local_symbol & symbol = srcdbg_local_symbols[i];
-
 				// local symbols require a PC getter function so they can test if they're
 				// currently in scope
 				auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
 
-				if (symbol.type() == debug_info_provider_base::local_symbol::CONSTANT_INTEGER)
+				if (sym.type() == debug_info_provider_base::local_symbol::CONSTANT_INTEGER)
 				{
-					m_symtable_srcdbg_locals->add(symbol.name(), pc_getter_binding, symbol.scope_ranges(), symbol.value_integer());
+					m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value_integer());
 				}
 				else
 				{
-					assert (symbol.type() == debug_info_provider_base::local_symbol::EXPRESSION);
-					m_symtable_srcdbg_locals->add(symbol.name(), pc_getter_binding, symbol.scope_ranges(), symbol.value_expression());
+					assert (sym.type() == debug_info_provider_base::local_symbol::EXPRESSION);
+					m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value_expression());
 				}
 			}
 		}
