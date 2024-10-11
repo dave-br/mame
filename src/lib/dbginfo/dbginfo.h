@@ -7,7 +7,7 @@ extern "C" {
 ABI register numbers for Motorola 8/16-bit processors
 taken from https://refspecs.linuxfoundation.org/elf/m8-16eabi.pdf
 
-Register Name					Number		HC05	HC08	HC11	HC12	HC16
+Register Name					Number		68HC05	68HC08	68HC11	68HC12	68HC16
 Accumulator A 					0			X		X		X		X		X
 Accumulator B 					1							X		X		X
 Accumulator D 					3							X		X		X
@@ -46,7 +46,7 @@ unsigned short __cdecl mame_mdi_simp_add_source_file_path(void * mdi_simp_state,
 void __cdecl mame_mdi_simp_add_line_mapping(void * mdi_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
 void __cdecl mame_mdi_simp_add_global_constant_symbol(void * mdi_simp_state, const char * symbol_name, int symbol_value);
 void __cdecl mame_mdi_simp_add_local_constant_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
-void __cdecl mame_mdi_simp_add_local_dynamic_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char register, int register_offset);
+void __cdecl mame_mdi_simp_add_local_dynamic_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 void __cdecl mame_mdi_simp_close(void * mdi_simp_state);
 
 #ifdef __cplusplus

@@ -45,6 +45,8 @@ typedef struct
 */
 typedef struct
 {
+	/* TODO: USE addres_range struct */
+
 	/* address in CPU space of first byte of first instruction for this line */
 	unsigned short address_first;
 
@@ -58,6 +60,33 @@ typedef struct
 	unsigned int line_number;
 } mdi_line_mapping;
 
+typedef struct
+{
+	unsigned short address_first;
+	unsigned short address_last;
+} address_range;
+
+typedef struct
+{
+	int symbol_value;
+	unsigned int num_address_ranges;
+	address_range ranges[];
+} local_constant_symbol_value;
+
+typedef struct
+{
+	address_range range;
+	unsigned char reg;
+	int reg_offset;
+
+} local_dynamic_symbol_entry;
+
+typedef struct
+{
+	unsigned int num_local_dynamic_symbol_entries;
+	local_dynamic_symbol_entry local_dynamic_symbol_entries[];
+
+} local_dynamic_symbol_value;
 
 /*
 	mame_debug_info_simple format:
@@ -66,7 +95,9 @@ typedef struct
 	char                            source_file_paths[][]
 	mdi_line_mapping                line_mappings[num_line_mappings]
 	char                            symbol_names[][]
-	int                             symbol_values[]
+	int                             global_constant_symbol_values[num_global_constant_symbol_values]
+	local_constant_symbol_value		local_constant_symbol_values[]
+	local_dynamic_symbol_value		local_dynamic_symbol_values[]
 
 	Description:
 	- Each source_file_paths[i] is a null-terminated string path to a source file.  The
