@@ -8,7 +8,7 @@
 class resizeable_array
 {
 public:
-	typedef bool (*data_compare)(const void * data1, const void * data2);
+	// typedef bool (*data_compare)(const void * data1, const void * data2);
 	void construct()
 	{
 		m_data = nullptr;
@@ -36,14 +36,34 @@ public:
 		m_size += data_size;
 	}
 
-	int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
+	// int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
+	// {
+	// 	const char * data = m_data;
+	// 	const char * data_end = m_data + m_size;
+	// 	int ret = 0;
+	// 	while (data < data_end)
+	// 	{
+	// 		if (comp(data, data_bytes))
+	// 		{
+	// 			return ret;
+	// 		}
+
+	// 		data += data_size;
+	// 		ret++;
+	// 	}
+
+	// 	push_back(data_bytes, data_size);
+	// 	return ret;
+	// }
+
+	unsigned int find(unsigned int search, unsigned int data_size)
 	{
 		const char * data = m_data;
 		const char * data_end = m_data + m_size;
 		int ret = 0;
 		while (data < data_end)
 		{
-			if (comp(data, data_bytes))
+			if (*(unsigned int *) data == search)
 			{
 				return ret;
 			}
@@ -52,8 +72,7 @@ public:
 			ret++;
 		}
 
-		push_back(data_bytes, data_size);
-		return ret;
+		return (unsigned int) - 1;
 	}
 
 
@@ -101,10 +120,10 @@ public:
 		resizeable_array::push_back((char *) &new_int, sizeof(unsigned int));
 	}
 
-	int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
-	{
-		return 0;		// not implemented
-	}
+	// int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
+	// {
+	// 	return 0;		// not implemented
+	// }
 
 	unsigned int get(unsigned int i)
 	{
@@ -151,7 +170,23 @@ public:
 
 private:
 	int_resizeable_array m_offsets;
-	data_compare m_comp;
+	// data_compare m_comp;
+};
+
+
+struct local_constant
+{
+	unsigned int symbol_name_index;
+	int symbol_value;
+	unsigned int num_address_ranges;
+	resizeable_array ranges;
+};
+
+struct local_dynamic
+{
+	unsigned int symbol_name_index;
+	unsigned int num_local_dynamic_symbol_entries;
+	resizeable_array values;
 };
 
 class mdi_simple_generator
@@ -165,6 +200,18 @@ public:
 		m_line_mappings.construct();
 		m_symbol_names.construct();
 		m_global_constant_symbol_values.construct();
+		m_local_constant_symbol_values.construct();
+		m_local_dynamic_symbol_values.construct();
+
+		memcpy(&m_header.header_base.magic[0], "MDbI", 4);
+		memcpy(&m_header.header_base.type[0], "simp", 4);
+		m_header.header_base.version = 1;
+		m_header.source_file_paths_size = 0;
+		m_header.num_line_mappings = 0;
+		m_header.symbol_names_size = 0;
+		m_header.num_global_constant_symbol_values = 0;
+		m_header.local_constant_symbol_values_size = 0;
+		m_header.local_dynamic_symbol_values_size = 0;
 	}
 
 	void destruct()
@@ -188,16 +235,6 @@ public:
 			// TODO: ERROR
 			return;
 		}
-
-		memcpy(&m_header.header_base.magic[0], "MDbI", 4);
-		memcpy(&m_header.header_base.type[0], "simp", 4);
-		m_header.header_base.version = 1;
-		m_header.source_file_paths_size = 0;
-		m_header.num_line_mappings = 0;
-		m_header.symbol_names_size = 0;
-		m_header.num_global_constant_symbol_values = 0;
-		m_header.local_constant_symbol_values_size = 0;
-		m_header.local_dynamic_symbol_values_size = 0;
 	}
 
 	unsigned short add_source_file_path(const char * source_file_path)
@@ -209,35 +246,74 @@ public:
 	void add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
 	{
 		m_header.num_line_mappings++;
-		mdi_line_mapping line_mapping = { address_first, address_last, source_file_index, line_number };
+		mdi_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
 		m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
 	}
 
 	void add_global_constant_symbol(const char * symbol_name, int symbol_value)
 	{
-		int name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
-		// add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
 		global_constant_symbol_value global;
-		global.symbol_name_index = name_index;
+		global.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
 		global.symbol_value = symbol_value;
 		m_global_constant_symbol_values.push_back(&global, sizeof(global));
+		m_header.num_global_constant_symbol_values++;
 	}
 
 	void add_local_constant_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 	{
-		int name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
-		// add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
-		local_constant_symbol_value local;
-		local.
-		global.symbol_name_index = m_num_symbol_names++;
-		global.symbol_value = symbol_value;
-		m_global_constant_symbol_values.push_back(&global, sizeof(global));
+		local_constant * entry_ptr;
+		local_constant local;
+		local.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
+		unsigned int entry_idx = m_local_constant_symbol_values.find(local.symbol_name_index, sizeof(local));
+		if (entry_idx == (unsigned int) -1)
+		{
+			local.symbol_value = symbol_value;
+			local.num_address_ranges = 0;
+			local.ranges.construct();
+			entry_ptr = &local;
+			// TODO: DEBUG to see if this size excludes local_constant_symbol_entries[]
+			m_header.local_constant_symbol_values_size += sizeof(local_constant_symbol_value);
+		}
+		else
+		{
+			entry_ptr = (local_constant *) m_local_constant_symbol_values.get() + entry_idx * sizeof(local);
+		}
 
+		address_range range;
+		range.address_first = address_first;
+		range.address_last = address_last;
+		entry_ptr->ranges.push_back(&range, sizeof(range));
+		m_header.local_constant_symbol_values_size += sizeof(range);
+		entry_ptr->num_address_ranges++;
 	}
 
 	void add_local_dynamic_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 	{
+		local_dynamic * entry_ptr;
+		local_dynamic local;
+		local.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
+		unsigned int entry_idx = m_local_dynamic_symbol_values.find(local.symbol_name_index, sizeof(local));
+		if (entry_idx == (unsigned int) -1)
+		{
+			local.num_local_dynamic_symbol_entries = 0;
+			local.values.construct();
+			entry_ptr = &local;
+			// TODO: DEBUG to see if this size excludes local_dynamic_symbol_entries[]
+			m_header.local_dynamic_symbol_values_size += sizeof(local_dynamic_symbol_value);
+		}
+		else
+		{
+			entry_ptr = (local_dynamic *) m_local_dynamic_symbol_values.get() + entry_idx * sizeof(local);
+		}
 
+		local_dynamic_symbol_entry value;
+		value.range.address_first = address_first;
+		value.range.address_last = address_last;
+		value.reg = reg;
+		value.reg_offset = reg_offset;
+		entry_ptr->values.push_back(&value, sizeof(value));
+		m_header.local_dynamic_symbol_values_size += sizeof(value);
+		entry_ptr->num_local_dynamic_symbol_entries++;
 	}
 
 
@@ -258,9 +334,27 @@ public:
 		{
 			fwrite(m_symbol_names.get() + i, sizeof(char), 1, m_output);
 		}
-		for (int i=0; i < m_global_constant_symbol_values.size(); i += sizeof(int))
+		for (int i=0; i < m_global_constant_symbol_values.size(); i += sizeof(global_constant_symbol_value))
 		{
-			fwrite(m_global_constant_symbol_values.get() + i, sizeof(int), 1, m_output);
+			fwrite(m_global_constant_symbol_values.get() + i, sizeof(global_constant_symbol_value), 1, m_output);
+		}
+		for (int i=0; i < m_local_constant_symbol_values.size(); i += sizeof(local_constant))
+		{
+			local_constant * loc = (local_constant *) m_local_constant_symbol_values.get() + i;
+			fwrite(loc, sizeof(local_constant), 1, m_output);
+			for (int j=0; j < loc->ranges.size(); j += sizeof(address_range))
+			{
+				fwrite(loc->ranges.get() + j, sizeof(address_range), 1, m_output);
+			}
+		}
+		for (int i=0; i < m_local_dynamic_symbol_values.size(); i += sizeof(local_dynamic))
+		{
+			local_dynamic * loc = (local_dynamic *) m_local_dynamic_symbol_values.get() + i;
+			fwrite(loc, sizeof(local_dynamic), 1, m_output);
+			for (int j=0; j < loc->values.size(); j += sizeof(local_dynamic_symbol_entry))
+			{
+				fwrite(loc->values.get() + j, sizeof(local_dynamic_symbol_entry), 1, m_output);
+			}
 		}
 		fclose(m_output);
 		m_output = nullptr;
@@ -286,6 +380,8 @@ private:
 	resizeable_array m_line_mappings;
 	string_resizeable_array m_symbol_names;
 	resizeable_array m_global_constant_symbol_values;
+	resizeable_array m_local_constant_symbol_values;
+	resizeable_array m_local_dynamic_symbol_values;
 };
 
 
