@@ -8,6 +8,7 @@
 class resizeable_array
 {
 public:
+	typedef bool (*data_compare)(const void * data1, const void * data2);
 	void construct()
 	{
 		m_data = nullptr;
@@ -23,17 +24,38 @@ public:
 		}
 	}
 
-	unsigned char * get()
+	char * get()
 	{
 		return m_data;
 	}
 
-	void push_back(const void * data_bytes, unsigned int data_size)
+	void push_back(const void * data_bytes, int data_size)
 	{
 		ensure_capacity(m_size + data_size);
 		memcpy(m_data + m_size, data_bytes, data_size); 
 		m_size += data_size;
 	}
+
+	int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
+	{
+		const char * data = m_data;
+		const char * data_end = m_data + m_size;
+		int ret = 0;
+		while (data < data_end)
+		{
+			if (comp(data, data_bytes))
+			{
+				return ret;
+			}
+
+			data += data_size;
+			ret++;
+		}
+
+		push_back(data_bytes, data_size);
+		return ret;
+	}
+
 
 	unsigned int size()
 	{
@@ -62,41 +84,69 @@ protected:
 
 		memcpy(new_data, m_data, m_size);
 		free(m_data);
-		m_data = (unsigned char *) new_data;
+		m_data = (char *) new_data;
 		m_capacity = new_capacity;
 	}
 
-	unsigned char * m_data;
+	char * m_data;
 	unsigned int m_size;
 	unsigned int m_capacity;
 };
 
-class indexed_resizeable_array : public resizeable_array
+class int_resizeable_array : public resizeable_array
 {
 public:
-	typedef bool (*data_compare)(const void * data1, const void * data2);
-	void construct(data_compare comp)
+	void push_back(unsigned int new_int)
+	{
+		resizeable_array::push_back((char *) &new_int, sizeof(unsigned int));
+	}
+
+	int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
+	{
+		return 0;		// not implemented
+	}
+
+	unsigned int get(unsigned int i)
+	{
+		return * (unsigned int *) m_data + (i * sizeof(unsigned int));
+	}
+
+	unsigned int size()
+	{
+		return m_size / sizeof(unsigned int);
+	}	
+};
+
+class string_resizeable_array : public resizeable_array
+{
+public:
+	void construct()
 	{
 		// TODO: are ctors / dtors really out?  I remember new/delete bad for C, but why ctors?
 		resizeable_array::construct();
 		m_offsets.construct();
-		m_comp = comp;
 	}
 
-	int find_or_push_back(const void * new_data, unsigned int & size)
+	unsigned int find_or_push_back(const char * new_string, unsigned int & size)
 	{
 		for (unsigned int i = 0; i < m_offsets.size(); i++)
 		{
-			const void * data = m_data + m_offsets.get(i);
-			if (m_comp(data, new_data))
+			const char * string = m_data + m_offsets.get(i);
+			if (strcmp(string, new_string) == 0)
 			{
 				return i;
 			}
 		}
 
+		// String not found, add it to the end.  Remember that
+		// offset in m_offsets array
 		m_offsets.push_back(m_size);
-		push_back(new_data, size);
-		return m_offsets.count() - 1;
+		size_t length = strlen(new_string);
+		push_back(new_string, length);
+		char null_terminator = '\0';
+		push_back(&null_terminator, 1);
+		size += length + 1;
+		return m_offsets.size() - 1;		// Index into m_offsets representing newly-added string
 	}
 
 private:
@@ -160,22 +210,22 @@ public:
 	{
 		m_header.num_line_mappings++;
 		mdi_line_mapping line_mapping = { address_first, address_last, source_file_index, line_number };
-		m_line_mappings.push_back(&line_mapping, sizeof(line_mapping));
+		m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
 	}
 
 	void add_global_constant_symbol(const char * symbol_name, int symbol_value)
 	{
-		int name_index = m_symbol_names.find_or_push_back(m_header.symbol_names_size, symbol_name);
+		int name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
 		// add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
 		global_constant_symbol_value global;
-		global.symbol_name_index = symbol_names_size;
+		global.symbol_name_index = name_index;
 		global.symbol_value = symbol_value;
 		m_global_constant_symbol_values.push_back(&global, sizeof(global));
 	}
 
 	void add_local_constant_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 	{
-		int name_index = m_symbol_names.find_or_push_back(m_header.symbol_names_size, symbol_name);
+		int name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
 		// add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
 		local_constant_symbol_value local;
 		local.
@@ -234,8 +284,8 @@ private:
 	unsigned short m_num_source_file_paths;
 	resizeable_array m_source_file_paths;
 	resizeable_array m_line_mappings;
-	indexed_resizeable_array m_symbol_names;
-	indexed_resizeable_array m_global_constant_symbol_values;
+	string_resizeable_array m_symbol_names;
+	resizeable_array m_global_constant_symbol_values;
 };
 
 
