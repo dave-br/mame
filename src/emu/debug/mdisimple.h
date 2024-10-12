@@ -34,8 +34,23 @@ typedef struct
 	unsigned int num_line_mappings;
 
 	unsigned int symbol_names_size;
+
+	unsigned int num_global_constant_symbol_values;
+
+	unsigned int local_constant_symbol_values_size;
+
+	unsigned int local_dynamic_symbol_values_size;
 } mame_debug_info_simple_header;
 
+
+typedef struct
+{
+	/* address in CPU space of first byte of first instruction for this range */
+	unsigned short address_first;
+
+	/* address in CPU space of first byte of last instruction (inclusive) for this range */
+	unsigned short address_last;
+} address_range;
 
 /* 
 	A single mapping between a 1-based line number of a source file and the
@@ -45,13 +60,8 @@ typedef struct
 */
 typedef struct
 {
-	/* TODO: USE addres_range struct */
-
-	/* address in CPU space of first byte of first instruction for this line */
-	unsigned short address_first;
-
-	/* address in CPU space of first byte of last instruction (inclusive) for this line */
-	unsigned short address_last;
+	/* range of addresses corresponding to this line */
+	address_range range;
 
 	/* 0-based index of source file (from source_file_paths) containing this line */
 	unsigned short source_file_index;
@@ -60,32 +70,41 @@ typedef struct
 	unsigned int line_number;
 } mdi_line_mapping;
 
-typedef struct
-{
-	unsigned short address_first;
-	unsigned short address_last;
-} address_range;
 
 typedef struct
 {
+	unsigned int symbol_name_index;
+	int symbol_value;
+} global_constant_symbol_value;
+
+typedef struct
+{
+	unsigned int symbol_name_index;
 	int symbol_value;
 	unsigned int num_address_ranges;
 	address_range ranges[];
 } local_constant_symbol_value;
+
+
+/* A local dynamic symbol consists of multiple address ranges, with each range 
+ * corresponding to a (potentially distinct) register offset.  For example,
+ * multiple local variables in different scopes, with the same name, would
+ * be considered the "same" local dynamic symbol, though each one would be
+ * accessed in a different way, depending on which address the PC is currently at.
+ */
 
 typedef struct
 {
 	address_range range;
 	unsigned char reg;
 	int reg_offset;
-
 } local_dynamic_symbol_entry;
 
 typedef struct
 {
+	unsigned int symbol_name_index;
 	unsigned int num_local_dynamic_symbol_entries;
 	local_dynamic_symbol_entry local_dynamic_symbol_entries[];
-
 } local_dynamic_symbol_value;
 
 /*
@@ -95,7 +114,7 @@ typedef struct
 	char                            source_file_paths[][]
 	mdi_line_mapping                line_mappings[num_line_mappings]
 	char                            symbol_names[][]
-	int                             global_constant_symbol_values[num_global_constant_symbol_values]
+	global_constant_symbol_value    global_constant_symbol_values[num_global_constant_symbol_values]
 	local_constant_symbol_value		local_constant_symbol_values[]
 	local_dynamic_symbol_value		local_dynamic_symbol_values[]
 
@@ -103,8 +122,8 @@ typedef struct
 	- Each source_file_paths[i] is a null-terminated string path to a source file.  The
 	  first dimension index fits into an unsigned short.
 	- line_mappings need not be in any order
-	- At most one line_mappings entry per source file line number, and only for line numbers
-	  corresponding to the first byte of a range of machine-language instruction.
+	- There may be 0, 1, or more line_mappings entries per source file line number, and only
+	  for line numbers corresponding to the first byte of a range of machine-language instruction.
 	- No two line_mapping entries should have intersecting address ranges.
 	- There is no compiler padding in these structures
 
