@@ -40,7 +40,7 @@ public:
 		return m_size;
 	}
 
-private:
+protected:
 	void ensure_capacity(unsigned int req_capacity)
 	{
 		if (req_capacity <= m_capacity)
@@ -69,6 +69,39 @@ private:
 	unsigned char * m_data;
 	unsigned int m_size;
 	unsigned int m_capacity;
+};
+
+class indexed_resizeable_array : public resizeable_array
+{
+public:
+	typedef bool (*data_compare)(const void * data1, const void * data2);
+	void construct(data_compare comp)
+	{
+		// TODO: are ctors / dtors really out?  I remember new/delete bad for C, but why ctors?
+		resizeable_array::construct();
+		m_offsets.construct();
+		m_comp = comp;
+	}
+
+	int find_or_push_back(const void * new_data, unsigned int & size)
+	{
+		for (unsigned int i = 0; i < m_offsets.size(); i++)
+		{
+			const void * data = m_data + m_offsets.get(i);
+			if (m_comp(data, new_data))
+			{
+				return i;
+			}
+		}
+
+		m_offsets.push_back(m_size);
+		push_back(new_data, size);
+		return m_offsets.count() - 1;
+	}
+
+private:
+	int_resizeable_array m_offsets;
+	data_compare m_comp;
 };
 
 class mdi_simple_generator
@@ -112,6 +145,9 @@ public:
 		m_header.source_file_paths_size = 0;
 		m_header.num_line_mappings = 0;
 		m_header.symbol_names_size = 0;
+		m_header.num_global_constant_symbol_values = 0;
+		m_header.local_constant_symbol_values_size = 0;
+		m_header.local_dynamic_symbol_values_size = 0;
 	}
 
 	unsigned short add_source_file_path(const char * source_file_path)
@@ -129,12 +165,23 @@ public:
 
 	void add_global_constant_symbol(const char * symbol_name, int symbol_value)
 	{
-		add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
-		m_global_constant_symbol_values.push_back(&symbol_value, sizeof(symbol_value));
+		int name_index = m_symbol_names.find_or_push_back(m_header.symbol_names_size, symbol_name);
+		// add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
+		global_constant_symbol_value global;
+		global.symbol_name_index = symbol_names_size;
+		global.symbol_value = symbol_value;
+		m_global_constant_symbol_values.push_back(&global, sizeof(global));
 	}
 
 	void add_local_constant_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 	{
+		int name_index = m_symbol_names.find_or_push_back(m_header.symbol_names_size, symbol_name);
+		// add_string(m_symbol_names, m_header.symbol_names_size, symbol_name);
+		local_constant_symbol_value local;
+		local.
+		global.symbol_name_index = m_num_symbol_names++;
+		global.symbol_value = symbol_value;
+		m_global_constant_symbol_values.push_back(&global, sizeof(global));
 
 	}
 
@@ -187,8 +234,8 @@ private:
 	unsigned short m_num_source_file_paths;
 	resizeable_array m_source_file_paths;
 	resizeable_array m_line_mappings;
-	resizeable_array m_symbol_names;
-	resizeable_array m_global_constant_symbol_values;
+	indexed_resizeable_array m_symbol_names;
+	indexed_resizeable_array m_global_constant_symbol_values;
 };
 
 
