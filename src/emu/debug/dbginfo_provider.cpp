@@ -95,135 +95,135 @@ debug_info_simple::debug_info_simple(running_machine& machine, std::vector<uint8
 	m_global_symbols(),
 	m_local_symbols()
 {
-	mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
-	if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
-	if (strncmp(header_base->type, "simp", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
-	if (header_base->version != 1) { assert(false); };						// TODO: ERROR
+	// mame_debug_info_header_base * header_base = (mame_debug_info_header_base *) &data[0];
+	// if (strncmp(header_base->magic, "MDbI", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info as err condition
+	// if (strncmp(header_base->type, "simp", 4) != 0) { assert(false); };		// TODO: Move to debug_info_provider_base::create_debug_info to decide to call this fcn
+	// if (header_base->version != 1) { assert(false); };						// TODO: ERROR
 
-	u32 i = 0;
-	mame_debug_info_simple_header header;
-	read_field<mame_debug_info_simple_header>(header, data, i);
+	// u32 i = 0;
+	// mame_debug_info_simple_header header;
+	// read_field<mame_debug_info_simple_header>(header, data, i);
 
-	if (header.source_file_paths_size == 0)
-	{
-		// TODO ERROR
-		assert(false);
-	}
+	// if (header.source_file_paths_size == 0)
+	// {
+	// 	// TODO ERROR
+	// 	assert(false);
+	// }
 
-	u32 first_line_mapping = i + header.source_file_paths_size;
-	if (data.size() <= first_line_mapping - 1)
-	{
-		// TODO ERROR
-		assert(false);
-	}
+	// u32 first_line_mapping = i + header.source_file_paths_size;
+	// if (data.size() <= first_line_mapping - 1)
+	// {
+	// 	// TODO ERROR
+	// 	assert(false);
+	// }
 
-	// Final byte before first_line_mapping must be null-terminator.
-	// Ensuring this now avoids buffer overruns when reading the strings
-	if (data[first_line_mapping - 1] != '\0')
-	{
-		// TODO ERROR
-		assert(false);		
-	}
+	// // Final byte before first_line_mapping must be null-terminator.
+	// // Ensuring this now avoids buffer overruns when reading the strings
+	// if (data[first_line_mapping - 1] != '\0')
+	// {
+	// 	// TODO ERROR
+	// 	assert(false);		
+	// }
 
-	u32 first_symbol_name = first_line_mapping + (header.num_line_mappings * sizeof(mdi_line_mapping));
-	u32 first_symbol_address = first_symbol_name + header.symbol_names_size;
+	// u32 first_symbol_name = first_line_mapping + (header.num_line_mappings * sizeof(mdi_line_mapping));
+	// u32 first_symbol_address = first_symbol_name + header.symbol_names_size;
 
-	if (header.symbol_names_size > 0)
-	{
-		if (data.size() <= first_symbol_address)
-		{
-			// TODO ERROR
-			assert(false);
-		}
+	// if (header.symbol_names_size > 0)
+	// {
+	// 	if (data.size() <= first_symbol_address)
+	// 	{
+	// 		// TODO ERROR
+	// 		assert(false);
+	// 	}
 
-		if (data[first_symbol_address - 1] != '\0')
-		{
-			// TODO ERROR
-			assert(false);
-		}
-	}
+	// 	if (data[first_symbol_address - 1] != '\0')
+	// 	{
+	// 		// TODO ERROR
+	// 		assert(false);
+	// 	}
+	// }
 
-	u32 string_start;
-	string_start = i;
-	for (; i < first_line_mapping; i++)
-	{
-		if (data[i] == '\0')
-		{
-			// i points to character immediately following null terminator, so
-			// previous string runs from string_start through i - 1, and
-			// i begins a new string
-			std::string built((const char *) &data[string_start], i - string_start);
-			std::string local;
-			generate_local_path(machine, built, local);
-			debug_info_provider_base::source_file_path sfp(built, local);
-			m_source_file_paths.push_back(std::move(sfp));
-			string_start = i + 1;
-		}
-	}
+	// u32 string_start;
+	// string_start = i;
+	// for (; i < first_line_mapping; i++)
+	// {
+	// 	if (data[i] == '\0')
+	// 	{
+	// 		// i points to character immediately following null terminator, so
+	// 		// previous string runs from string_start through i - 1, and
+	// 		// i begins a new string
+	// 		std::string built((const char *) &data[string_start], i - string_start);
+	// 		std::string local;
+	// 		generate_local_path(machine, built, local);
+	// 		debug_info_provider_base::source_file_path sfp(built, local);
+	// 		m_source_file_paths.push_back(std::move(sfp));
+	// 		string_start = i + 1;
+	// 	}
+	// }
 
-	// Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
-	// entries from debug info.  Ensure m_linemaps_by_line is pre-sized so as
-	// we encounter a mapping, we'll always have an entry ready for its source file index.
-	m_linemaps_by_line.reserve(m_source_file_paths.size());
-	m_linemaps_by_line.resize(m_source_file_paths.size());
-	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
-	{
-		mdi_line_mapping line_map;
-		read_field<mdi_line_mapping>(line_map, data, i);
-		m_linemaps_by_address.push_back(line_map);
-		if (line_map.source_file_index >= m_source_file_paths.size())
-		{
-			// TODO ERROR
-			assert(false);		
-		}
-		address_line addrline = {line_map.address_first, line_map.address_last, line_map.line_number};
-		m_linemaps_by_line[line_map.source_file_index].push_back(addrline);
-	}
+	// // Populate m_line_maps_by_line and m_linemaps_by_address with mdi_line_mapping
+	// // entries from debug info.  Ensure m_linemaps_by_line is pre-sized so as
+	// // we encounter a mapping, we'll always have an entry ready for its source file index.
+	// m_linemaps_by_line.reserve(m_source_file_paths.size());
+	// m_linemaps_by_line.resize(m_source_file_paths.size());
+	// for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
+	// {
+	// 	mdi_line_mapping line_map;
+	// 	read_field<mdi_line_mapping>(line_map, data, i);
+	// 	m_linemaps_by_address.push_back(line_map);
+	// 	if (line_map.source_file_index >= m_source_file_paths.size())
+	// 	{
+	// 		// TODO ERROR
+	// 		assert(false);		
+	// 	}
+	// 	address_line addrline = {line_map.address_first, line_map.address_last, line_map.line_number};
+	// 	m_linemaps_by_line[line_map.source_file_index].push_back(addrline);
+	// }
 
-	std::sort(
-		m_linemaps_by_address.begin(),
-		m_linemaps_by_address.end(), 
-		[] (const mdi_line_mapping &linemap1, const mdi_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
+	// std::sort(
+	// 	m_linemaps_by_address.begin(),
+	// 	m_linemaps_by_address.end(), 
+	// 	[] (const mdi_line_mapping &linemap1, const mdi_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
 	
-	for (u16 file_idx = 0; file_idx < m_source_file_paths.size(); file_idx++)
-	{
-		std::sort(
-			m_linemaps_by_line[file_idx].begin(),
-			m_linemaps_by_line[file_idx].end(), 
-			[] (const address_line& adrline1, const address_line &adrline2)
-			{
-				if (adrline1.line_number == adrline2.line_number)
-				{
-					return adrline1.address_first < adrline2.address_first;
-				}
-				return adrline1.line_number < adrline2.line_number; 
-			});
-	}
+	// for (u16 file_idx = 0; file_idx < m_source_file_paths.size(); file_idx++)
+	// {
+	// 	std::sort(
+	// 		m_linemaps_by_line[file_idx].begin(),
+	// 		m_linemaps_by_line[file_idx].end(), 
+	// 		[] (const address_line& adrline1, const address_line &adrline2)
+	// 		{
+	// 			if (adrline1.line_number == adrline2.line_number)
+	// 			{
+	// 				return adrline1.address_first < adrline2.address_first;
+	// 			}
+	// 			return adrline1.line_number < adrline2.line_number; 
+	// 		});
+	// }
 
-	// Symbols
-	if (header.symbol_names_size == 0)
-	{
-		return;
-	}
-	string_start = i;
-	u32 j = first_symbol_address;
-	for (; i < first_symbol_address; i++)
-	{
-		if (data[i] == '\0')
-		{
-			// i points to character immediately following null terminator, so
-			// previous string runs from string_start through i - 1, and
-			// i begins a new string
-			std::string symbol_name((const char *) &data[string_start], i - string_start);
-			s32 symbol_value;
-			read_field<s32>(symbol_value, data, j);
-			global_symbol sym(symbol_name, symbol_value);
-			m_global_symbols.push_back(std::move(sym));
-			string_start = i + 1;
-		}
-	}	
+	// // Symbols
+	// if (header.symbol_names_size == 0)
+	// {
+	// 	return;
+	// }
+	// string_start = i;
+	// u32 j = first_symbol_address;
+	// for (; i < first_symbol_address; i++)
+	// {
+	// 	if (data[i] == '\0')
+	// 	{
+	// 		// i points to character immediately following null terminator, so
+	// 		// previous string runs from string_start through i - 1, and
+	// 		// i begins a new string
+	// 		std::string symbol_name((const char *) &data[string_start], i - string_start);
+	// 		s32 symbol_value;
+	// 		read_field<s32>(symbol_value, data, j);
+	// 		global_symbol sym(symbol_name, symbol_value);
+	// 		m_global_symbols.push_back(std::move(sym));
+	// 		string_start = i + 1;
+	// 	}
+	// }	
 
-	// TODO: init local_symbols
+	// // TODO: init local_symbols
 }
 
 void debug_info_simple::generate_local_path(running_machine& machine, const std::string & built, std::string & local)
@@ -350,7 +350,7 @@ std::optional<file_line> debug_info_simple::address_to_file_line (offs_t address
 		m_linemaps_by_address.cbegin(), 
 		m_linemaps_by_address.cend(),
 		address,
-		[] (auto const &linemap, u16 addr) { return linemap.address_first < addr; });
+		[] (auto const &linemap, u16 addr) { return linemap.range.address_first < addr; });
 	if (guess == m_linemaps_by_address.cend())
 	{
 		// address > last mapped address_first, so consider the last address range
@@ -360,13 +360,13 @@ std::optional<file_line> debug_info_simple::address_to_file_line (offs_t address
 	// m_linemaps_by_address is sorted by address_first.  guess is
 	// the leftmost entry with address <= guess->address_first.  If they're
 	// equal, guess is our answer.  Otherwise, check the preceding entry.
-	if (guess->address_first <= address && address <= guess->address_last)
+	if (guess->range.address_first <= address && address <= guess->range.address_last)
 	{
 		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
 	}
 	guess--;
 	if (guess >= m_linemaps_by_address.cbegin() &&
-		guess->address_first <= address && address <= guess->address_last)
+		guess->range.address_first <= address && address <= guess->range.address_last)
 	{
 		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
 	}
