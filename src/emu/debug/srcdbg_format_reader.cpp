@@ -24,28 +24,32 @@ template <typename T> static bool read_field(const T & var, const std::vector<ui
 		return false;
 	}
 
-	var = *(const T *) (data.data() + i);
+	// var = *static_cast<const T *&>(&data[i]);
+	// var = *static_cast<const T *&>(static_cast<const void *>(data.data() + i));
+	// var = *static_cast<T *>(&data[i]);
+	var = *(const T *)(&data[i]);
 	i += sizeof(T);
 	return true;
 }
 
-static bool scan_bytes(u32 num_bytes, const std::vector<uint8_t>& data, u32& i, std::string & error)
-{
-	if (data.size() < i + num_bytes)
-	{
-		error = "File ended prematurely while scanning ahead ";
-		error += num_bytes;
-		error += " bytes.";
-		return false;
-	}
+// static bool scan_bytes(u32 num_bytes, const std::vector<uint8_t>& data, u32& i, std::string & error)
+// {
+// 	if (data.size() < i + num_bytes)
+// 	{
+// 		error = "File ended prematurely while scanning ahead ";
+// 		error += num_bytes;
+// 		error += " bytes.";
+// 		return false;
+// 	}
 
-	i += num_bytes;
-	return true;
-}
+// 	i += num_bytes;
+// 	return true;
+// }
 
-bool srcdbg_format_read(srcdbg_format_reader_callback & callback, std::string & error)
+bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
 {
 	std::vector<uint8_t> data;
+	util::core_file::load(srcdbg_path, data);
 
 	// Read base header first to detemine type
 	u32 i = 0;
@@ -64,10 +68,10 @@ bool srcdbg_format_read(srcdbg_format_reader_callback & callback, std::string & 
 	i = 0;
 	mame_debug_info_simple_header header;
 	// memset(&header, 0, sizeof(header));
-	if (!read_field<mame_debug_info_simple_header>(header, data, i, error))
-	{
-		return false;
-	}
+	// if (!read_field<mame_debug_info_simple_header>(header, data, i, error))
+	// {
+	// 	return false;
+	// }
 	if (!callback.on_read_simp_header(header))
 	{
 		return true;
@@ -113,10 +117,10 @@ bool srcdbg_format_read(srcdbg_format_reader_callback & callback, std::string & 
 	{
 		mdi_line_mapping line_map;
 		// memset(&line_map, 0, sizeof(line_map));
-		if (!read_field<mdi_line_mapping>(line_map, data, i, error))
-		{
-			return false;
-		}
+		// if (!read_field<mdi_line_mapping>(line_map, data, i, error))
+		// {
+		// 	return false;
+		// }
 		if (!callback.on_read_line_mapping(line_map))
 		{
 			return true;
@@ -144,10 +148,10 @@ bool srcdbg_format_read(srcdbg_format_reader_callback & callback, std::string & 
 	{
 		global_constant_symbol_value value;
 		// memset(&value, 0, sizeof(value));
-		if (!read_field<global_constant_symbol_value>(value, data, i, error))
-		{
-			return false;
-		}
+		// if (!read_field<global_constant_symbol_value>(value, data, i, error))
+		// {
+		// 	return false;
+		// }
 		if (!callback.on_read_global_constant_symbol_value(value))
 		{
 			return true;
@@ -157,14 +161,14 @@ bool srcdbg_format_read(srcdbg_format_reader_callback & callback, std::string & 
 	u32 after_local_constant_symbol_values = i + header.local_constant_symbol_values_size;
 	while (i < after_local_constant_symbol_values)
 	{
-		local_constant_symbol_value value;
+		// local_constant_symbol_value value;
 		u32 value_start_idx = i;
 		// memset(&value, 0, sizeof(value));
-		if (!read_field<local_constant_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value.num_address_ranges * sizeof(address_range), data, i, error))
-		{
-			return false;
-		}
+		// if (!read_field<local_constant_symbol_value>(value, data, i, error) ||
+		// 	!scan_bytes(value.num_address_ranges * sizeof(address_range), data, i, error))
+		// {
+		// 	return false;
+		// }
 		if (!callback.on_read_local_constant_symbol_value(*(const local_constant_symbol_value *) &data[value_start_idx]))
 		{
 			return true;
@@ -174,14 +178,14 @@ bool srcdbg_format_read(srcdbg_format_reader_callback & callback, std::string & 
 	u32 after_local_dynamic_symbol_values = i + header.local_dynamic_symbol_values_size;
 	while (i < after_local_dynamic_symbol_values)
 	{
-		local_dynamic_symbol_value value;
+		// local_dynamic_symbol_value value;
 		u32 value_start_idx = i;
 		// memset(&value, 0, sizeof(value));
-		if (!read_field<local_dynamic_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value.num_local_dynamic_symbol_entries * sizeof(local_dynamic_symbol_entry), data, i, error))
-		{
-			return false;
-		}
+		// if (!read_field<local_dynamic_symbol_value>(value, data, i, error) ||
+		// 	!scan_bytes(value.num_local_dynamic_symbol_entries * sizeof(local_dynamic_symbol_entry), data, i, error))
+		// {
+		// 	return false;
+		// }
 		if (!callback.on_read_local_dynamic_symbol_value(*(const local_dynamic_symbol_value *) &data[value_start_idx]))
 		{
 			return true;
