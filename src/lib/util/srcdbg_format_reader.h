@@ -7,8 +7,13 @@
 
 #pragma once
 
-#include "emu.h"
 #include "mdisimple.h"
+
+#include <string>
+#include <cstdint>
+
+using u16 = uint16_t;
+
 
 
 class srcdbg_format_reader_callback

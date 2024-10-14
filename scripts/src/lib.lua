@@ -123,6 +123,8 @@ end
 		MAME_DIR .. "src/lib/util/server_wss.hpp",
 		MAME_DIR .. "src/lib/util/simh_tape_file.cpp",
 		MAME_DIR .. "src/lib/util/simh_tape_file.h",
+		MAME_DIR .. "src/lib/util/srcdbg_format_reader.cpp",
+		MAME_DIR .. "src/lib/util/srcdbg_format_reader.h",
 		MAME_DIR .. "src/lib/util/strformat.cpp",
 		MAME_DIR .. "src/lib/util/strformat.h",
 		MAME_DIR .. "src/lib/util/tape_file_interface.h",

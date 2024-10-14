@@ -13,35 +13,12 @@
 
 #include "corefile.h"
 
-// #include <cstdio>
+#include <cstdio>
+#include <string>
 
-// using u16 = uint16_t;
-// using u32 = uint32_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
 
-
-int main(int argc, char *argv[])
-{
-	if (argc != 2)
-	{
-		fprintf(stderr, "Usage:\ndbginfodump <path to MAME source debugging information file>\n");
-		return 1;
-	}
-
-	printf("Dumping '%s'...\n", argv[1]);
-
-	srcdbg_dump dumper;
-	std::string error;
-	if (!srcdbg_format_read(argv[1], dumper, error))
-	{
-		if (!error.empty())
-		{
-			fprintf(stderr, "%s\n", error);
-		}
-		return 1;
-	}
-
-	return 0;
-}
 
 class srcdbg_dump : public srcdbg_format_reader_callback
 {
@@ -141,7 +118,7 @@ bool srcdbg_dump::on_read_global_constant_symbol_value(const global_constant_sym
 		printf("\n**** Global constant symbol values: ****\n");
 		m_printed_global_constant_symbol_value_title = true;
 	}
-	printf("Symbol name index: %u, symbol value: %d", value.symbol_name_index, value.symbol_value);
+	printf("Symbol name index: %u, symbol value: %d\n", value.symbol_name_index, value.symbol_value);
 	return true;
 } 	
 
@@ -152,7 +129,7 @@ bool srcdbg_dump::on_read_local_constant_symbol_value(const local_constant_symbo
 		printf("\n**** Local constant symbol values: ****\n");
 		m_printed_local_constant_symbol_value_title = true;
 	}
-	printf("Symbol name index: %u, symbol value: %d", value.symbol_name_index, value.symbol_value);
+	printf("Symbol name index: %u, symbol value: %d\n", value.symbol_name_index, value.symbol_value);
 	for (u32 i = 0; i < value.num_address_ranges; i++)
 	{
 		printf("\taddress range: %04X-%04X\n", value.ranges[i].address_first, value.ranges[i].address_last);
@@ -167,7 +144,7 @@ bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_
 		printf("\n**** Local constant symbol values: ****\n");
 		m_printed_local_dynamic_symbol_value_title = true;
 	}
-	printf("Symbol name index: %u, symbol value: %d", value.symbol_name_index);
+	printf("Symbol name index: %u\n", value.symbol_name_index);
 	for (u32 i = 0; i < value.num_local_dynamic_symbol_entries; i++)
 	{
 		printf(
@@ -180,10 +157,6 @@ bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_
 	return true;
 }
 
-void srcdbg_dump::on_error(const char * error)
-{
-	
-}
 
 const char * srcdbg_dump::reg_idx_to_string(unsigned char reg)
 {
@@ -218,6 +191,33 @@ const char * srcdbg_dump::reg_idx_to_string(unsigned char reg)
 	assert(false && "reg_idx_to_string called with invalid register number");
 	return nullptr;
 }
+
+
+int main(int argc, char *argv[])
+{
+	if (argc != 2)
+	{
+		fprintf(stderr, "Usage:\ndbginfodump <path to MAME source debugging information file>\n");
+		return 1;
+	}
+
+	printf("Dumping '%s'...\n", argv[1]);
+
+	srcdbg_dump dumper;
+	std::string error;
+	if (!srcdbg_format_read(argv[1], dumper, error))
+	{
+		if (!error.empty())
+		{
+			fprintf(stderr, "%s\n", error.c_str());
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+
 
 // int orig(int argc, char *argv[])
 // {
