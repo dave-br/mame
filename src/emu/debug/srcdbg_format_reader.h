@@ -22,9 +22,10 @@ public:
 	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) = 0;
 	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) = 0;
 	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) = 0;
-	virtual bool on_error(const char * error) = 0;
-	
 };
+
+bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error);
+
 
 
 #endif // MAME_EMU_DEBUG_SRCDBG_FORMATREADER_H
