@@ -59,38 +59,36 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 
 	if (strncmp(header_base->type, "simp", 4) != 0)
 	{
-		callback.on_error("Error while reading header: Only type 'simp' is currently supported");
+		error = "Error while reading header: Only type 'simp' is currently supported";
 		return false;
 	};
 	
 	if (header_base->version != 1)
 	{
-		callback.on_error("Error while reading header: Only version 1 is currently supported");
+		error = "Error while reading header: Only version 1 is currently supported";
 		return false;
 	};
 
 	// Reread header as simple ('simp') type
 	i = 0;
 	const mame_debug_info_simple_header * header;
-	if (!read_field<mame_debug_info_simple_header>(header, data, i, error))
+	if (!read_field<mame_debug_info_simple_header>(header, data, i, error) ||
+		!callback.on_read_simp_header(*header))
 	{
 		return false;
-	}
-	if (!callback.on_read_simp_header(*header))
-	{
-		return true;
 	}
 
 	u32 first_line_mapping = i + header->source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
 	{
-		fprintf(stderr, "File too small to contain reported source_file_paths_size=%u\n", header.source_file_paths_size);
-		return 1;
+		error = "File too small to contain reported source_file_paths_size=";
+		error += header->source_file_paths_size;
+		return false;
 	}
 	if (data[first_line_mapping - 1] != '\0')
 	{
-		fprintf(stderr, "null terminator missing at end of last source file\n");
-		return 1;
+		error = "null terminator missing at end of last source file";
+		return false;
 	}
 
 	u32 first_symbol_name = first_line_mapping + (header->num_line_mappings * sizeof(mdi_line_mapping));
@@ -110,6 +108,33 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 			return false;
 		}
 	}
+
+	u32 after_global_constant_symbol_values = 
+		after_symbol_names + header->num_global_constant_symbol_values * sizeof(global_constant_symbol_value);
+	if (data.size() < after_global_constant_symbol_values)
+	{
+		error = "File too small to contain reported num_global_constant_symbol_values=";
+		error += header->num_global_constant_symbol_values;
+		return false;
+	}
+
+	u32 after_local_constant_symbol_values = after_global_constant_symbol_values + header->local_constant_symbol_values_size;
+	if (data.size() < after_local_constant_symbol_values)
+	{
+		error = "File too small to contain reported local_constant_symbol_values_size=";
+		error += header->local_constant_symbol_values_size;
+		return false;
+	}
+
+	u32 after_local_dynamic_symbol_values = after_local_constant_symbol_values + header->local_dynamic_symbol_values_size;
+	if (data.size() != after_local_dynamic_symbol_values)
+	{
+		error = "File size (";
+		error += data.size();
+		error += ") not an exact match to the sum of section sizes reported in header";
+		return false;
+	}
+
 	std::string str;
 	u16 source_index = 0;
 	for (; i < first_line_mapping; i++)
@@ -131,24 +156,22 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
 		const mdi_line_mapping * line_map;
-		if (!read_field<mdi_line_mapping>(line_map, data, i, error))
+		if (!read_field<mdi_line_mapping>(line_map, data, i, error) ||
+		 	!callback.on_read_line_mapping(*line_map))
 		{
 			return false;
-		}
-		if (!callback.on_read_line_mapping(*line_map))
-		{
-			return true;
 		}
 	}
 
 	u16 symbol_index = 0;
+	str.clear();
 	for (; i < after_symbol_names; i++)
 	{
 		if (data[i] == '\0')
 		{
 			if (!callback.on_read_symbol_name(symbol_index++, std::move(str)))
 			{
-				return true;
+				return false;
 			}
 			str.clear();
 		}
@@ -171,7 +194,6 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		}
 	}
 
-	u32 after_local_constant_symbol_values = i + header->local_constant_symbol_values_size;
 	while (i < after_local_constant_symbol_values)
 	{
 		const local_constant_symbol_value * value;
@@ -187,7 +209,6 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		}
 	}
 
-	u32 after_local_dynamic_symbol_values = i + header->local_dynamic_symbol_values_size;
 	while (i < after_local_dynamic_symbol_values)
 	{
 		const local_dynamic_symbol_value * value;

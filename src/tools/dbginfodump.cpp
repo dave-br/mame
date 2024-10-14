@@ -29,21 +29,25 @@ int main(int argc, char *argv[])
 
 	printf("Dumping '%s'...\n", argv[1]);
 
-	srcdbg_dump dumper(argv[1]);
-	if (dumper.go())
+	srcdbg_dump dumper;
+	std::string error;
+	if (!srcdbg_format_read(argv[1], dumper, error))
 	{
-		return 0;
+		if (!error.empty())
+		{
+			fprintf(stderr, "%s\n", error);
+		}
+		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
 class srcdbg_dump : public srcdbg_format_reader_callback
 {
 public:
-	srcdbg_dump(const char * path) 
-		: m_path(path) 
-		, m_printed_source_file_paths_title(false)
+	srcdbg_dump() 
+		: m_printed_source_file_paths_title(false)
 		, m_printed_line_mapping_title(false)
 		, m_printed_symbol_names_title(false)
 		, m_printed_global_constant_symbol_value_title(false)
@@ -60,12 +64,10 @@ public:
 	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) override;
 	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) override;
 	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) override;
-	virtual bool on_error(const char * error) override;
 
 private:
 	const char * reg_idx_to_string(unsigned char reg);
 
-	const char * m_path;
 	bool m_printed_source_file_paths_title;
 	bool m_printed_line_mapping_title;
 	bool m_printed_symbol_names_title;
@@ -176,6 +178,11 @@ bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_
 			value.local_dynamic_symbol_entries[i].range.address_last);
 	}
 	return true;
+}
+
+void srcdbg_dump::on_error(const char * error)
+{
+	
 }
 
 const char * srcdbg_dump::reg_idx_to_string(unsigned char reg)
