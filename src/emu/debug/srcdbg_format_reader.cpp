@@ -51,14 +51,23 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	// Read base header first to detemine type
 	u32 i = 0;
 	const mame_debug_info_header_base * header_base;
-	if (!read_field<mame_debug_info_header_base>(header_base, data, i, error))
+	if (!read_field<mame_debug_info_header_base>(header_base, data, i, error) ||
+	 	!callback.on_read_header_base(*header_base))
 	{
 		return false;
 	}
-	if (!callback.on_read_header_base(*header_base))
+
+	if (strncmp(header_base->type, "simp", 4) != 0)
 	{
-		return true;
-	}
+		callback.on_error("Error while reading header: Only type 'simp' is currently supported");
+		return false;
+	};
+	
+	if (header_base->version != 1)
+	{
+		callback.on_error("Error while reading header: Only version 1 is currently supported");
+		return false;
+	};
 
 	// Reread header as simple ('simp') type
 	i = 0;
@@ -73,6 +82,17 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	}
 
 	u32 first_line_mapping = i + header->source_file_paths_size;
+	if (data.size() <= first_line_mapping - 1)
+	{
+		fprintf(stderr, "File too small to contain reported source_file_paths_size=%u\n", header.source_file_paths_size);
+		return 1;
+	}
+	if (data[first_line_mapping - 1] != '\0')
+	{
+		fprintf(stderr, "null terminator missing at end of last source file\n");
+		return 1;
+	}
+
 	u32 first_symbol_name = first_line_mapping + (header->num_line_mappings * sizeof(mdi_line_mapping));
 	u32 after_symbol_names = first_symbol_name + header->symbol_names_size;
 	if (header->symbol_names_size > 0)
