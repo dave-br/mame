@@ -862,9 +862,10 @@ links {
 }
 
 includedirs {
+	MAME_DIR .. "src/emu/debug",
 	MAME_DIR .. "src/lib/dbginfo",
-	MAME_DIR .. "src/osd",
 	MAME_DIR .. "src/lib/util",
+	MAME_DIR .. "src/osd",
 }
 
 files {
