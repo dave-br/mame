@@ -98,13 +98,13 @@ typedef struct
 	address_range range;
 	unsigned char reg;
 	int reg_offset;
-} local_dynamic_symbol_entry;
+} local_dynamic_scoped_value;
 
 typedef struct
 {
 	unsigned int symbol_name_index;
-	unsigned int num_local_dynamic_symbol_entries;
-	local_dynamic_symbol_entry local_dynamic_symbol_entries[];
+	unsigned int num_local_dynamic_scoped_values;
+	local_dynamic_scoped_value local_dynamic_scoped_values[];
 } local_dynamic_symbol_value;
 
 /*

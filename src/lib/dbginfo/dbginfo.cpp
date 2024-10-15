@@ -185,7 +185,7 @@ struct local_constant
 struct local_dynamic
 {
 	unsigned int symbol_name_index;
-	unsigned int num_local_dynamic_symbol_entries;
+	unsigned int num_local_dynamic_scoped_values;
 	resizeable_array values;
 };
 
@@ -295,7 +295,7 @@ public:
 		unsigned int entry_idx = m_local_dynamic_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
-			local.num_local_dynamic_symbol_entries = 0;
+			local.num_local_dynamic_scoped_values = 0;
 			local.values.construct();
 			m_local_dynamic_symbol_values.push_back(&local, sizeof(local));
 			entry_ptr = (local_dynamic *) (m_local_dynamic_symbol_values.get() + m_local_dynamic_symbol_values.size() - sizeof(local));
@@ -305,14 +305,14 @@ public:
 		{
 			entry_ptr = ((local_dynamic *) m_local_dynamic_symbol_values.get()) + entry_idx;
 		}
-		local_dynamic_symbol_entry value;
+		local_dynamic_scoped_value value;
 		value.range.address_first = address_first;
 		value.range.address_last = address_last;
 		value.reg = reg;
 		value.reg_offset = reg_offset;
 		entry_ptr->values.push_back(&value, sizeof(value));
 		m_header.local_dynamic_symbol_values_size += sizeof(value);
-		entry_ptr->num_local_dynamic_symbol_entries++;
+		entry_ptr->num_local_dynamic_scoped_values++;
 	}
 
 
@@ -355,7 +355,7 @@ public:
 				continue;
 			}
 			fwrite(loc, sizeof(local_dynamic_symbol_value), 1, m_output);
-			fwrite(loc->values.get(), sizeof(local_dynamic_symbol_entry), loc->values.size() / sizeof(local_dynamic_symbol_entry), m_output);
+			fwrite(loc->values.get(), sizeof(local_dynamic_scoped_value), loc->values.size() / sizeof(local_dynamic_scoped_value), m_output);
 		}
 		fclose(m_output);
 		m_output = nullptr;
