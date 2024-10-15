@@ -297,8 +297,8 @@ public:
 		{
 			local.num_local_dynamic_symbol_entries = 0;
 			local.values.construct();
-			entry_ptr = &local;
 			m_local_dynamic_symbol_values.push_back(&local, sizeof(local));
+			entry_ptr = (local_dynamic *) (m_local_dynamic_symbol_values.get() + m_local_dynamic_symbol_values.size() - sizeof(local));
 			m_header.local_dynamic_symbol_values_size += sizeof(local_dynamic_symbol_value);
 		}
 		else
