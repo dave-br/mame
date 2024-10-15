@@ -127,7 +127,7 @@ public:
 
 	unsigned int get(unsigned int i)
 	{
-		return * (unsigned int *) m_data + (i * sizeof(unsigned int));
+		return * (((unsigned int *) m_data) + i);
 	}
 
 	unsigned int size()
@@ -339,29 +339,23 @@ public:
 		}
 		for (int i=0; i < m_local_constant_symbol_values.size(); i += sizeof(local_constant))
 		{
-			local_constant * loc = (local_constant *) m_local_constant_symbol_values.get() + i;
+			local_constant * loc = (local_constant *) (m_local_constant_symbol_values.get() + i);
 			if (loc->ranges.size() == 0)
 			{
 				continue;
 			}
 			fwrite(loc, sizeof(local_constant_symbol_value), 1, m_output);
-			for (int j=0; j < loc->ranges.size(); j += sizeof(address_range))
-			{
-				fwrite(loc->ranges.get() + j, sizeof(address_range), 1, m_output);
-			}
+			fwrite(loc->ranges.get(), sizeof(address_range), loc->ranges.size() / sizeof(address_range), m_output);
 		}
 		for (int i=0; i < m_local_dynamic_symbol_values.size(); i += sizeof(local_dynamic))
 		{
-			local_dynamic * loc = (local_dynamic *) m_local_dynamic_symbol_values.get() + i;
+			local_dynamic * loc = (local_dynamic *) (m_local_dynamic_symbol_values.get() + i);
 			if (loc->values.size() == 0)
 			{
 				continue;
 			}
 			fwrite(loc, sizeof(local_dynamic_symbol_value), 1, m_output);
-			for (int j=0; j < loc->values.size(); j += sizeof(local_dynamic_symbol_entry))
-			{
-				fwrite(loc->values.get() + j, sizeof(local_dynamic_symbol_entry), 1, m_output);
-			}
+			fwrite(loc->values.get(), sizeof(local_dynamic_symbol_entry), loc->values.size() / sizeof(local_dynamic_symbol_entry), m_output);
 		}
 		fclose(m_output);
 		m_output = nullptr;
