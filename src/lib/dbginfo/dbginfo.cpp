@@ -271,12 +271,12 @@ public:
 			local.num_address_ranges = 0;
 			local.ranges.construct();
 			entry_ptr = &local;
-			// TODO: DEBUG to see if this size excludes local_constant_symbol_entries[]
+			m_local_constant_symbol_values.push_back(&local, sizeof(local));
 			m_header.local_constant_symbol_values_size += sizeof(local_constant_symbol_value);
 		}
 		else
 		{
-			entry_ptr = (local_constant *) m_local_constant_symbol_values.get() + entry_idx * sizeof(local);
+			entry_ptr = ((local_constant *) m_local_constant_symbol_values.get()) + entry_idx;
 		}
 
 		address_range range;
@@ -298,14 +298,13 @@ public:
 			local.num_local_dynamic_symbol_entries = 0;
 			local.values.construct();
 			entry_ptr = &local;
-			// TODO: DEBUG to see if this size excludes local_dynamic_symbol_entries[]
+			m_local_dynamic_symbol_values.push_back(&local, sizeof(local));
 			m_header.local_dynamic_symbol_values_size += sizeof(local_dynamic_symbol_value);
 		}
 		else
 		{
-			entry_ptr = (local_dynamic *) m_local_dynamic_symbol_values.get() + entry_idx * sizeof(local);
+			entry_ptr = ((local_dynamic *) m_local_dynamic_symbol_values.get()) + entry_idx;
 		}
-
 		local_dynamic_symbol_entry value;
 		value.range.address_first = address_first;
 		value.range.address_last = address_last;
@@ -341,7 +340,11 @@ public:
 		for (int i=0; i < m_local_constant_symbol_values.size(); i += sizeof(local_constant))
 		{
 			local_constant * loc = (local_constant *) m_local_constant_symbol_values.get() + i;
-			fwrite(loc, sizeof(local_constant), 1, m_output);
+			if (loc->ranges.size() == 0)
+			{
+				continue;
+			}
+			fwrite(loc, sizeof(local_constant_symbol_value), 1, m_output);
 			for (int j=0; j < loc->ranges.size(); j += sizeof(address_range))
 			{
 				fwrite(loc->ranges.get() + j, sizeof(address_range), 1, m_output);
@@ -350,7 +353,11 @@ public:
 		for (int i=0; i < m_local_dynamic_symbol_values.size(); i += sizeof(local_dynamic))
 		{
 			local_dynamic * loc = (local_dynamic *) m_local_dynamic_symbol_values.get() + i;
-			fwrite(loc, sizeof(local_dynamic), 1, m_output);
+			if (loc->values.size() == 0)
+			{
+				continue;
+			}
+			fwrite(loc, sizeof(local_dynamic_symbol_value), 1, m_output);
 			for (int j=0; j < loc->values.size(); j += sizeof(local_dynamic_symbol_entry))
 			{
 				fwrite(loc->values.get() + j, sizeof(local_dynamic_symbol_entry), 1, m_output);
