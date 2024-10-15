@@ -141,7 +141,7 @@ bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_
 {
 	if (!m_printed_local_dynamic_symbol_value_title)
 	{
-		printf("\n**** Local constant symbol values: ****\n");
+		printf("\n**** Local dynamic symbol values: ****\n");
 		m_printed_local_dynamic_symbol_value_title = true;
 	}
 	printf("Symbol name index: %u\n", value.symbol_name_index);
