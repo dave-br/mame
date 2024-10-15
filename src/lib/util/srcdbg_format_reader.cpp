@@ -155,8 +155,19 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
 		const mdi_line_mapping * line_map;
-		if (!read_field<mdi_line_mapping>(line_map, data, i, error) ||
-		 	!callback.on_read_line_mapping(*line_map))
+		if (!read_field<mdi_line_mapping>(line_map, data, i, error))
+		{
+			return false;
+		}
+
+		if (line_map->source_file_index >= source_index)
+		{
+			error = "Invalid source_file_index encountered in line map: ";
+			error += line_map->source_file_index;
+			return false;
+		}
+
+ 		if (!callback.on_read_line_mapping(*line_map))
 		{
 			return false;
 		}
