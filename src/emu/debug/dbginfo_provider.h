@@ -5,6 +5,8 @@
 
 #include "srcdbg_format_reader.h"
 
+#include "express.h"
+
 
 class file_line
 {
@@ -57,73 +59,57 @@ public:
 		std::string m_local;
 	};
 
-	class global_symbol
+	class global_static_symbol
 	{
 	public:
-		global_symbol(std::string & name_p, offs_t value_p) :
+		global_static_symbol(std::string & name_p, s64 value_p) :
 			m_name(std::move(name_p)),
 			m_value(value_p)
 		{
 		}
 
 		const char * name() const { return m_name.c_str(); };
-		u64 value() const { return m_value; };
+		s64 value() const { return m_value; };
 
 	private:
 		std::string m_name;
-		u64 m_value;
+		s64 m_value;
 	};
 
-	class local_symbol
+	class local_static_symbol
 	{
 	public:
-		enum Type
+		local_static_symbol(std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, s64 value)
+			: m_name(std::move(name))
+			, m_scope_ranges(scope_ranges)
+			, m_value_integer(value)
 		{
-			CONSTANT_INTEGER,
-			EXPRESSION,
-		};
-
-		local_symbol(std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, offs_t value) :
-			m_name(std::move(name)),
-			m_scope_ranges(scope_ranges),
-			m_type(CONSTANT_INTEGER),
-			m_value_integer(value)
-		{
-		}
-
-		local_symbol(std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, const std::string & value) :
-			m_name(std::move(name)),
-			m_scope_ranges(scope_ranges),
-			m_type(EXPRESSION)
-		{
-			new (&m_value_expression) std::string(std::move(value));
-		}
-
-		~local_symbol()
-		{
-			using std::string;
-			if (m_type == EXPRESSION)
-			{
-				m_value_expression.~string();
-			}
 		}
 
 		const char * name() const { return m_name.c_str(); };
 		const std::vector<std::pair<offs_t,offs_t>> & scope_ranges() const { return m_scope_ranges; };
-		Type type() const { return m_type; };
-		s64 value_integer() const { return m_value_integer; };
-		const std::string & value_expression() const { return m_value_expression; };
+		s64 value() const { return m_value_integer; };
 
 	private:
 		std::string m_name;
 		std::vector<std::pair<offs_t,offs_t>> m_scope_ranges;
-		Type m_type;
-		union
-		{
-			u64 m_value_integer;
-			std::string m_value_expression;
-		};
+		s64 m_value_integer;
 	};
+
+	class local_dynamic_symbol
+	{
+	public:
+		local_dynamic_symbol(std::string & name, std::vector<symbol_table::scoped_value> scoped_values)
+			: m_name(std::move(name))
+			, m_scoped_values(scoped_values)
+		{
+		}
+
+	private:
+		std::string m_name;
+		std::vector<symbol_table::scoped_value> m_scoped_values;
+	};
+
 
 	typedef std::pair<offs_t,offs_t> address_range;
 	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
@@ -133,8 +119,9 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
-	virtual const std::vector<global_symbol> & global_symbols() const = 0;
-	virtual const std::vector<local_symbol> & local_symbols() const = 0;
+	virtual const std::vector<global_static_symbol> & global_static_symbols() const = 0;
+	virtual const std::vector<local_static_symbol> & local_static_symbols() const = 0;
+	virtual const std::vector<local_dynamic_symbol> & local_dynamic_symbols() const = 0;
 };
 
 
@@ -155,8 +142,9 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
-	virtual const std::vector<global_symbol> & global_symbols() const override { return m_global_symbols; };
-	virtual const std::vector<local_symbol> & local_symbols() const override { return m_local_symbols; };
+	virtual const std::vector<global_static_symbol> & global_static_symbols() const override { return m_global_static_symbols; };
+	virtual const std::vector<local_static_symbol> & local_static_symbols() const override { return m_local_static_symbols; };
+	virtual const std::vector<local_dynamic_symbol> & local_dynamic_symbols() const override { return m_local_dynamic_symbols; };
 
 private:
 	struct address_line
@@ -176,8 +164,9 @@ private:
 	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 	                                                                   // sorted by line, from file #i
-	std::vector<global_symbol>                      m_global_symbols;
-	std::vector<local_symbol>						 m_local_symbols;
+	std::vector<global_static_symbol>        m_global_static_symbols;
+	std::vector<local_static_symbol>		 m_local_static_symbols;
+	std::vector<local_dynamic_symbol> 		m_local_dynamic_symbols;
 };
 
 
@@ -187,6 +176,7 @@ public:
 	srcdbg_import(debug_info_simple & srcdbg_simple)
 		: m_srcdbg_simple(srcdbg_simple) 
 		, m_read_line_mappings_yet(false)
+		, m_symbol_names()
 		{}
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;};
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;};
@@ -200,6 +190,7 @@ public:
 private:
 	debug_info_simple & m_srcdbg_simple;
 	bool m_read_line_mappings_yet;
+	std::vector<std::string> m_symbol_names;
 };
 
 

@@ -86,6 +86,9 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 
 bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && source_path)
 {
+	// srcdbg_format_read is required to notify in (contiguous) index order
+	assert (m_srcdbg_simple.m_source_file_paths.size() == source_path_index);
+
 	std::string local;
 	m_srcdbg_simple.generate_local_path(source_path, local);
 	debug_info_provider_base::source_file_path sfp(source_path, local);
@@ -130,30 +133,64 @@ bool srcdbg_import::on_read_line_mapping(const mdi_line_mapping & line_map)
 	// 		});
 	// }
 
-	// Symbols
-	if (header.symbol_names_size == 0)
-	{
-		return;
-	}
-	string_start = i;
-	u32 j = first_symbol_address;
-	for (; i < first_symbol_address; i++)
-	{
-		if (data[i] == '\0')
-		{
-			// i points to character immediately following null terminator, so
-			// previous string runs from string_start through i - 1, and
-			// i begins a new string
-			std::string symbol_name((const char *) &data[string_start], i - string_start);
-			s32 symbol_value;
-			read_field<s32>(symbol_value, data, j);
-			global_symbol sym(symbol_name, symbol_value);
-			m_global_symbols.push_back(std::move(sym));
-			string_start = i + 1;
-		}
-	}	
+bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name)
+{
+	// srcdbg_format_read is required to notify in (contiguous) index order
+	assert (m_srcdbg_simple.m_global_static_symbols.size() == symbol_name_index);
+	m_symbol_names.push_back(std::move(symbol_name));
+	return true;
+}
 
-	// TODO: init local_symbols
+
+bool srcdbg_import::on_read_global_constant_symbol_value(const global_constant_symbol_value & value)
+{
+	debug_info_provider_base::global_static_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value);
+	m_srcdbg_simple.m_global_static_symbols.push_back(std::move(sym));
+	return true;
+}
+
+
+bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_symbol_value & value)
+{
+	std::vector<std::pair<offs_t,offs_t>> ranges;
+	for (u32 i = 0; i < value.num_address_ranges; i++)
+	{
+		ranges.push_back(
+			std::move(
+				std::pair<offs_t,offs_t>(value.ranges[i].address_first, value.ranges[i].address_last)));
+	}
+
+	debug_info_provider_base::local_static_symbol sym(
+		m_symbol_names[value.symbol_name_index],
+		ranges,
+		value.symbol_value);
+
+	// TODO: names: static -> constant
+	m_srcdbg_simple.m_local_static_symbols.push_back(std::move(sym));
+
+	return true;
+}
+
+
+bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value)
+{
+	std::vector<symbol_table::scoped_value> scoped_values;
+	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
+	{
+		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
+		std::string expr = reg_to_string(sv.reg);
+		expr += " + ";
+		expr += sv.reg_offset;
+		symbol_table::scoped_value scoped_value(
+			std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last),
+			expr);
+
+		scoped_values.push_back(std::move(scoped_value));
+	}
+
+	debug_info_provider_base::local_dynamic_symbol sym(m_symbol_names[value.symbol_name_index], scoped_values);
+
+	return true;
 }
 
 
@@ -164,8 +201,8 @@ debug_info_simple::debug_info_simple(const running_machine& machine)
 	, m_source_file_paths()
 	, m_linemaps_by_address()
 	, m_linemaps_by_line()
-	, m_global_symbols()
-	, m_local_symbols()
+	, m_global_static_symbols()
+	, m_local_static_symbols()
 {
 }
 

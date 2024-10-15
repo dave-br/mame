@@ -580,7 +580,7 @@ device_debug::device_debug(device_t &device)
 				else
 				{
 					assert (sym.type() == debug_info_provider_base::local_symbol::EXPRESSION);
-					m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value_expression());
+					m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.  .scope_ranges(), sym.value_expression());
 				}
 			}
 		}

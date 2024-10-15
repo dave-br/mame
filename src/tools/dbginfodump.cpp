@@ -145,14 +145,14 @@ bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_
 		m_printed_local_dynamic_symbol_value_title = true;
 	}
 	printf("Symbol name index: %u\n", value.symbol_name_index);
-	for (u32 i = 0; i < value.num_local_dynamic_symbol_entries; i++)
+	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		printf(
 			"\tvalue: %s + %d\taddress range: %04X-%04X\n", 
-			reg_idx_to_string(value.local_dynamic_symbol_entries[i].reg),
-			value.local_dynamic_symbol_entries[i].reg_offset,
-			value.local_dynamic_symbol_entries[i].range.address_first, 
-			value.local_dynamic_symbol_entries[i].range.address_last);
+			reg_idx_to_string(value.local_dynamic_scoped_values[i].reg),
+			value.local_dynamic_scoped_values[i].reg_offset,
+			value.local_dynamic_scoped_values[i].range.address_first, 
+			value.local_dynamic_scoped_values[i].range.address_last);
 	}
 	return true;
 }
