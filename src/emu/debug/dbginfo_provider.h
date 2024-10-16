@@ -146,7 +146,7 @@ public:
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
 	virtual const std::vector<global_static_symbol> & global_static_symbols() const override { return m_global_static_symbols; };
 	virtual const std::vector<local_static_symbol> & local_static_symbols() const override { return m_local_static_symbols; };
-	virtual const std::vector<local_dynamic_symbol> & local_dynamic_symbols() const override { return m_local_dynamic_symbols; };
+	virtual const std::vector<local_dynamic_symbol> & local_dynamic_symbols() override { ensure_local_dynamics_ready(); return m_local_dynamic_symbols; };
 
 private:
 	struct address_line
@@ -158,6 +158,8 @@ private:
 
 	void generate_local_path(const std::string & built, std::string & local);
 	void apply_source_map(std::string & local);
+	void ensure_local_dynamics_ready();
+
 
 	const running_machine& m_machine;
 

@@ -196,22 +196,20 @@ bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_sym
 
 bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value)
 {
-	std::vector<symbol_table::scoped_value> scoped_values;
+	std::vector<scoped_value_internal> scoped_values;
 	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
-		std::string expr = m_state->state_find_entry(sv.reg)->symbol();
-		expr += " + ";
-		expr += sv.reg_offset;
-		symbol_table::scoped_value scoped_value(
+		scoped_value_internal scoped_value(
 			std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last),
-			expr);
+			sv.reg,
+			sv.reg_offset);
 
 		scoped_values.push_back(std::move(scoped_value));
 	}
 
-	debug_info_provider_base::local_dynamic_symbol sym(m_symbol_names[value.symbol_name_index], scoped_values);
-	m_srcdbg_simple.m_local_dynamic_symbols.push_back(std::move(sym));
+	debug_info_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], scoped_values);
+	m_srcdbg_simple.m_local_dynamic_symbols_internal.push_back(std::move(sym));
 
 	return true;
 }
@@ -228,6 +226,34 @@ debug_info_simple::debug_info_simple(const running_machine& machine)
 	, m_local_static_symbols()
 {
 }
+
+void debug_info_simple::ensure_local_dynamics_ready()
+{
+	if (m_local_dynamics_ready)
+	{
+		return;
+	}
+
+	for (local_dynamic_symbol_internal sym_internal : m_local_dynamic_symbols_internal)
+	{
+		std::vector<symbol_table::scoped_value> scoped_values;
+		for (scoped_value_internal & sv : sym_internal.scoped_values)
+		{
+			std::string expr = m_state->state_find_entry(sv.reg)->symbol();
+			expr += " + ";
+			expr += sv.reg_offset;
+			symbol_table::scoped_value scoped_value(std::move(sv.range), expr);
+			scoped_values.push_back(std::move(scoped_value));
+		}
+
+		debug_info_provider_base::local_dynamic_symbol sym(std::move(sym_internal.symbol_name), scoped_values);
+		m_local_dynamic_symbols.push_back(std::move(sym));
+	}
+
+	m_local_dynamic_symbols_internal.clear();
+	m_local_dynamics_ready = true;
+}
+
 
 
 void debug_info_simple::generate_local_path(const std::string & built, std::string & local)
