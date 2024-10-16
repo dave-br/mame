@@ -385,9 +385,9 @@ u64 local_dynamic_symbol_entry::value() const
 	u64 pc = m_get_pc();
 	for (symbol_table::scoped_value val : m_scoped_values)
 	{
-		if (val.m_address_range.first <= pc && pc <= val.m_address_range.second)
+		if (val.address_range().first <= pc && pc <= val.address_range().second)
 		{
-			return parsed_expression(m_table, val.m_expression).execute();
+			return parsed_expression(m_table, val.expression()).execute();
 		}
 	}
 
@@ -407,7 +407,7 @@ bool local_dynamic_symbol_entry::is_in_scope() const
 	u64 pc = m_get_pc();
 	for (symbol_table::scoped_value val : m_scoped_values)
 	{
-		if (val.m_address_range.first <= pc && pc <= val.m_address_range.second)
+		if (val.address_range().first <= pc && pc <= val.address_range().second)
 		{
 			return true;
 		}

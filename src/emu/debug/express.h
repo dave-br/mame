@@ -179,7 +179,10 @@ public:
 			: m_address_range(std::move(address_range))
 			, m_expression(std::move(expression))
 		{}
+		const std::pair<offs_t,offs_t> & address_range() const { return m_address_range; };
+		const std::string & expression() const { return m_expression; };
 
+	private:
 		std::pair<offs_t,offs_t> m_address_range;
 		const std::string & m_expression;
 	};
