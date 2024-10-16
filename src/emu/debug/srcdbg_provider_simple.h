@@ -18,7 +18,7 @@ class debug_info_simple : public debug_info_provider_base
 public:
 	debug_info_simple(const running_machine& machine);
 	~debug_info_simple() { }
-	virtual void complete_initialization();		// TODO: COMMENT
+	virtual void complete_initialization() override;		// TODO: COMMENT
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
 	virtual const source_file_path & file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
