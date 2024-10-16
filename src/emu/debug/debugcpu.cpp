@@ -553,7 +553,9 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			// Add symbols from source debugging info, if any.  First, globals
-			const std::vector<debug_info_provider_base::global_static_symbol> & srcdbg_global_symbols = device.machine().debugger().debug_info().global_static_symbols();
+			debug_info_provider_base & srcdbg_provider = device.machine().debugger().debug_info();
+			srcdbg_provider.complete_initialization();		// TODO: COMMENT
+			const std::vector<debug_info_provider_base::global_static_symbol> & srcdbg_global_symbols = srcdbg_provider.global_static_symbols();
 
 			// TODO: FIX COMMENT
 			// Source debugging information includes symbols, so point m_symtable to them,

@@ -175,7 +175,7 @@ public:
 	class scoped_value
 	{
 	public:
-		scoped_value(std::pair<offs_t,offs_t> address_range, const std::string & expression)
+		scoped_value(std::pair<offs_t,offs_t> & address_range, const std::string & expression)
 			: m_address_range(std::move(address_range))
 			, m_expression(std::move(expression))
 		{}
