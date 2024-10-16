@@ -104,6 +104,8 @@ public:
 			, m_scoped_values(scoped_values)
 		{
 		}
+		const char * name() const { return m_name.c_str(); };
+		const std::vector<symbol_table::scoped_value> & scoped_values() const { return m_scoped_values; };
 
 	private:
 		std::string m_name;
@@ -173,11 +175,7 @@ private:
 class srcdbg_import : public srcdbg_format_reader_callback
 {
 public:
-	srcdbg_import(debug_info_simple & srcdbg_simple)
-		: m_srcdbg_simple(srcdbg_simple) 
-		, m_read_line_mappings_yet(false)
-		, m_symbol_names()
-		{}
+	srcdbg_import(debug_info_simple & srcdbg_simple);
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;};
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;};
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
@@ -189,8 +187,9 @@ public:
 
 private:
 	debug_info_simple & m_srcdbg_simple;
-	bool m_read_line_mappings_yet;
+	bool m_read_line_mapping_yet;
 	std::vector<std::string> m_symbol_names;
+	device_state_interface * m_state;
 };
 
 

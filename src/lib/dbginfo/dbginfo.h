@@ -26,19 +26,24 @@ MAC Multiplicand Register (IR)	28											X
 MAC Accumulator (AM) 			29											X
 MAC XY Mask Register 			30											X
 */
-
-
 // Cannot find ABI register numbers for 6809, so extending the above
-#define MAME_DBGSRC_REGISTER_6809_A		0
-#define MAME_DBGSRC_REGISTER_6809_B		1
-#define MAME_DBGSRC_REGISTER_6809_D		3
-#define MAME_DBGSRC_REGISTER_6809_X		7
-#define MAME_DBGSRC_REGISTER_6809_Y		8
-#define MAME_DBGSRC_REGISTER_6809_U		10
-#define MAME_DBGSRC_REGISTER_6809_DP	11
-#define MAME_DBGSRC_REGISTER_6809_SP	15
-#define MAME_DBGSRC_REGISTER_6809_PC	16
-#define MAME_DBGSRC_REGISTER_6809_CC	17
+
+// For tools targeting 6809, these values are for the reg parameter to
+// mame_mdi_simp_add_local_dynamic_symbol()
+
+// TODO: MAME symbol evaluation assumes these values match those of each
+// enum under devices\cpu.  What is the best way to ensure this?  Should
+// those enums be lifted out into headers like this intended for 3rd-party tools?
+#define MAME_DBGSRC_REGISTER_6809_PC	-1
+#define MAME_DBGSRC_REGISTER_6809_SP	0
+#define MAME_DBGSRC_REGISTER_6809_CC	1
+#define MAME_DBGSRC_REGISTER_6809_A		2
+#define MAME_DBGSRC_REGISTER_6809_B		3
+#define MAME_DBGSRC_REGISTER_6809_D		4
+#define MAME_DBGSRC_REGISTER_6809_U		5
+#define MAME_DBGSRC_REGISTER_6809_X		6
+#define MAME_DBGSRC_REGISTER_6809_Y		7
+#define MAME_DBGSRC_REGISTER_6809_DP	8
 
 
 void * __cdecl mame_mdi_simp_open_new(const char * file_path);

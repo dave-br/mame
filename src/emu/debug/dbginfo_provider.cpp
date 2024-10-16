@@ -84,6 +84,28 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 	// 	}
 	// }
 
+srcdbg_import::srcdbg_import(debug_info_simple & srcdbg_simple)
+	: m_srcdbg_simple(srcdbg_simple) 
+	, m_read_line_mapping_yet(false)
+	, m_symbol_names()
+	, m_state(device_interface_enumerator<device_state_interface>(m_srcdbg_simple.m_machine.root_device()).first())
+{
+	// device_t * cpu = m_srcdbg_simple.m_machine.device<cpu_device>("maincpu");
+	// 	for (device_t &device : device_enumerator(m_machine.root_device()))
+	// {
+	// 	auto *cpu = dynamic_cast<cpu_device *>(&device);
+	// 	if (cpu)
+	// 	{
+	// 		m_visiblecpu = cpu;
+	// 		break;
+	// 	}
+	// }
+
+	// .cpu	
+	// device.interface(m_state);
+}
+
+
 bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && source_path)
 {
 	// srcdbg_format_read is required to notify in (contiguous) index order
@@ -98,13 +120,13 @@ bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && so
 
 bool srcdbg_import::on_read_line_mapping(const mdi_line_mapping & line_map)
 {
-	if (!m_read_line_mappings_yet)
+	if (!m_read_line_mapping_yet)
 	{
   		// Ensure m_linemaps_by_line is pre-sized so as we encounter a mapping, we'll always have
 		// an entry ready for its source file index.
 		m_srcdbg_simple.m_linemaps_by_line.reserve(m_srcdbg_simple.m_source_file_paths.size());
 		m_srcdbg_simple.m_linemaps_by_line.resize(m_srcdbg_simple.m_source_file_paths.size());
-		m_read_line_mappings_yet = true;
+		m_read_line_mapping_yet = true;
 	}
 	m_srcdbg_simple.m_linemaps_by_address.push_back(line_map);
 	debug_info_simple::address_line addrline = {line_map.range.address_first, line_map.range.address_last, line_map.line_number};
@@ -136,7 +158,7 @@ bool srcdbg_import::on_read_line_mapping(const mdi_line_mapping & line_map)
 bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name)
 {
 	// srcdbg_format_read is required to notify in (contiguous) index order
-	assert (m_srcdbg_simple.m_global_static_symbols.size() == symbol_name_index);
+	assert (m_symbol_names.size() == symbol_name_index);
 	m_symbol_names.push_back(std::move(symbol_name));
 	return true;
 }
@@ -178,7 +200,7 @@ bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbo
 	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
-		std::string expr = reg_to_string(sv.reg);
+		std::string expr = m_state->state_find_entry(sv.reg)->symbol();
 		expr += " + ";
 		expr += sv.reg_offset;
 		symbol_table::scoped_value scoped_value(
@@ -189,6 +211,7 @@ bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbo
 	}
 
 	debug_info_provider_base::local_dynamic_symbol sym(m_symbol_names[value.symbol_name_index], scoped_values);
+	m_srcdbg_simple.m_local_dynamic_symbols.push_back(std::move(sym));
 
 	return true;
 }
@@ -211,7 +234,7 @@ void debug_info_simple::generate_local_path(const std::string & built, std::stri
 {
 	namespace fs = std::filesystem;
 	local = built;                          // Default local path to the originally built source path
-	apply_source_map(m_machine, local);     // Apply the source map if built matches a prefix
+	apply_source_map(local);     			// Apply the source map if built matches a prefix
 	if (osd_is_absolute_path(local))        // If local is already absolute, we're done
 	{
 		return;
@@ -219,7 +242,7 @@ void debug_info_simple::generate_local_path(const std::string & built, std::stri
 
 	// Go through source search path until we can construct an
 	// absolute path to an existing file
-	path_iterator path(machine.options().debug_source_path());
+	path_iterator path(m_machine.options().debug_source_path());
 	std::string source_dir;
 	while (path.next(source_dir))
 	{
