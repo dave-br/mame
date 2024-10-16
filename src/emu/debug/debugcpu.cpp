@@ -553,35 +553,31 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			// Add symbols from source debugging info, if any.  First, globals
-			const std::vector<debug_info_provider_base::global_symbol> & srcdbg_global_symbols = device.machine().debugger().debug_info().global_symbols();
+			const std::vector<debug_info_provider_base::global_static_symbol> & srcdbg_global_symbols = device.machine().debugger().debug_info().global_static_symbols();
 
 			// TODO: FIX COMMENT
 			// Source debugging information includes symbols, so point m_symtable to them,
 			// and set their parent to be the (old) m_symtable
 			m_symtable_srcdbg_globals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-			for (const debug_info_provider_base::global_symbol & sym : srcdbg_global_symbols)
+			for (const debug_info_provider_base::global_static_symbol & sym : srcdbg_global_symbols)
 			{
 				m_symtable_srcdbg_globals->add(sym.name(), sym.value());
 			}
 
 			// Next, lexically-scoped (local) symbols from source debugging info
-			const std::vector<debug_info_provider_base::local_symbol> & srcdbg_local_symbols = device.machine().debugger().debug_info().local_symbols();
+			const std::vector<debug_info_provider_base::local_static_symbol> & srcdbg_local_static_symbols = device.machine().debugger().debug_info().local_static_symbols();
+			// local symbols require a PC getter function so they can test if they're
+			// currently in scope
+			auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
 			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-			for (const debug_info_provider_base::local_symbol & sym : srcdbg_local_symbols)
+			for (const debug_info_provider_base::local_static_symbol & sym : srcdbg_local_static_symbols)
 			{
-				// local symbols require a PC getter function so they can test if they're
-				// currently in scope
-				auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
-
-				if (sym.type() == debug_info_provider_base::local_symbol::CONSTANT_INTEGER)
-				{
-					m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value_integer());
-				}
-				else
-				{
-					assert (sym.type() == debug_info_provider_base::local_symbol::EXPRESSION);
-					m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.  .scope_ranges(), sym.value_expression());
-				}
+				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value());
+			}
+			const std::vector<debug_info_provider_base::local_dynamic_symbol> & srcdbg_local_dynamic_symbols = device.machine().debugger().debug_info().local_dynamic_symbols();
+			for (const debug_info_provider_base::local_dynamic_symbol & sym : srcdbg_local_dynamic_symbols)
+			{
+				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scoped_values());
 			}
 		}
 

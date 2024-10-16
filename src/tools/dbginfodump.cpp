@@ -43,8 +43,6 @@ public:
 	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) override;
 
 private:
-	const char * reg_idx_to_string(unsigned char reg);
-
 	bool m_printed_source_file_paths_title;
 	bool m_printed_line_mapping_title;
 	bool m_printed_symbol_names_title;
@@ -148,48 +146,13 @@ bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_
 	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		printf(
-			"\tvalue: %s + %d\taddress range: %04X-%04X\n", 
-			reg_idx_to_string(value.local_dynamic_scoped_values[i].reg),
+			"\tvalue: (reg idx %d) + %d\taddress range: %04X-%04X\n", 
+			value.local_dynamic_scoped_values[i].reg,
 			value.local_dynamic_scoped_values[i].reg_offset,
 			value.local_dynamic_scoped_values[i].range.address_first, 
 			value.local_dynamic_scoped_values[i].range.address_last);
 	}
 	return true;
-}
-
-
-const char * srcdbg_dump::reg_idx_to_string(unsigned char reg)
-{
-	struct reg_name
-	{
-		unsigned char reg;
-		const char * name;
-	};
-
-	static const reg_name reg_names[] =
-	{
-		{ MAME_DBGSRC_REGISTER_6809_A, "A" },
-		{ MAME_DBGSRC_REGISTER_6809_B, "B" },
-		{ MAME_DBGSRC_REGISTER_6809_D, "D" },
-		{ MAME_DBGSRC_REGISTER_6809_X, "X" },
-		{ MAME_DBGSRC_REGISTER_6809_Y, "Y" },
-		{ MAME_DBGSRC_REGISTER_6809_U, "U" },
-		{ MAME_DBGSRC_REGISTER_6809_DP, "DP" },
-		{ MAME_DBGSRC_REGISTER_6809_SP, "S" },
-		{ MAME_DBGSRC_REGISTER_6809_PC, "PC" },
-		{ MAME_DBGSRC_REGISTER_6809_CC, "CC" }
-	};
-
-	for (u32 i = 0; i < sizeof(reg_names) / sizeof(reg_name); i++)
-	{
-		if (reg == reg_names[i].reg)
-		{
-			return reg_names[i].name;
-		}
-	}
-
-	assert(false && "reg_idx_to_string called with invalid register number");
-	return nullptr;
 }
 
 
