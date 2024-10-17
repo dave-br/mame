@@ -163,7 +163,8 @@ void disasmbasewin_info::update_menu()
 
 bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	if (m_views[VIEW_IDX_DISASM]->is_visible() &&
+	if (m_views[VIEW_IDX_DISASM].get() != nullptr &&
+	  	m_views[VIEW_IDX_DISASM]->is_visible() &&
 		handle_disasm_command(wparam, lparam))
 	{
 		return true;
