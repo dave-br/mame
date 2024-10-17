@@ -581,7 +581,7 @@ device_debug::device_debug(device_t &device)
 			{
 				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scoped_values());
 			}
-			m_symtable = m_symtable_srcdbg_globals.get();
+			m_symtable = m_symtable_srcdbg_locals.get();
 		}
 
 		// add entries to enable/disable unmap reporting for each space
