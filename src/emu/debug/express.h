@@ -184,7 +184,7 @@ public:
 
 	private:
 		std::pair<offs_t,offs_t> m_address_range;
-		const std::string & m_expression;
+		std::string m_expression;
 	};
 
 	// construction/destruction
