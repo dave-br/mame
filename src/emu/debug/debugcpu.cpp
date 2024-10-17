@@ -571,7 +571,7 @@ device_debug::device_debug(device_t &device)
 			// local symbols require a PC getter function so they can test if they're
 			// currently in scope
 			auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
-			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
+			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_srcdbg_globals.get(), &device);
 			for (const debug_info_provider_base::local_static_symbol & sym : srcdbg_local_static_symbols)
 			{
 				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value());
@@ -581,6 +581,7 @@ device_debug::device_debug(device_t &device)
 			{
 				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scoped_values());
 			}
+			m_symtable = m_symtable_srcdbg_globals.get();
 		}
 
 		// add entries to enable/disable unmap reporting for each space
