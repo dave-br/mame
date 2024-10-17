@@ -6,6 +6,7 @@
 #include "path.h"
 
 #include <filesystem>
+#include <sstream>
 
 
 srcdbg_import::srcdbg_import(debug_info_simple & srcdbg_simple)
@@ -161,10 +162,9 @@ void debug_info_simple::complete_initialization()
 		std::vector<symbol_table::scoped_value> scoped_values;
 		for (scoped_value_internal & sv : sym_internal.m_scoped_values)
 		{
-			std::string expr = state->state_find_entry(sv.m_reg)->symbol();
-			expr += " + ";
-			expr += sv.m_reg_offset;
-			symbol_table::scoped_value scoped_value(sv.m_range, expr);
+			std::ostringstream expr;
+			expr << "(" << state->state_find_entry(sv.m_reg)->symbol() << " + " << sv.m_reg_offset << ")";
+			symbol_table::scoped_value scoped_value(sv.m_range, std::move(expr.str()).c_str());
 			scoped_values.push_back(std::move(scoped_value));
 		}
 

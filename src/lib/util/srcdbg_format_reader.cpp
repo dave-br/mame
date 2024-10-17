@@ -142,7 +142,7 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		{
 			if (!callback.on_read_source_path(source_index++, std::move(str)))
 			{
-				return true;
+				return false;
 			}
 			str.clear();
 		}
@@ -194,15 +194,12 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	for (u32 global_constant_idx = 0; global_constant_idx < header->num_global_constant_symbol_values; global_constant_idx++)
 	{
 		const global_constant_symbol_value * value;
-		if (!read_field<global_constant_symbol_value>(value, data, i, error))
+		if (!read_field<global_constant_symbol_value>(value, data, i, error) ||
+			!callback.on_read_global_constant_symbol_value(*value))
 		{
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
-		if (!callback.on_read_global_constant_symbol_value(*value))
-		{
-			return true;
-		}
 	}
 
 	while (i < after_local_constant_symbol_values)
@@ -210,15 +207,12 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		const local_constant_symbol_value * value;
 		u32 value_start_idx = i;
 		if (!read_field<local_constant_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value->num_address_ranges * sizeof(address_range), data, i, error))
+			!scan_bytes(value->num_address_ranges * sizeof(address_range), data, i, error) ||
+			!callback.on_read_local_constant_symbol_value(*(const local_constant_symbol_value *) &data[value_start_idx]))
 		{
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
-		if (!callback.on_read_local_constant_symbol_value(*(const local_constant_symbol_value *) &data[value_start_idx]))
-		{
-			return true;
-		}
 	}
 
 	while (i < after_local_dynamic_symbol_values)
@@ -226,15 +220,12 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		const local_dynamic_symbol_value * value;
 		u32 value_start_idx = i;
 		if (!read_field<local_dynamic_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value->num_local_dynamic_scoped_values * sizeof(local_dynamic_scoped_value), data, i, error))
+			!scan_bytes(value->num_local_dynamic_scoped_values * sizeof(local_dynamic_scoped_value), data, i, error) ||
+			!callback.on_read_local_dynamic_symbol_value(*(const local_dynamic_symbol_value *) &data[value_start_idx]))
 		{
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
-		if (!callback.on_read_local_dynamic_symbol_value(*(const local_dynamic_symbol_value *) &data[value_start_idx]))
-		{
-			return true;
-		}
 	}
 
 	// TODO: MORE CHECKING OF HEADER SIZE VALS AND NUM_SYMS FOR LOCS
