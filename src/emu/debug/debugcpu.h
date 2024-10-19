@@ -201,6 +201,7 @@ private:
 	int                     m_stepsleft;                // number of steps left until done
 	int                     m_delay_steps;              // number of steps until target address check
 	std::optional<file_line> m_step_source_start;       // TODO
+	int                     m_step_source_call_nesting;
 
 	// execution information
 	offs_t                  m_stopaddr;                 // stop address for DEBUG_FLAG_STOP_PC

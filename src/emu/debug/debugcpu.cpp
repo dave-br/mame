@@ -496,6 +496,7 @@ device_debug::device_debug(device_t &device)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
 	, m_step_source_start()
+	, m_step_source_call_nesting(0)
 	, m_stopaddr(0)
 	, m_stoptime(attotime::zero)
 	, m_stopirq(0)
@@ -975,15 +976,36 @@ void device_debug::instruction_hook(offs_t curpc)
 				}
 				else
 				{
-					// When source-stepping, stop if we're currently on a user source line and that source
-					// line is different from where we started (or we started outside a user source line)
+					// When source-stepping, stop if we're currently on a user source line AND either
+					// i) we started outside a user source line, or
+					// ii) current source line is different from where we started, or
+					// iii) there has been an unmatched return since we started (e.g., recursive return to same pc)
 					std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(curpc);
 					should_stop = (file_line_cur.has_value() &&
-						(!m_step_source_start.has_value() || !(file_line_cur.value() == m_step_source_start.value())));
+						(!m_step_source_start.has_value() ||
+						!(file_line_cur.value() == m_step_source_start.value()) ||
+						m_step_source_call_nesting < 0));
+
+					debug_disasm_buffer buffer(device());
+
+					// disassemble the current instruction and get the flags
+					u32 dasmresult = buffer.disassemble_info(curpc);
+					if ((dasmresult & util::disasm_interface::SUPPORTED) != 0)
+					{
+						if (dasmresult & util::disasm_interface::STEP_OVER)
+						{
+							m_step_source_call_nesting++;
+						}
+						if (dasmresult & util::disasm_interface::STEP_OUT)
+						{
+							m_step_source_call_nesting--;
+						}
+					}
 					if (should_stop)
 					{
 						// And, if we're stopping, reset the source stepping state.
 						m_step_source_start.reset();
+						m_step_source_call_nesting = 0;
 					}
 				}
 
