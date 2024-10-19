@@ -965,24 +965,49 @@ void device_debug::instruction_hook(offs_t curpc)
 			// decrement the count
 			m_stepsleft--;
 
-			// if we hit 0, stop
+			// if we hit 0, stop unless source stepping requires we continue
 			if (m_stepsleft == 0)
 			{
-				bool should_stop = true;
-				if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0)
+				bool should_stop;
+				if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) == 0)
 				{
+					should_stop = true;
+				}
+				else
+				{
+					// When source-stepping, stop if we're currently on a user source line and that source
+					// line is different from where we started (or we started outside a user source line)
 					std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(curpc);
-					if (!file_line_cur.has_value() || 
-						(m_step_source_start.has_value() && file_line_cur.value() == m_step_source_start.value()))
+					should_stop = (file_line_cur.has_value() &&
+						(!m_step_source_start.has_value() || !(file_line_cur.value() == m_step_source_start.value())));
+					if (should_stop)
 					{
-						should_stop = false;
-					}
-					if (m_step_source_start.has_value() && file_line_cur.has_value() &&
-						!(file_line_cur.value() == m_step_source_start.value()))
-					{
+						// And, if we're stopping, reset the source stepping state.
 						m_step_source_start.reset();
 					}
 				}
+
+
+
+
+				// bool should_stop = true;
+				// if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0)
+				// {
+				// 	// We're currently source-code-level stepping.  Are we done?
+				// 	std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(curpc);
+				// 	if (!file_line_cur.has_value() || 
+				// 		(m_step_source_start.has_value() && file_line_cur.value() == m_step_source_start.value()))
+				// 	{
+				// 		// We're not in user source, or we are but at the same source line as when we started.  Not done.
+				// 		should_stop = false;
+				// 	}
+				// 	if (m_step_source_start.has_value() && file_line_cur.has_value() &&
+				// 		!(file_line_cur.value() == m_step_source_start.value()))
+				// 	{
+				// 		// We're in user source at a different line from where we started.  Done.
+				// 		m_step_source_start.reset();
+				// 	}
+				// }
 				if (should_stop)
 				{
 					debugcpu.set_execution_stopped();
