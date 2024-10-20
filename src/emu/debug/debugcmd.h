@@ -84,7 +84,9 @@ private:
 	void execute_quit(const std::vector<std::string_view> &params);
 	void execute_do(const std::vector<std::string_view> &params);
 	void execute_step(const std::vector<std::string_view> &params);
+	void execute_step_source(const std::vector<std::string_view> &params);
 	void execute_over(const std::vector<std::string_view> &params);
+	void execute_over_source(const std::vector<std::string_view> &params);
 	void execute_out(const std::vector<std::string_view> &params);
 	void execute_go(const std::vector<std::string_view> &params);
 	void execute_go_vblank(const std::vector<std::string_view> &params);
