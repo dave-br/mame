@@ -976,60 +976,8 @@ void device_debug::instruction_hook(offs_t curpc)
 				}
 				else
 				{
-					// When source-stepping, stop if we're currently on a user source line AND either
-					// i) we started outside a user source line, or
-					// ii) current source line is different from where we started, or
-					// iii) there has been an unmatched return since we started (e.g., recursive return to same pc)
-					std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(curpc);
-					should_stop = (file_line_cur.has_value() &&
-						(!m_step_source_start.has_value() ||
-						!(file_line_cur.value() == m_step_source_start.value()) ||
-						m_step_source_call_nesting < 0));
 
-					debug_disasm_buffer buffer(device());
-
-					// disassemble the current instruction and get the flags
-					u32 dasmresult = buffer.disassemble_info(curpc);
-					if ((dasmresult & util::disasm_interface::SUPPORTED) != 0)
-					{
-						if (dasmresult & util::disasm_interface::STEP_OVER)
-						{
-							m_step_source_call_nesting++;
-						}
-						if (dasmresult & util::disasm_interface::STEP_OUT)
-						{
-							m_step_source_call_nesting--;
-						}
-					}
-					if (should_stop)
-					{
-						// And, if we're stopping, reset the source stepping state.
-						m_step_source_start.reset();
-						m_step_source_call_nesting = 0;
-					}
 				}
-
-
-
-
-				// bool should_stop = true;
-				// if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0)
-				// {
-				// 	// We're currently source-code-level stepping.  Are we done?
-				// 	std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(curpc);
-				// 	if (!file_line_cur.has_value() || 
-				// 		(m_step_source_start.has_value() && file_line_cur.value() == m_step_source_start.value()))
-				// 	{
-				// 		// We're not in user source, or we are but at the same source line as when we started.  Not done.
-				// 		should_stop = false;
-				// 	}
-				// 	if (m_step_source_start.has_value() && file_line_cur.has_value() &&
-				// 		!(file_line_cur.value() == m_step_source_start.value()))
-				// 	{
-				// 		// We're in user source at a different line from where we started.  Done.
-				// 		m_step_source_start.reset();
-				// 	}
-				// }
 				if (should_stop)
 				{
 					debugcpu.set_execution_stopped();
@@ -1138,6 +1086,8 @@ void device_debug::wait_hook()
 	if ((m_flags & (DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH)) != 0 && (m_flags & (DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS)) == 0)
 		prepare_for_step_overout(m_state->pcbase());
 
+	// Once source-level stepping starts, keep track of the first encountered file/line
+	// of user source.
 	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 && !m_step_source_start.has_value())
 	{
 		m_step_source_start = machine.debugger().debug_info().address_to_file_line(curpc);
@@ -1145,6 +1095,59 @@ void device_debug::wait_hook()
 
 	// no longer in debugger code
 	debugcpu.set_within_instruction(false);
+}
+
+
+//-------------------------------------------------
+//  is_source_stepping_complete - helper to
+//  maintain bookkeeping during source-level stepping
+//  and determine if the stepping is complete
+//-------------------------------------------------
+
+bool device_debug::is_source_stepping_complete(offs_t pc)
+{
+	assert ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0);
+	running_machine &machine = m_device.machine();
+
+	// When source-stepping, stop if we're currently on a user source line AND either
+	// i) we started outside a user source line, or
+	// ii) current source line is different from where we started, or
+	// iii) there has been an unmatched return since we started (e.g., recursive return to same pc)
+	std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(pc);
+	bool ret = (file_line_cur.has_value() &&
+		(!m_step_source_start.has_value() ||                         // i)
+		!(file_line_cur.value() == m_step_source_start.value()) ||   // ii)
+		m_step_source_call_nesting < 0));                            // iii)
+
+	// Look at instruction we're about to execute to track calls and returns (iii)
+	// for use next time
+	debug_disasm_buffer buffer(device());
+	u32 dasmresult = buffer.disassemble_info(pc);
+	if ((dasmresult & util::disasm_interface::SUPPORTED) != 0)
+	{
+		// Track calls (util::disasm_interface::STEP_OVER).  Note: Step-over will
+		// automatically skip returns (for nested matching calls & returns),
+		// so we need to skip counting the calls as well unless we're doing
+		// step-into (m_flags & DEBUG_FLAG_STEPPING)
+		if ((m_flags & DEBUG_FLAG_STEPPING) != 0 && 
+			(dasmresult & util::disasm_interface::STEP_OVER) != 0)
+		{
+			m_step_source_call_nesting++;
+		}
+		// Track returns (util::disasm_interface::STEP_OUT)
+		if ((dasmresult & util::disasm_interface::STEP_OUT) != 0)
+		{
+			m_step_source_call_nesting--;
+		}
+	}
+	if (ret)
+	{
+		// We're stopping, so reset the source stepping state.
+		m_step_source_start.reset();
+		m_step_source_call_nesting = 0;
+	}
+
+	return ret;
 }
 
 

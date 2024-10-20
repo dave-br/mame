@@ -172,6 +172,7 @@ private:
 
 	// internal helpers
 	void prepare_for_step_overout(offs_t pc);
+	bool is_source_stepping_complete(offs_t pc);
 	void errorlog_write_line(const char *line);
 
 	// breakpoint and watchpoint helpers
@@ -200,8 +201,8 @@ private:
 	offs_t                  m_stepaddr;                 // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH
 	int                     m_stepsleft;                // number of steps left until done
 	int                     m_delay_steps;              // number of steps until target address check
-	std::optional<file_line> m_step_source_start;       // TODO
-	int                     m_step_source_call_nesting;
+	std::optional<file_line> m_step_source_start;       // When source-level stepping, where did the step start?
+	int                     m_step_source_call_nesting; // When source-level stepping, how many calls minus returns have we encountered?
 
 	// execution information
 	offs_t                  m_stopaddr;                 // stop address for DEBUG_FLAG_STOP_PC
