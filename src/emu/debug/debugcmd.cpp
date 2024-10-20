@@ -193,8 +193,12 @@ debugger_commands::debugger_commands(running_machine& machine, debugger_cpu& cpu
 	m_console.register_command("do",        CMDFLAG_NONE, 1, 1, std::bind(&debugger_commands::execute_do, this, _1));
 	m_console.register_command("step",      CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_step, this, _1));
 	m_console.register_command("s",         CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_step, this, _1));
+	m_console.register_command("steps",     CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_step_source, this, _1));
+	m_console.register_command("sts",       CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_step_source, this, _1));
 	m_console.register_command("over",      CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_over, this, _1));
 	m_console.register_command("o",         CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_over, this, _1));
+	m_console.register_command("overs",     CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_over_source, this, _1));
+	m_console.register_command("os",        CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_over_source, this, _1));
 	m_console.register_command("out" ,      CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_out, this, _1));
 	m_console.register_command("go",        CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_go, this, _1));
 	m_console.register_command("g",         CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_go, this, _1));
@@ -798,6 +802,16 @@ void debugger_commands::execute_step(const std::vector<std::string_view> &params
 }
 
 
+/*-----------------------------------------------------
+    execute_step_source - execute the step src command
+-----------------------------------------------------*/
+
+void debugger_commands::execute_step_source(const std::vector<std::string_view> &params)
+{
+	m_console.get_visible_cpu()->debug()->single_step(1 /* steps */, true /* source-level stepping */);
+}
+
+
 /*-------------------------------------------------
     execute_over - execute the over command
 -------------------------------------------------*/
@@ -810,6 +824,16 @@ void debugger_commands::execute_over(const std::vector<std::string_view> &params
 		return;
 
 	m_console.get_visible_cpu()->debug()->single_step_over(steps);
+}
+
+
+/*-----------------------------------------------------
+    execute_over_source - execute the over src command
+-----------------------------------------------------*/
+
+void debugger_commands::execute_over_source(const std::vector<std::string_view> &params)
+{
+	m_console.get_visible_cpu()->debug()->single_step_over(1 /* steps */, true /* source-level stepping */);
 }
 
 
