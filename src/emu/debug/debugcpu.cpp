@@ -969,16 +969,8 @@ void device_debug::instruction_hook(offs_t curpc)
 			// if we hit 0, stop unless source stepping requires we continue
 			if (m_stepsleft == 0)
 			{
-				bool should_stop;
-				if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) == 0)
-				{
-					should_stop = true;
-				}
-				else
-				{
-
-				}
-				if (should_stop)
+				if (((m_flags & DEBUG_FLAG_SOURCE_STEPPING) == 0) ||
+					is_source_stepping_complete(curpc))
 				{
 					debugcpu.set_execution_stopped();
 				}
