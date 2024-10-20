@@ -86,15 +86,15 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 	RECT comborect;
 	comborect.top = bounds.top + EDGE_WIDTH;
 	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
-	comborect.left = bounds.left + EDGE_WIDTH;
-	comborect.right = bounds.right - EDGE_WIDTH;
+	comborect.left = bounds.left /*+ EDGE_WIDTH*/;
+	comborect.right = bounds.right /*- EDGE_WIDTH*/;
 
 	// source view gets the rest
 	RECT srcrect;
 	srcrect.top = comborect.bottom + (2 * EDGE_WIDTH);
 	srcrect.bottom = bounds.bottom - EDGE_WIDTH;
-	srcrect.left = bounds.left + EDGE_WIDTH;
-	srcrect.right = bounds.right - EDGE_WIDTH;
+	srcrect.left = bounds.left /*+ EDGE_WIDTH*/;
+	srcrect.right = bounds.right /*- EDGE_WIDTH*/;
 
 	// set the bounds of things
 	smart_set_window_bounds(m_filecombownd, window(), comborect);
