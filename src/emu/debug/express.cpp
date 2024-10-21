@@ -1778,7 +1778,7 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 		string++;
 	}
 	parse_token linenum_token;
-	parse_number(linenum_token, linenum_buffer.c_str() + 1, 10, expression_error::INVALID_NUMBER);
+	parse_number(linenum_token, linenum_buffer.c_str(), 10, expression_error::INVALID_NUMBER);
 
 	// Convert file path and line number to an address
 	const debug_info_provider_base & debug_info = symbols().machine().debugger().debug_info();
