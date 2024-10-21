@@ -250,10 +250,6 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 		AppendMenu(settingsmenu, MF_ENABLED, ID_DARK_BACKGROUND, TEXT("Dark Background"));
 		AppendMenu(GetMenu(window()), MF_ENABLED | MF_POPUP, (UINT_PTR)settingsmenu, TEXT("Settings"));
 
-		AppendMenu(m_optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
-		AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_SOURCE, TEXT("Show source\tTODO KBD"));
-		AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_DISASM, TEXT("Show disassembly\tTODO KBD"));
-
 		// get the work bounds
 		RECT work_bounds, bounds;
 		SystemParametersInfo(SPI_GETWORKAREA, 0, &work_bounds, 0);

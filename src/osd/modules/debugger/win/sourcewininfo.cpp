@@ -35,6 +35,11 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger, bool is_mai
 
 	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->create_source_file_combobox(window(), (LONG_PTR)this);
 
+	// Add source-debugging commands to options menu
+	AppendMenu(m_optionsmenu, MF_DISABLED | MF_SEPARATOR, 0, TEXT(""));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_SOURCE, TEXT("Show source\tCtrl+U"));
+	AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_DISASM, TEXT("Show disassembly\tCtrl+Shift+U"));
+
 	// recently commented out!
 	// // recompute the children once to get the maxwidth
 	// recompute_children();
@@ -126,33 +131,25 @@ void sourcewin_info::draw_contents(HDC dc)
 }
 
 
-// bool sourcewin_info::handle_key(WPARAM wparam, LPARAM lparam)
-// {
-// 	switch (wparam)
-// 	{
-// 	// ajg - steals the F4 from the global key handler - but ALT+F4 didn't work anyways ;)
-// 	case VK_F4:
-// 		SendMessage(window(), WM_COMMAND, ID_RUN_TO_CURSOR, 0);
-// 		return true;
+bool sourcewin_info::handle_key(WPARAM wparam, LPARAM lparam)
+{
+	if (GetAsyncKeyState(VK_CONTROL) & 0x8000 && wparam == 'U')
+	{
+		if (GetAsyncKeyState(VK_SHIFT))
+		{
+			SendMessage(window(), WM_COMMAND, ID_SHOW_DISASM, 0);
+		}
+		else
+		{
+			SendMessage(window(), WM_COMMAND, ID_SHOW_SOURCE, 0);
 
-// 	case VK_F9:
-// 		if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
-// 			SendMessage(window(), WM_COMMAND, ID_DISABLE_BREAKPOINT, 0);
-// 		else
-// 			SendMessage(window(), WM_COMMAND, ID_TOGGLE_BREAKPOINT, 0);
-// 		return true;
+		}
+		return true;
+	}
 
-// 	case VK_RETURN:
-// 		if (m_views[0]->cursor_visible() && m_views[0]->source_is_visible_cpu())
-// 		{
-// 			SendMessage(window(), WM_COMMAND, ID_STEP, 0);
-// 			return true;
-// 		}
-// 		break;
-// 	}
+	return disasmbasewin_info::handle_key(wparam, lparam);
+}
 
-// 	return debugwin_info::handle_key(wparam, lparam);
-// }
 
 bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 {
