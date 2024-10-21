@@ -23,8 +23,7 @@ class sourcewin_info : public disasmbasewin_info
 public:
 	sourcewin_info(debugger_windows_interface &debugger, bool is_main_console, LPCSTR title, WNDPROC handler);
 	virtual ~sourcewin_info();
-
-	// virtual bool handle_key(WPARAM wparam, LPARAM lparam) override;
+	virtual bool handle_key(WPARAM wparam, LPARAM lparam) override;
 	// virtual void restore_configuration_from_node(util::xml::data_node const &node) override;
 
 protected:
