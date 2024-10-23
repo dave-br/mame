@@ -90,7 +90,7 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		return false;
 	}
 
-	u32 first_symbol_name = first_line_mapping + (header->num_line_mappings * sizeof(mdi_line_mapping));
+	u32 first_symbol_name = first_line_mapping + (header->num_line_mappings * sizeof(srcdbg_line_mapping));
 	u32 after_symbol_names = first_symbol_name + header->symbol_names_size;
 	if (header->symbol_names_size > 0)
 	{
@@ -154,8 +154,8 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
-		const mdi_line_mapping * line_map;
-		if (!read_field<mdi_line_mapping>(line_map, data, i, error))
+		const srcdbg_line_mapping * line_map;
+		if (!read_field<srcdbg_line_mapping>(line_map, data, i, error))
 		{
 			return false;
 		}

@@ -29,7 +29,7 @@ MAC XY Mask Register 			30											X
 // Cannot find ABI register numbers for 6809, so extending the above
 
 // For tools targeting 6809, these values are for the reg parameter to
-// mame_mdi_simp_add_local_dynamic_symbol()
+// mame_srcdbg_simp_add_local_dynamic_symbol()
 
 // TODO: MAME symbol evaluation assumes these values match those of each
 // enum under devices\cpu.  What is the best way to ensure this?  Should
@@ -46,13 +46,13 @@ MAC XY Mask Register 			30											X
 #define MAME_DBGSRC_REGISTER_6809_DP	8
 
 
-void * __cdecl mame_mdi_simp_open_new(const char * file_path);
-unsigned short __cdecl mame_mdi_simp_add_source_file_path(void * mdi_simp_state, const char * source_file_path);
-void __cdecl mame_mdi_simp_add_line_mapping(void * mdi_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
-void __cdecl mame_mdi_simp_add_global_constant_symbol(void * mdi_simp_state, const char * symbol_name, int symbol_value);
-void __cdecl mame_mdi_simp_add_local_constant_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
-void __cdecl mame_mdi_simp_add_local_dynamic_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
-void __cdecl mame_mdi_simp_close(void * mdi_simp_state);
+void * __cdecl mame_srcdbg_simp_open_new(const char * file_path);
+unsigned short __cdecl mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path);
+void __cdecl mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
+void __cdecl mame_srcdbg_simp_add_global_constant_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value);
+void __cdecl mame_srcdbg_simp_add_local_constant_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
+void __cdecl mame_srcdbg_simp_add_local_dynamic_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
+void __cdecl mame_srcdbg_simp_close(void * srcdbg_simp_state);
 
 #ifdef __cplusplus
 }
