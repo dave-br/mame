@@ -1,3 +1,15 @@
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_provider_simple.h
+
+    Implementation of interface to source-debugging info for the
+	"simple" format
+
+***************************************************************************/
+
+
 #include "emu.h"
 #include "srcdbg_provider_simple.h"
 

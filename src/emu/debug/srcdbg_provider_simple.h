@@ -1,3 +1,15 @@
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_provider_simple.h
+
+    Implementation of interface to source-debugging info for the
+	"simple" format
+
+***************************************************************************/
+
+
 #ifndef MAME_EMU_DEBUG_SRCDBG_PROVIDER_SIMPLE_H
 #define MAME_EMU_DEBUG_SRCDBG_PROVIDER_SIMPLE_H
 
@@ -7,9 +19,6 @@
 
 
 class srcdbg_import;
-
-// debug-info provider for the simple format
-
 
 class srcdbg_provider_simple : public srcdbg_provider_base
 {

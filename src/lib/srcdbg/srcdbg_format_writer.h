@@ -1,3 +1,14 @@
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_format_writer.h
+
+    Library of helper functions to generate MAME source-level
+	debugging info files
+
+***************************************************************************/
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +56,10 @@ MAC XY Mask Register 			30											X
 #define MAME_DBGSRC_REGISTER_6809_Y		7
 #define MAME_DBGSRC_REGISTER_6809_DP	8
 
+
+/*********************************************************************
+  Functions for generating "simple" format debugging info files
+**********************************************************************/
 
 void * __cdecl mame_srcdbg_simp_open_new(const char * file_path);
 unsigned short __cdecl mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path);

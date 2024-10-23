@@ -1,9 +1,16 @@
-// TODO
+// license:BSD-3-Clause
+// copyright-holders:David Broman
 /*********************************************************************
 
+    srcdbg_format.h
+
+    Helper for reading MAME source-level debugging info files
+
 ***************************************************************************/
-#ifndef MAME_EMU_DEBUG_SRCDBG_FORMATREADER_H
-#define MAME_EMU_DEBUG_SRCDBG_FORMATREADER_H
+
+
+#ifndef MAME_UTIL_SRCDBG_FORMATREADER_H
+#define MAME_UTIL_SRCDBG_FORMATREADER_H
 
 #pragma once
 
@@ -13,7 +20,7 @@
 #include <cstdint>
 
 using u16 = uint16_t;
-
+using u32 = uint32_t;
 
 
 class srcdbg_format_reader_callback
@@ -33,4 +40,4 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 
 
 
-#endif // MAME_EMU_DEBUG_SRCDBG_FORMATREADER_H
+#endif // MAME_UTIL_SRCDBG_FORMATREADER_H

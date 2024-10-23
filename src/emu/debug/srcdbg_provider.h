@@ -1,5 +1,16 @@
-#ifndef MAME_EMU_DEBUG_DEBUGINFO_PROVIDER_H
-#define MAME_EMU_DEBUG_DEBUGINFO_PROVIDER_H
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_provider.h
+
+    Format-agnostic interface to source-debugging info
+
+***************************************************************************/
+
+
+#ifndef MAME_EMU_DEBUG_SRCDBG_PROVIDER_H
+#define MAME_EMU_DEBUG_SRCDBG_PROVIDER_H
 
 #pragma once
 
@@ -128,7 +139,4 @@ public:
 };
 
 
-
-
-
-#endif // MAME_EMU_DEBUG_DEBUGINFO_PROVIDER_H
+#endif // MAME_EMU_DEBUG_SRCDBG_PROVIDER_H
