@@ -843,7 +843,7 @@ end
 -- dbginfodump
 --------------------------------------------------
 
-project("dbginfodump")
+project("srcdbgdump")
 uuid ("80b18ed5-4f84-4e50-95c9-8f44e99c22dd")
 kind "ConsoleApp"
 
@@ -862,13 +862,12 @@ links {
 }
 
 includedirs {
-	MAME_DIR .. "src/lib/dbginfo",
 	MAME_DIR .. "src/lib/util",
 	MAME_DIR .. "src/osd",
 }
 
 files {
-	MAME_DIR .. "src/tools/dbginfodump.cpp",
+	MAME_DIR .. "src/tools/srcdbgdump.cpp",
 }
 
 configuration { }
