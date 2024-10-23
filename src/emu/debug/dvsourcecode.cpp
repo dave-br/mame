@@ -98,7 +98,7 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 	flush_updates();
 	u32 line = m_cursor.y + 1;
 
-	std::vector<debug_info_provider_base::address_range> ranges;
+	std::vector<srcdbg_provider_base::address_range> ranges;
 	m_debug_info.file_line_to_address_ranges(m_cur_src_index, line, ranges);
 
 	if (ranges.size() == 0)
@@ -179,7 +179,7 @@ void debug_view_sourcecode::view_update()
 
 	// Print
 	// const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
-	const debug_info_provider_base::source_file_path & path = m_debug_info.file_index_to_path(m_cur_src_index);
+	const srcdbg_provider_base::source_file_path & path = m_debug_info.file_index_to_path(m_cur_src_index);
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_line(0, "Error opening file", DCA_NORMAL);
@@ -247,7 +247,7 @@ void debug_view_sourcecode::view_update()
 
 bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
-	std::vector<debug_info_provider_base::address_range> ranges;
+	std::vector<srcdbg_provider_base::address_range> ranges;
 	m_debug_info.file_line_to_address_ranges(m_cur_src_index, line, ranges);
 	const device_debug * debug = source()->device()->debug();
 	for (offs_t i = 0; i < ranges.size(); i++)

@@ -31,7 +31,7 @@ private:
 };
 
 // abstract base class for debug-info (symbols) file readers
-class debug_info_provider_base
+class srcdbg_provider_base
 {
 public:
 	// TODO: MAKE FRIEND CLASS, AND ONLY GETTERS PUBLIC
@@ -114,8 +114,8 @@ public:
 
 
 	typedef std::pair<offs_t,offs_t> address_range;
-	static std::unique_ptr<debug_info_provider_base> create_debug_info(running_machine &machine);
-	virtual ~debug_info_provider_base() {};
+	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine);
+	virtual ~srcdbg_provider_base() {};
 	virtual void complete_initialization() = 0;
 	virtual std::size_t num_files() const = 0;
 	virtual const source_file_path & file_index_to_path(u16 file_index) const = 0;

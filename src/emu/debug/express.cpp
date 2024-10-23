@@ -32,7 +32,7 @@
 #include "emu.h"
 #include "express.h"
 #include "debugger.h"
-#include "dvsourcecode.h"		// TODO: ONLY FOR debug_info_provider_base, MOVE
+#include "dvsourcecode.h"		// TODO: ONLY FOR srcdbg_provider_base, MOVE
 
 
 #include "corestr.h"
@@ -288,7 +288,7 @@ public:
 // 	virtual u64 execute(int numparams, const u64 *paramlist);
 
 private:
-	// using Type = debug_info_provider_base::local_symbol::Type;
+	// using Type = srcdbg_provider_base::local_symbol::Type;
 
 	// internal state
 	symbol_table::getter_func m_get_pc;
@@ -323,7 +323,7 @@ public:
 // 	virtual u64 execute(int numparams, const u64 *paramlist);
 
 private:
-	// using Type = debug_info_provider_base::local_symbol::Type;
+	// using Type = srcdbg_provider_base::local_symbol::Type;
 
 	// internal state
 	symbol_table::getter_func m_get_pc;
@@ -1781,13 +1781,13 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	parse_number(linenum_token, linenum_buffer.c_str(), 10, expression_error::INVALID_NUMBER);
 
 	// Convert file path and line number to an address
-	const debug_info_provider_base & debug_info = symbols().machine().debugger().debug_info();
+	const srcdbg_provider_base & debug_info = symbols().machine().debugger().debug_info();
 	std::optional<int> file_index = debug_info.file_path_to_index(file_path.c_str());
 	if (!file_index.has_value())
 	{
 		// TODO: ERROR
 	}
-	std::vector<debug_info_provider_base::address_range> ranges;
+	std::vector<srcdbg_provider_base::address_range> ranges;
 	debug_info.file_line_to_address_ranges(file_index.value(), linenum_token.value(), ranges);
 	if (ranges.size() == 0)
 	{

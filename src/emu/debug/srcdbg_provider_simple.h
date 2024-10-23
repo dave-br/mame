@@ -11,13 +11,13 @@ class srcdbg_import;
 // debug-info provider for the simple format
 
 
-class debug_info_simple : public debug_info_provider_base
+class srcdbg_provider_simple : public srcdbg_provider_base
 {
 	friend class srcdbg_import;
 
 public:
-	debug_info_simple(const running_machine& machine);
-	~debug_info_simple() { }
+	srcdbg_provider_simple(const running_machine& machine);
+	~srcdbg_provider_simple() { }
 	virtual void complete_initialization() override;		// TODO: COMMENT
 	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
 	virtual const source_file_path & file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
@@ -81,7 +81,7 @@ private:
 class srcdbg_import : public srcdbg_format_reader_callback
 {
 public:
-	srcdbg_import(debug_info_simple & srcdbg_simple);
+	srcdbg_import(srcdbg_provider_simple & srcdbg_simple);
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;};
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;};
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
@@ -92,7 +92,7 @@ public:
 	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) override;
 
 private:
-	debug_info_simple & m_srcdbg_simple;
+	srcdbg_provider_simple & m_srcdbg_simple;
 	bool m_read_line_mapping_yet;
 	std::vector<std::string> m_symbol_names;
 	device_state_interface * m_state;

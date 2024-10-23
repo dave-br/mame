@@ -9,7 +9,7 @@
 #include <sstream>
 
 
-srcdbg_import::srcdbg_import(debug_info_simple & srcdbg_simple)
+srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	: m_srcdbg_simple(srcdbg_simple) 
 	, m_read_line_mapping_yet(false)
 	, m_symbol_names()
@@ -37,7 +37,7 @@ bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && so
 
 	std::string local;
 	m_srcdbg_simple.generate_local_path(source_path, local);
-	debug_info_provider_base::source_file_path sfp(source_path, local);
+	srcdbg_provider_base::source_file_path sfp(source_path, local);
 	m_srcdbg_simple.m_source_file_paths.push_back(std::move(sfp));
 	return true;
 }
@@ -53,7 +53,7 @@ bool srcdbg_import::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 		m_read_line_mapping_yet = true;
 	}
 	m_srcdbg_simple.m_linemaps_by_address.push_back(line_map);
-	debug_info_simple::address_line addrline = {line_map.range.address_first, line_map.range.address_last, line_map.line_number};
+	srcdbg_provider_simple::address_line addrline = {line_map.range.address_first, line_map.range.address_last, line_map.line_number};
 	m_srcdbg_simple.m_linemaps_by_line[line_map.source_file_index].push_back(addrline);
 	return true;
 }
@@ -90,7 +90,7 @@ bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && sy
 
 bool srcdbg_import::on_read_global_constant_symbol_value(const global_constant_symbol_value & value)
 {
-	debug_info_provider_base::global_static_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value);
+	srcdbg_provider_base::global_static_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value);
 	m_srcdbg_simple.m_global_static_symbols.push_back(std::move(sym));
 	return true;
 }
@@ -106,7 +106,7 @@ bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_sym
 				std::pair<offs_t,offs_t>(value.ranges[i].address_first, value.ranges[i].address_last)));
 	}
 
-	debug_info_provider_base::local_static_symbol sym(
+	srcdbg_provider_base::local_static_symbol sym(
 		m_symbol_names[value.symbol_name_index],
 		ranges,
 		value.symbol_value);
@@ -120,11 +120,11 @@ bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_sym
 
 bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value)
 {
-	std::vector<debug_info_simple::scoped_value_internal> scoped_values;
+	std::vector<srcdbg_provider_simple::scoped_value_internal> scoped_values;
 	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
-		debug_info_simple::scoped_value_internal scoped_value(
+		srcdbg_provider_simple::scoped_value_internal scoped_value(
 			std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last),
 			sv.reg,
 			sv.reg_offset);
@@ -132,7 +132,7 @@ bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbo
 		scoped_values.push_back(std::move(scoped_value));
 	}
 
-	debug_info_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], scoped_values);
+	srcdbg_provider_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], scoped_values);
 	m_srcdbg_simple.m_local_dynamic_symbols_internal.push_back(std::move(sym));
 
 	return true;
@@ -140,8 +140,8 @@ bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbo
 
 
 
-debug_info_simple::debug_info_simple(const running_machine& machine)
-	: debug_info_provider_base()
+srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
+	: srcdbg_provider_base()
 	, m_machine(machine)
 	, m_source_file_paths()
 	, m_linemaps_by_address()
@@ -151,7 +151,7 @@ debug_info_simple::debug_info_simple(const running_machine& machine)
 {
 }
 
-void debug_info_simple::complete_initialization()
+void srcdbg_provider_simple::complete_initialization()
 {
 	assert (m_local_dynamic_symbols.empty());
 
@@ -168,7 +168,7 @@ void debug_info_simple::complete_initialization()
 			scoped_values.push_back(std::move(scoped_value));
 		}
 
-		debug_info_provider_base::local_dynamic_symbol sym(sym_internal.m_name, scoped_values);
+		srcdbg_provider_base::local_dynamic_symbol sym(sym_internal.m_name, scoped_values);
 		m_local_dynamic_symbols.push_back(std::move(sym));
 	}
 
@@ -177,7 +177,7 @@ void debug_info_simple::complete_initialization()
 
 
 
-void debug_info_simple::generate_local_path(const std::string & built, std::string & local)
+void srcdbg_provider_simple::generate_local_path(const std::string & built, std::string & local)
 {
 	namespace fs = std::filesystem;
 	local = built;                          // Default local path to the originally built source path
@@ -205,7 +205,7 @@ void debug_info_simple::generate_local_path(const std::string & built, std::stri
 	// None found, leave local == built
 }
 
-void debug_info_simple::apply_source_map(std::string & local)
+void srcdbg_provider_simple::apply_source_map(std::string & local)
 {
 	path_iterator path(m_machine.options().debug_source_path_map());
 	std::string prefix_find, prefix_replace;
@@ -240,7 +240,7 @@ Use replacement pairs to adjust each source file (on demand or on init?)
 use file_enumerator to search one adjusted file within a set of search paths
 */
 
-std::optional<int> debug_info_simple::file_path_to_index(const char * file_path) const
+std::optional<int> srcdbg_provider_simple::file_path_to_index(const char * file_path) const
 {
 	// TODO: Fancy heuristics to match full paths of source file from
 	// dbginfo and local machine
@@ -258,7 +258,7 @@ std::optional<int> debug_info_simple::file_path_to_index(const char * file_path)
 
 // Given a source file & line number, return the address of the first byte of
 // the first instruction of the range of instructions attributable to that line
-void debug_info_simple::file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const
+void srcdbg_provider_simple::file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
 	if (file_index >= m_linemaps_by_line.size())
 	{
@@ -293,7 +293,7 @@ void debug_info_simple::file_line_to_address_ranges(u16 file_index, u32 line_num
 
 // Given an address, return the source file & line number attributable to the
 // range of addresses that includes the specified address
-std::optional<file_line> debug_info_simple::address_to_file_line (offs_t address) const
+std::optional<file_line> srcdbg_provider_simple::address_to_file_line (offs_t address) const
 {
 	assert(m_linemaps_by_address.size() > 0);
 

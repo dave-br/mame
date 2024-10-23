@@ -6,7 +6,7 @@
 
 
 // static
-std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug_info(running_machine &machine)
+std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine)
 {
 	const char * di_path = machine.options().debug_info();
 	if (di_path[0] == 0)
@@ -17,8 +17,8 @@ std::unique_ptr<debug_info_provider_base> debug_info_provider_base::create_debug
 	}
 
 	// TODO: before full-blown reading, something should just check magic & type, and then
-	// defer to debug_info_simple, etc.
-	std::unique_ptr<debug_info_simple> ret = std::make_unique<debug_info_simple>(machine);
+	// defer to srcdbg_provider_simple, etc.
+	std::unique_ptr<srcdbg_provider_simple> ret = std::make_unique<srcdbg_provider_simple>(machine);
 	srcdbg_import importer(*ret);
 	std::string error;
 

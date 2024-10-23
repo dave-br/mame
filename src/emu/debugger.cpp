@@ -89,9 +89,9 @@ debugger_manager::~debugger_manager()
 }
 
 // TODO COMMENT
-std::unique_ptr<debug_info_provider_base> debugger_manager::load_debug_info(running_machine &machine)
+std::unique_ptr<srcdbg_provider_base> debugger_manager::load_debug_info(running_machine &machine)
 {
-	return debug_info_provider_base::create_debug_info(machine);
+	return srcdbg_provider_base::create_debug_info(machine);
 }
 
 /*-------------------------------------------------
