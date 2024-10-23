@@ -1,16 +1,19 @@
-// TODO
-/***************************************************************************
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
 
+    srcdbg_format.cpp
+
+    Helper for reading MAME source-level debugging info files
 
 ***************************************************************************/
+
 
 #include "srcdbg_format_reader.h"
 
 #include "corefile.h"
 
 #include <cstdio>
-
-using u32 = uint32_t;
 
 
 template <typename T> static bool read_field(const T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)

@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Andrew Gardner, Vas Crabb
+// copyright-holders:David Broman
 /*********************************************************************
 
     dvsourcecode.h
@@ -7,6 +7,7 @@
     Source code debugger view.
 
 ***************************************************************************/
+
 #ifndef MAME_EMU_DEBUG_DVSOURCE_H
 #define MAME_EMU_DEBUG_DVSOURCE_H
 
@@ -75,13 +76,11 @@ private:
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
 	device_state_interface *                          m_state;                 // state interface, if present
-	const srcdbg_provider_base &                  m_debug_info;            // Interface to the loaded debugging info file
+	const srcdbg_provider_base &                      m_debug_info;            // Interface to the loaded debugging info file
 	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
-	std::vector<std::pair<std::string, std::string>>  m_src_path_map;
 	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
-	// u32                                 m_first_visible_line;    // Line number to show at top of scrolled view
 };
 
 #endif // MAME_EMU_DEBUG_DVSOURCE_H

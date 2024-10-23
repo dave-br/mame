@@ -1,5 +1,16 @@
-#ifndef SRCDBG_FORMAT_H
-#define SRCDBG_FORMAT_H
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_format.h
+
+    File-format definition for MAME source-level debugging info files
+
+***************************************************************************/
+
+
+#ifndef MAME_UTIL_SRCDBG_FORMAT_H
+#define MAME_UTIL_SRCDBG_FORMAT_H
 
 #pragma once
 
@@ -131,4 +142,4 @@ typedef struct
 
 #pragma pack(pop)
 
-#endif // SRCDBG_FORMAT_H
+#endif // MAME_UTIL_SRCDBG_FORMAT_H

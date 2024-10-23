@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Aaron Giles, Vas Crabb
+// copyright-holders:David Broman
 //============================================================
 //
 //  sourceviewinfo.cpp - Win32 debug window handling

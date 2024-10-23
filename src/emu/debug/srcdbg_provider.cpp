@@ -1,3 +1,15 @@
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_provider.cpp
+
+    Factory to create format-specific implementation of
+	format-agnostic interface to source-debugging info
+
+***************************************************************************/
+
+
 #include "emu.h"
 #include "srcdbg_provider_simple.h"		// TODO: BREAK UP BETTER SO THIS IS UNNECESSARY
 #include "srcdbg_provider.h"

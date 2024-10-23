@@ -1,3 +1,15 @@
+// license:BSD-3-Clause
+// copyright-holders:David Broman
+/*********************************************************************
+
+    srcdbg_format_writer.h
+
+    Library of helper functions to generate MAME source-level
+	debugging info files
+
+***************************************************************************/
+
+
 #include "srcdbg_format_writer.h"
 #include "srcdbg_format.h"
 

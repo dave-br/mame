@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
-// copyright-holders:Aaron Giles, Vas Crabb
+// copyright-holders:David Broman
 //============================================================
 //
-//  sourcewininfo.h - Win32 debug window handling
+//  sourceviewinfo.h - Win32 debug window handling
 //
 //============================================================
 #ifndef MAME_DEBUGGER_WIN_SOURCEVIEWINFO_H

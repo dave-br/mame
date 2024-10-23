@@ -1,10 +1,10 @@
 // license:BSD-3-Clause
-// copyright-holders: TODO
+// copyright-holders:David Broman
 /***************************************************************************
 
-    dbginfodump.cpp
+    srcdbgdump.cpp
 
-    MAME debugging info dump utility
+    MAME source-level debugging info dump utility
 
 ***************************************************************************/
 
