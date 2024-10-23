@@ -1,7 +1,6 @@
 #include "emu.h"
-#include "mdisimple.h"
 #include "srcdbg_provider_simple.h"		// TODO: BREAK UP BETTER SO THIS IS UNNECESSARY
-#include "dbginfo_provider.h"
+#include "srcdbg_provider.h"
 
 #include "emuopts.h"
 

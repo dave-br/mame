@@ -1,5 +1,5 @@
-#include "dbginfo.h"
-#include "mdisimple.h"
+#include "srcdbg_format_writer.h"
+#include "srcdbg_format.h"
 
 #include <stdlib.h>
 #include <stdio.h>
