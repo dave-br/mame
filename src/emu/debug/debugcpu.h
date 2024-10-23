@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "dbginfo_provider.h"
+#include "srcdbg_provider.h"
 
 #include <set>
 #include <utility>

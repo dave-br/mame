@@ -5,7 +5,6 @@
 ***************************************************************************/
 
 #include "srcdbg_format_reader.h"
-#include "mdisimple.h"
 
 #include "corefile.h"
 

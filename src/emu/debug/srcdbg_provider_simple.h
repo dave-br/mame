@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "dbginfo_provider.h"
+#include "srcdbg_provider.h"
 
 
 class srcdbg_import;
