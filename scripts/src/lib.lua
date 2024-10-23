@@ -151,19 +151,17 @@ end
 
 
 
-project "dbginfo"
+project "srcdbg"
 	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
 	kind (LIBTYPE)
 
 	addprojectflags()
 
 	includedirs {
-		MAME_DIR .. "src/emu/debug",
 		MAME_DIR .. "src/lib/util",
 	}
 
 	files {
-		MAME_DIR .. "src/lib/dbginfo/dbginfo.cpp",
-		MAME_DIR .. "src/lib/dbginfo/dbginfo.h",
-		MAME_DIR .. "src/lib/dbginfo/mdisimple.h",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
 	}
