@@ -35,7 +35,7 @@ public:
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override;
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override;
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
-	virtual bool on_read_line_mapping(const mdi_line_mapping & line_map) override;
+	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
 	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
 	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) override;
 	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) override;
@@ -82,7 +82,7 @@ bool srcdbg_dump::on_read_source_path(u16 source_path_index, std::string && sour
 	return true;
 }
 
-bool srcdbg_dump::on_read_line_mapping(const mdi_line_mapping & line_map)
+bool srcdbg_dump::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 {
 	if (!m_printed_line_mapping_title)
 	{
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
 // 		return 1;
 // 	}
 
-// 	u32 first_symbol_name = first_line_mapping + (header.num_line_mappings * sizeof(mdi_line_mapping));
+// 	u32 first_symbol_name = first_line_mapping + (header.num_line_mappings * sizeof(srcdbg_line_mapping));
 // 	u32 first_symbol_address = first_symbol_name + header.symbol_names_size;
 // 	if (header.symbol_names_size > 0)
 // 	{
@@ -273,9 +273,9 @@ int main(int argc, char *argv[])
 // 	printf("\n**** Line mappings: ****\n");
 // 	for (u32 line_map_idx = 0; line_map_idx < header.num_line_mappings; line_map_idx++)
 // 	{
-// 		mdi_line_mapping line_map;
+// 		srcdbg_line_mapping line_map;
 // 		memset(&line_map, 0, sizeof(line_map));
-// 		read_field<mdi_line_mapping>(line_map, data, i);
+// 		read_field<srcdbg_line_mapping>(line_map, data, i);
 // 		printf("address_first: $%X\taddress_last: $%X\tsource_file_index: %u\tline_number: %u\n",
 // 			u32(line_map.address_first),
 // 			u32(line_map.address_last),

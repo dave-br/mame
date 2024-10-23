@@ -42,7 +42,7 @@ bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && so
 	return true;
 }
 
-bool srcdbg_import::on_read_line_mapping(const mdi_line_mapping & line_map)
+bool srcdbg_import::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 {
 	if (!m_read_line_mapping_yet)
 	{
@@ -62,7 +62,7 @@ bool srcdbg_import::on_read_line_mapping(const mdi_line_mapping & line_map)
 	// std::sort(
 	// 	m_linemaps_by_address.begin(),
 	// 	m_linemaps_by_address.end(), 
-	// 	[] (const mdi_line_mapping &linemap1, const mdi_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
+	// 	[] (const srcdbg_line_mapping &linemap1, const srcdbg_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
 	
 	// for (u16 file_idx = 0; file_idx < m_source_file_paths.size(); file_idx++)
 	// {

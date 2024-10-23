@@ -189,7 +189,7 @@ struct local_dynamic
 	resizeable_array values;
 };
 
-class mdi_simple_generator
+class srcdbg_simple_generator
 {
 public:
 	void construct()
@@ -246,7 +246,7 @@ public:
 	void add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
 	{
 		m_header.num_line_mappings++;
-		mdi_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
+		srcdbg_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
 		m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
 	}
 
@@ -325,9 +325,9 @@ public:
 		{
 			fwrite(m_source_file_paths.get() + i, sizeof(char), 1, m_output);
 		}
-		for (int i=0; i < m_line_mappings.size(); i += sizeof(mdi_line_mapping))
+		for (int i=0; i < m_line_mappings.size(); i += sizeof(srcdbg_line_mapping))
 		{
-			fwrite(m_line_mappings.get() + i, sizeof(mdi_line_mapping), 1, m_output);
+			fwrite(m_line_mappings.get() + i, sizeof(srcdbg_line_mapping), 1, m_output);
 		}
 		for (int i=0; i < m_symbol_names.size(); i += sizeof(char))
 		{
@@ -389,9 +389,9 @@ private:
 
 // C Interface to assemblers / compilers
 
-void * mame_mdi_simp_open_new(const char * file_path)
+void * mame_srcdbg_simp_open_new(const char * file_path)
 {
-	mdi_simple_generator * generator = (mdi_simple_generator *) malloc(sizeof(mdi_simple_generator));
+	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) malloc(sizeof(srcdbg_simple_generator));
 	if (generator == nullptr)
 	{
 		// TODO: ERROR
@@ -402,35 +402,35 @@ void * mame_mdi_simp_open_new(const char * file_path)
 }
 
 
-unsigned short mame_mdi_simp_add_source_file_path(void * mdi_simp_state, const char * source_file_path)
+unsigned short mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path)
 {
-	return ((mdi_simple_generator *) mdi_simp_state)->add_source_file_path(source_file_path);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_source_file_path(source_file_path);
 }
 
 
-void mame_mdi_simp_add_line_mapping(void * mdi_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
+void mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
 {
-	((mdi_simple_generator *) mdi_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
 }
 
-void mame_mdi_simp_add_global_constant_symbol(void * mdi_simp_state, const char * symbol_name, int symbol_value)
+void mame_srcdbg_simp_add_global_constant_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
 {
-	((mdi_simple_generator *) mdi_simp_state)->add_global_constant_symbol(symbol_name, symbol_value);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_constant_symbol(symbol_name, symbol_value);
 }
 
-void mame_mdi_simp_add_local_constant_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
+void mame_srcdbg_simp_add_local_constant_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 {
-	((mdi_simple_generator *) mdi_simp_state)->add_local_constant_symbol(symbol_name, address_first, address_last, symbol_value);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_constant_symbol(symbol_name, address_first, address_last, symbol_value);
 }
-void mame_mdi_simp_add_local_dynamic_symbol(void * mdi_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
+void mame_srcdbg_simp_add_local_dynamic_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 {
-	((mdi_simple_generator *) mdi_simp_state)->add_local_dynamic_symbol(symbol_name, address_first, address_last, reg, reg_offset);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_dynamic_symbol(symbol_name, address_first, address_last, reg, reg_offset);
 }
 
 
-void mame_mdi_simp_close(void * mdi_simp_state)
+void mame_srcdbg_simp_close(void * srcdbg_simp_state)
 {
-	mdi_simple_generator * generator = (mdi_simple_generator *) mdi_simp_state;
+	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) srcdbg_simp_state;
 	generator->close();
 	generator->destruct();
 }

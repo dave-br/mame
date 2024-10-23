@@ -1,5 +1,5 @@
-#ifndef MAME_MDISIMPLE_H
-#define MAME_MDISIMPLE_H
+#ifndef SRCDBG_FORMAT_H
+#define SRCDBG_FORMAT_H
 
 #pragma once
 
@@ -68,7 +68,7 @@ typedef struct
 
 	/* 1-based line number in source file */
 	unsigned int line_number;
-} mdi_line_mapping;
+} srcdbg_line_mapping;
 
 
 typedef struct
@@ -112,7 +112,7 @@ typedef struct
 	
 	mame_debug_info_simple_header   header
 	char                            source_file_paths[][]
-	mdi_line_mapping                line_mappings[num_line_mappings]
+	srcdbg_line_mapping             line_mappings[num_line_mappings]
 	char                            symbol_names[][]
 	global_constant_symbol_value    global_constant_symbol_values[num_global_constant_symbol_values]
 	local_constant_symbol_value		local_constant_symbol_values[]
@@ -131,4 +131,4 @@ typedef struct
 
 #pragma pack(pop)
 
-#endif // MAME_MDISIMPLE_H
+#endif // SRCDBG_FORMAT_H

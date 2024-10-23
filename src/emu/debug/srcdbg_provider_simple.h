@@ -68,7 +68,7 @@ private:
 	const running_machine& m_machine;
 	// std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
 	std::vector<source_file_path>            m_source_file_paths;      // Starting points for source file path strings
-	std::vector<mdi_line_mapping>            m_linemaps_by_address;    // a list of mdi_line_mappings, sorted by address
+	std::vector<srcdbg_line_mapping>            m_linemaps_by_address;    // a list of srcdbg_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 	                                                                   // sorted by line, from file #i
 	std::vector<global_static_symbol>        m_global_static_symbols;
@@ -85,7 +85,7 @@ public:
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;};
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;};
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
-	virtual bool on_read_line_mapping(const mdi_line_mapping & line_map) override;
+	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
 	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
 	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) override;
 	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) override;
