@@ -554,31 +554,31 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			// Add symbols from source debugging info, if any.  First, globals
-			debug_info_provider_base & srcdbg_provider = device.machine().debugger().debug_info();
+			srcdbg_provider_base & srcdbg_provider = device.machine().debugger().debug_info();
 			srcdbg_provider.complete_initialization();		// TODO: COMMENT
-			const std::vector<debug_info_provider_base::global_static_symbol> & srcdbg_global_symbols = srcdbg_provider.global_static_symbols();
+			const std::vector<srcdbg_provider_base::global_static_symbol> & srcdbg_global_symbols = srcdbg_provider.global_static_symbols();
 
 			// TODO: FIX COMMENT
 			// Source debugging information includes symbols, so point m_symtable to them,
 			// and set their parent to be the (old) m_symtable
 			m_symtable_srcdbg_globals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-			for (const debug_info_provider_base::global_static_symbol & sym : srcdbg_global_symbols)
+			for (const srcdbg_provider_base::global_static_symbol & sym : srcdbg_global_symbols)
 			{
 				m_symtable_srcdbg_globals->add(sym.name(), sym.value());
 			}
 
 			// Next, lexically-scoped (local) symbols from source debugging info
-			const std::vector<debug_info_provider_base::local_static_symbol> & srcdbg_local_static_symbols = device.machine().debugger().debug_info().local_static_symbols();
+			const std::vector<srcdbg_provider_base::local_static_symbol> & srcdbg_local_static_symbols = device.machine().debugger().debug_info().local_static_symbols();
 			// local symbols require a PC getter function so they can test if they're
 			// currently in scope
 			auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
 			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_srcdbg_globals.get(), &device);
-			for (const debug_info_provider_base::local_static_symbol & sym : srcdbg_local_static_symbols)
+			for (const srcdbg_provider_base::local_static_symbol & sym : srcdbg_local_static_symbols)
 			{
 				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value());
 			}
-			const std::vector<debug_info_provider_base::local_dynamic_symbol> & srcdbg_local_dynamic_symbols = device.machine().debugger().debug_info().local_dynamic_symbols();
-			for (const debug_info_provider_base::local_dynamic_symbol & sym : srcdbg_local_dynamic_symbols)
+			const std::vector<srcdbg_provider_base::local_dynamic_symbol> & srcdbg_local_dynamic_symbols = device.machine().debugger().debug_info().local_dynamic_symbols();
+			for (const srcdbg_provider_base::local_dynamic_symbol & sym : srcdbg_local_dynamic_symbols)
 			{
 				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scoped_values());
 			}

@@ -75,7 +75,7 @@ class debug_view;
 class debug_view_manager;
 
 // TODO MOVE?  CURRENTLY declared in debug/dvsourcecode.h
-class debug_info_provider_base;
+class srcdbg_provider_base;
 
 // declared in debug/express.h
 class parsed_expression;
