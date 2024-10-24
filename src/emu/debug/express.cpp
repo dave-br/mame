@@ -292,7 +292,7 @@ private:
 
 	// internal state
 	symbol_table::getter_func m_get_pc;
-	std::vector<std::pair<offs_t,offs_t>> m_scope_ranges;
+	const std::vector<std::pair<offs_t,offs_t>> & m_scope_ranges;
 	// Type m_type;
 	// union
 	// {
@@ -327,7 +327,7 @@ private:
 
 	// internal state
 	symbol_table::getter_func m_get_pc;
-	std::vector<symbol_table::scoped_value> m_scoped_values;
+	const std::vector<symbol_table::scoped_value> & m_scoped_values;
 };
 
 //-------------------------------------------------
@@ -340,7 +340,7 @@ private:
 local_static_symbol_entry::local_static_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
 	: symbol_entry(table, SMT_INTEGER, name, "")
 	, m_get_pc(get_pc)
-	, m_scope_ranges(std::move(scope_ranges))
+	, m_scope_ranges(scope_ranges)
 	, m_value_integer(value)
 {	
 }
@@ -375,7 +375,7 @@ bool local_static_symbol_entry::is_in_scope() const
 local_dynamic_symbol_entry::local_dynamic_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::scoped_value> & scoped_values)
 	: symbol_entry(table, SMT_INTEGER, name, "")
 	, m_get_pc(get_pc)
-	, m_scoped_values(std::move(scoped_values))
+	, m_scoped_values(scoped_values)
 {
 }
 
