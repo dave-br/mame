@@ -132,19 +132,19 @@ bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_sym
 
 bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value)
 {
-	std::vector<srcdbg_provider_simple::scoped_value_internal> scoped_values;
+	std::vector<srcdbg_provider_simple::scoped_value_internal> values;
 	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
-		srcdbg_provider_simple::scoped_value_internal scoped_value(
+		srcdbg_provider_simple::scoped_value_internal value(
 			std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last),
 			sv.reg,
 			sv.reg_offset);
 
-		scoped_values.push_back(std::move(scoped_value));
+		values.push_back(std::move(value));
 	}
 
-	srcdbg_provider_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], scoped_values);
+	srcdbg_provider_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], values);
 	m_srcdbg_simple.m_local_dynamic_symbols_internal.push_back(std::move(sym));
 
 	return true;
@@ -171,16 +171,16 @@ void srcdbg_provider_simple::complete_initialization()
 
 	for (local_dynamic_symbol_internal sym_internal : m_local_dynamic_symbols_internal)
 	{
-		std::vector<symbol_table::scoped_value> scoped_values;
+		std::vector<symbol_table::scoped_value> values;
 		for (scoped_value_internal & sv : sym_internal.m_scoped_values)
 		{
 			std::ostringstream expr;
 			expr << "(" << state->state_find_entry(sv.m_reg)->symbol() << " + " << sv.m_reg_offset << ")";
-			symbol_table::scoped_value scoped_value(sv.m_range, std::move(expr).str().c_str());
-			scoped_values.push_back(std::move(scoped_value));
+			symbol_table::scoped_value value(sv.m_range, std::move(std::move(expr).str()));
+			values.push_back(std::move(value));
 		}
 
-		srcdbg_provider_base::local_dynamic_symbol sym(sym_internal.m_name, scoped_values);
+		srcdbg_provider_base::local_dynamic_symbol sym(sym_internal.m_name, values);
 		m_local_dynamic_symbols.push_back(std::move(sym));
 	}
 
