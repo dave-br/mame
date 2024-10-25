@@ -33,9 +33,9 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
-	virtual const std::vector<global_static_symbol> & global_static_symbols() const override { return m_global_static_symbols; };
-	virtual const std::vector<local_static_symbol> & local_static_symbols() const override { return m_local_static_symbols; };
-	virtual const std::vector<local_dynamic_symbol> & local_dynamic_symbols() const override { return m_local_dynamic_symbols; };
+	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const override { return m_global_fixed_symbols; };
+	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const override { return m_local_fixed_symbols; };
+	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const override { return m_local_relative_symbols; };
 
 private:
 	struct address_line
@@ -44,10 +44,10 @@ private:
 		u16 address_last;
 		u32 line_number;
 	};
-	class scoped_value_internal
+	class local_relative_range_internal
 	{
 	public:
-		scoped_value_internal(std::pair<offs_t,offs_t> && range, char reg, s32 reg_offset)
+		local_relative_range_internal(std::pair<offs_t,offs_t> && range, char reg, s32 reg_offset)
 			: m_range(std::move(range))
 			, m_reg(reg)
 			, m_reg_offset(reg_offset)
@@ -57,21 +57,21 @@ private:
 		s32 m_reg_offset;
 	};
 
-	class local_dynamic_symbol_internal
+	class local_relative_symbol_internal
 	{
 	public:
-		local_dynamic_symbol_internal(const std::string & name, std::vector<scoped_value_internal> scoped_values)
+		local_relative_symbol_internal(const std::string & name, std::vector<local_relative_range_internal> ranges)
 			: m_name(name)
-			, m_scoped_values(scoped_values)
+			, m_ranges(ranges)
 		{
 		}
 		std::string m_name;
-		std::vector<scoped_value_internal> m_scoped_values;
+		std::vector<local_relative_range_internal> m_ranges;
 	};
 
 	void generate_local_path(const std::string & built, std::string & local);
 	void apply_source_map(std::string & local);
-	void ensure_local_dynamics_ready();
+	void ensure_local_relatives_ready();
 
 
 	const running_machine& m_machine;
@@ -80,10 +80,10 @@ private:
 	std::vector<srcdbg_line_mapping>            m_linemaps_by_address;    // a list of srcdbg_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>   m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 	                                                                   // sorted by line, from file #i
-	std::vector<global_static_symbol>        m_global_static_symbols;
-	std::vector<local_static_symbol>		 m_local_static_symbols;
-	std::vector<local_dynamic_symbol_internal>	m_local_dynamic_symbols_internal;
-	std::vector<local_dynamic_symbol> 		m_local_dynamic_symbols;
+	std::vector<global_fixed_symbol>        m_global_fixed_symbols;
+	std::vector<local_fixed_symbol>		 m_local_fixed_symbols;
+	std::vector<local_relative_symbol_internal>	m_local_relative_symbols_internal;
+	std::vector<local_relative_symbol> 		m_local_relative_symbols;
 };
 
 
@@ -96,9 +96,9 @@ public:
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
 	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
-	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) override;
-	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) override;
-	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) override;
+	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) override;
+	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) override;
+	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) override;
 
 private:
 	srcdbg_provider_simple & m_srcdbg_simple;

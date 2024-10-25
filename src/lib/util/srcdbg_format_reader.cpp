@@ -111,25 +111,25 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		}
 	}
 
-	u32 after_global_constant_symbol_values = 
-		after_symbol_names + header->num_global_constant_symbol_values * sizeof(global_constant_symbol_value);
-	if (data.size() < after_global_constant_symbol_values)
+	u32 after_global_fixed_symbol_values = 
+		after_symbol_names + header->num_global_fixed_symbol_values * sizeof(global_fixed_symbol_value);
+	if (data.size() < after_global_fixed_symbol_values)
 	{
-		error = "File too small to contain reported num_global_constant_symbol_values=";
-		error += header->num_global_constant_symbol_values;
+		error = "File too small to contain reported num_global_fixed_symbol_values=";
+		error += header->num_global_fixed_symbol_values;
 		return false;
 	}
 
-	u32 after_local_constant_symbol_values = after_global_constant_symbol_values + header->local_constant_symbol_values_size;
-	if (data.size() < after_local_constant_symbol_values)
+	u32 after_local_fixed_symbol_values = after_global_fixed_symbol_values + header->local_fixed_symbol_values_size;
+	if (data.size() < after_local_fixed_symbol_values)
 	{
-		error = "File too small to contain reported local_constant_symbol_values_size=";
-		error += header->local_constant_symbol_values_size;
+		error = "File too small to contain reported local_fixed_symbol_values_size=";
+		error += header->local_fixed_symbol_values_size;
 		return false;
 	}
 
-	u32 after_local_dynamic_symbol_values = after_local_constant_symbol_values + header->local_dynamic_symbol_values_size;
-	if (data.size() != after_local_dynamic_symbol_values)
+	u32 after_local_relative_symbol_values = after_local_fixed_symbol_values + header->local_relative_symbol_values_size;
+	if (data.size() != after_local_relative_symbol_values)
 	{
 		error = "File size (";
 		error += data.size();
@@ -194,37 +194,37 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		}
 	}
 
-	for (u32 global_constant_idx = 0; global_constant_idx < header->num_global_constant_symbol_values; global_constant_idx++)
+	for (u32 global_fixed_idx = 0; global_fixed_idx < header->num_global_fixed_symbol_values; global_fixed_idx++)
 	{
-		const global_constant_symbol_value * value;
-		if (!read_field<global_constant_symbol_value>(value, data, i, error) ||
-			!callback.on_read_global_constant_symbol_value(*value))
+		const global_fixed_symbol_value * value;
+		if (!read_field<global_fixed_symbol_value>(value, data, i, error) ||
+			!callback.on_read_global_fixed_symbol_value(*value))
 		{
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
 	}
 
-	while (i < after_local_constant_symbol_values)
+	while (i < after_local_fixed_symbol_values)
 	{
-		const local_constant_symbol_value * value;
+		const local_fixed_symbol_value * value;
 		u32 value_start_idx = i;
-		if (!read_field<local_constant_symbol_value>(value, data, i, error) ||
+		if (!read_field<local_fixed_symbol_value>(value, data, i, error) ||
 			!scan_bytes(value->num_address_ranges * sizeof(address_range), data, i, error) ||
-			!callback.on_read_local_constant_symbol_value(*(const local_constant_symbol_value *) &data[value_start_idx]))
+			!callback.on_read_local_fixed_symbol_value(*(const local_fixed_symbol_value *) &data[value_start_idx]))
 		{
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
 	}
 
-	while (i < after_local_dynamic_symbol_values)
+	while (i < after_local_relative_symbol_values)
 	{
-		const local_dynamic_symbol_value * value;
+		const local_relative_symbol_value * value;
 		u32 value_start_idx = i;
-		if (!read_field<local_dynamic_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value->num_local_dynamic_scoped_values * sizeof(local_dynamic_scoped_value), data, i, error) ||
-			!callback.on_read_local_dynamic_symbol_value(*(const local_dynamic_symbol_value *) &data[value_start_idx]))
+		if (!read_field<local_relative_symbol_value>(value, data, i, error) ||
+			!scan_bytes(value->num_local_relative_ranges * sizeof(local_relative_range), data, i, error) ||
+			!callback.on_read_local_relative_symbol_value(*(const local_relative_symbol_value *) &data[value_start_idx]))
 		{
 			return false;
 		}

@@ -186,7 +186,7 @@ private:
 };
 
 
-struct local_constant
+struct local_fixed
 {
 	unsigned int symbol_name_index;
 	int symbol_value;
@@ -194,10 +194,10 @@ struct local_constant
 	resizeable_array ranges;
 };
 
-struct local_dynamic
+struct local_relative
 {
 	unsigned int symbol_name_index;
-	unsigned int num_local_dynamic_scoped_values;
+	unsigned int num_local_relative_ranges;
 	resizeable_array values;
 };
 
@@ -211,9 +211,9 @@ public:
 		m_source_file_paths.construct();
 		m_line_mappings.construct();
 		m_symbol_names.construct();
-		m_global_constant_symbol_values.construct();
-		m_local_constant_symbol_values.construct();
-		m_local_dynamic_symbol_values.construct();
+		m_global_fixed_symbol_values.construct();
+		m_local_fixed_symbol_values.construct();
+		m_local_relative_symbol_values.construct();
 
 		memcpy(&m_header.header_base.magic[0], "MDbI", 4);
 		memcpy(&m_header.header_base.type[0], "simp", 4);
@@ -221,9 +221,9 @@ public:
 		m_header.source_file_paths_size = 0;
 		m_header.num_line_mappings = 0;
 		m_header.symbol_names_size = 0;
-		m_header.num_global_constant_symbol_values = 0;
-		m_header.local_constant_symbol_values_size = 0;
-		m_header.local_dynamic_symbol_values_size = 0;
+		m_header.num_global_fixed_symbol_values = 0;
+		m_header.local_fixed_symbol_values_size = 0;
+		m_header.local_relative_symbol_values_size = 0;
 	}
 
 	void destruct()
@@ -236,7 +236,7 @@ public:
 		m_source_file_paths.destruct();
 		m_line_mappings.destruct();
 		m_symbol_names.destruct();
-		m_global_constant_symbol_values.destruct();
+		m_global_fixed_symbol_values.destruct();
 	}
 
 	void open(const char * file_path)
@@ -262,69 +262,69 @@ public:
 		m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
 	}
 
-	void add_global_constant_symbol(const char * symbol_name, int symbol_value)
+	void add_global_fixed_symbol(const char * symbol_name, int symbol_value)
 	{
-		global_constant_symbol_value global;
+		global_fixed_symbol_value global;
 		global.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
 		global.symbol_value = symbol_value;
-		m_global_constant_symbol_values.push_back(&global, sizeof(global));
-		m_header.num_global_constant_symbol_values++;
+		m_global_fixed_symbol_values.push_back(&global, sizeof(global));
+		m_header.num_global_fixed_symbol_values++;
 	}
 
-	void add_local_constant_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
+	void add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 	{
-		local_constant * entry_ptr;
-		local_constant local;
+		local_fixed * entry_ptr;
+		local_fixed local;
 		local.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
-		unsigned int entry_idx = m_local_constant_symbol_values.find(local.symbol_name_index, sizeof(local));
+		unsigned int entry_idx = m_local_fixed_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
 			local.symbol_value = symbol_value;
 			local.num_address_ranges = 0;
 			local.ranges.construct();
 			entry_ptr = &local;
-			m_local_constant_symbol_values.push_back(&local, sizeof(local));
-			m_header.local_constant_symbol_values_size += sizeof(local_constant_symbol_value);
+			m_local_fixed_symbol_values.push_back(&local, sizeof(local));
+			m_header.local_fixed_symbol_values_size += sizeof(local_fixed_symbol_value);
 		}
 		else
 		{
-			entry_ptr = ((local_constant *) m_local_constant_symbol_values.get()) + entry_idx;
+			entry_ptr = ((local_fixed *) m_local_fixed_symbol_values.get()) + entry_idx;
 		}
 
 		address_range range;
 		range.address_first = address_first;
 		range.address_last = address_last;
 		entry_ptr->ranges.push_back(&range, sizeof(range));
-		m_header.local_constant_symbol_values_size += sizeof(range);
+		m_header.local_fixed_symbol_values_size += sizeof(range);
 		entry_ptr->num_address_ranges++;
 	}
 
-	void add_local_dynamic_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
+	void add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 	{
-		local_dynamic * entry_ptr;
-		local_dynamic local;
+		local_relative * entry_ptr;
+		local_relative local;
 		local.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
-		unsigned int entry_idx = m_local_dynamic_symbol_values.find(local.symbol_name_index, sizeof(local));
+		unsigned int entry_idx = m_local_relative_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
-			local.num_local_dynamic_scoped_values = 0;
+			local.num_local_relative_ranges = 0;
 			local.values.construct();
-			m_local_dynamic_symbol_values.push_back(&local, sizeof(local));
-			entry_ptr = (local_dynamic *) (m_local_dynamic_symbol_values.get() + m_local_dynamic_symbol_values.size() - sizeof(local));
-			m_header.local_dynamic_symbol_values_size += sizeof(local_dynamic_symbol_value);
+			m_local_relative_symbol_values.push_back(&local, sizeof(local));
+			entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
+			m_header.local_relative_symbol_values_size += sizeof(local_relative_symbol_value);
 		}
 		else
 		{
-			entry_ptr = ((local_dynamic *) m_local_dynamic_symbol_values.get()) + entry_idx;
+			entry_ptr = ((local_relative *) m_local_relative_symbol_values.get()) + entry_idx;
 		}
-		local_dynamic_scoped_value value;
+		local_relative_range value;
 		value.range.address_first = address_first;
 		value.range.address_last = address_last;
 		value.reg = reg;
 		value.reg_offset = reg_offset;
 		entry_ptr->values.push_back(&value, sizeof(value));
-		m_header.local_dynamic_symbol_values_size += sizeof(value);
-		entry_ptr->num_local_dynamic_scoped_values++;
+		m_header.local_relative_symbol_values_size += sizeof(value);
+		entry_ptr->num_local_relative_ranges++;
 	}
 
 
@@ -345,29 +345,29 @@ public:
 		{
 			fwrite(m_symbol_names.get() + i, sizeof(char), 1, m_output);
 		}
-		for (int i=0; i < m_global_constant_symbol_values.size(); i += sizeof(global_constant_symbol_value))
+		for (int i=0; i < m_global_fixed_symbol_values.size(); i += sizeof(global_fixed_symbol_value))
 		{
-			fwrite(m_global_constant_symbol_values.get() + i, sizeof(global_constant_symbol_value), 1, m_output);
+			fwrite(m_global_fixed_symbol_values.get() + i, sizeof(global_fixed_symbol_value), 1, m_output);
 		}
-		for (int i=0; i < m_local_constant_symbol_values.size(); i += sizeof(local_constant))
+		for (int i=0; i < m_local_fixed_symbol_values.size(); i += sizeof(local_fixed))
 		{
-			local_constant * loc = (local_constant *) (m_local_constant_symbol_values.get() + i);
+			local_fixed * loc = (local_fixed *) (m_local_fixed_symbol_values.get() + i);
 			if (loc->ranges.size() == 0)
 			{
 				continue;
 			}
-			fwrite(loc, sizeof(local_constant_symbol_value), 1, m_output);
+			fwrite(loc, sizeof(local_fixed_symbol_value), 1, m_output);
 			fwrite(loc->ranges.get(), sizeof(address_range), loc->ranges.size() / sizeof(address_range), m_output);
 		}
-		for (int i=0; i < m_local_dynamic_symbol_values.size(); i += sizeof(local_dynamic))
+		for (int i=0; i < m_local_relative_symbol_values.size(); i += sizeof(local_relative))
 		{
-			local_dynamic * loc = (local_dynamic *) (m_local_dynamic_symbol_values.get() + i);
+			local_relative * loc = (local_relative *) (m_local_relative_symbol_values.get() + i);
 			if (loc->values.size() == 0)
 			{
 				continue;
 			}
-			fwrite(loc, sizeof(local_dynamic_symbol_value), 1, m_output);
-			fwrite(loc->values.get(), sizeof(local_dynamic_scoped_value), loc->values.size() / sizeof(local_dynamic_scoped_value), m_output);
+			fwrite(loc, sizeof(local_relative_symbol_value), 1, m_output);
+			fwrite(loc->values.get(), sizeof(local_relative_range), loc->values.size() / sizeof(local_relative_range), m_output);
 		}
 		fclose(m_output);
 		m_output = nullptr;
@@ -392,9 +392,9 @@ private:
 	resizeable_array m_source_file_paths;
 	resizeable_array m_line_mappings;
 	string_resizeable_array m_symbol_names;
-	resizeable_array m_global_constant_symbol_values;
-	resizeable_array m_local_constant_symbol_values;
-	resizeable_array m_local_dynamic_symbol_values;
+	resizeable_array m_global_fixed_symbol_values;
+	resizeable_array m_local_fixed_symbol_values;
+	resizeable_array m_local_relative_symbol_values;
 };
 
 
@@ -425,18 +425,18 @@ void mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short 
 	((srcdbg_simple_generator *) srcdbg_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
 }
 
-void mame_srcdbg_simp_add_global_constant_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
+void mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_constant_symbol(symbol_name, symbol_value);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_fixed_symbol(symbol_name, symbol_value);
 }
 
-void mame_srcdbg_simp_add_local_constant_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
+void mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_constant_symbol(symbol_name, address_first, address_last, symbol_value);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_fixed_symbol(symbol_name, address_first, address_last, symbol_value);
 }
-void mame_srcdbg_simp_add_local_dynamic_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
+void mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_dynamic_symbol(symbol_name, address_first, address_last, reg, reg_offset);
+	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_relative_symbol(symbol_name, address_first, address_last, reg, reg_offset);
 }
 
 

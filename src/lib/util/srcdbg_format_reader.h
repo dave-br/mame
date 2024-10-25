@@ -31,9 +31,9 @@ public:
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) = 0;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) = 0;
 	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) = 0;
-	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) = 0;
-	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) = 0;
-	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) = 0;
+	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) = 0;
+	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) = 0;
+	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) = 0;
 };
 
 bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error);

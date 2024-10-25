@@ -70,10 +70,10 @@ public:
 		std::string m_local;
 	};
 
-	class global_static_symbol
+	class global_fixed_symbol
 	{
 	public:
-		global_static_symbol(const std::string & name_p, s64 value_p)
+		global_fixed_symbol(const std::string & name_p, s64 value_p)
 			: m_name(name_p)
 			, m_value(value_p)
 		{
@@ -87,10 +87,10 @@ public:
 		s64 m_value;
 	};
 
-	class local_static_symbol
+	class local_fixed_symbol
 	{
 	public:
-		local_static_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, s64 value)
+		local_fixed_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, s64 value)
 			: m_name(name)
 			, m_scope_ranges(scope_ranges)
 			, m_value_integer(value)
@@ -107,20 +107,20 @@ public:
 		s64 m_value_integer;
 	};
 
-	class local_dynamic_symbol
+	class local_relative_symbol
 	{
 	public:
-		local_dynamic_symbol(const std::string & name, std::vector<symbol_table::scoped_value> && scoped_values)
+		local_relative_symbol(const std::string & name, std::vector<symbol_table::local_range_expression> && scoped_values)
 			: m_name(name)
-			, m_scoped_values(std::move(scoped_values))
+			, m_ranges(std::move(scoped_values))
 		{
 		}
 		const char * name() const { return m_name.c_str(); };
-		const std::vector<symbol_table::scoped_value> & scoped_values() const { return m_scoped_values; };
+		const std::vector<symbol_table::local_range_expression> & scoped_values() const { return m_ranges; };
 
 	private:
 		std::string m_name;
-		std::vector<symbol_table::scoped_value> m_scoped_values;
+		std::vector<symbol_table::local_range_expression> m_ranges;
 	};
 
 
@@ -133,9 +133,9 @@ public:
 	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
 	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
-	virtual const std::vector<global_static_symbol> & global_static_symbols() const = 0;
-	virtual const std::vector<local_static_symbol> & local_static_symbols() const = 0;
-	virtual const std::vector<local_dynamic_symbol> & local_dynamic_symbols() const = 0;
+	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
+	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
+	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
 };
 
 

@@ -172,10 +172,10 @@ public:
 		READ_WRITE
 	};
 
-	class scoped_value
+	class local_range_expression
 	{
 	public:
-		scoped_value(std::pair<offs_t,offs_t> && address_range, std::string && expression)
+		local_range_expression(std::pair<offs_t,offs_t> && address_range, std::string && expression)
 			: m_address_range(std::move(address_range))
 			, m_expression(std::move(expression))
 		{}
@@ -204,7 +204,7 @@ public:
 	symbol_entry &add(const char *name, getter_func getter, setter_func setter = nullptr, const std::string &format_string = "");
 	symbol_entry &add(const char *name, int minparams, int maxparams, execute_func execute);
 	symbol_entry &add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
-	symbol_entry &add(const char *name, symbol_table::getter_func get_pc, const std::vector<scoped_value> & scoped_values);
+	symbol_entry &add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values);
 	symbol_entry *find(const char *name) const { if (name) { auto search = m_symlist.find(name); if (search != m_symlist.end()) return search->second.get(); else return nullptr; } else return nullptr; }
 	symbol_entry *find_deep(const char *name);
 

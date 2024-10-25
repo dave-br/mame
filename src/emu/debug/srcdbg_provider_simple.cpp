@@ -100,15 +100,15 @@ bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && sy
 }
 
 
-bool srcdbg_import::on_read_global_constant_symbol_value(const global_constant_symbol_value & value)
+bool srcdbg_import::on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value)
 {
-	srcdbg_provider_base::global_static_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value);
-	m_srcdbg_simple.m_global_static_symbols.push_back(std::move(sym));
+	srcdbg_provider_base::global_fixed_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value);
+	m_srcdbg_simple.m_global_fixed_symbols.push_back(std::move(sym));
 	return true;
 }
 
 
-bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_symbol_value & value)
+bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value)
 {
 	std::vector<std::pair<offs_t,offs_t>> ranges;
 	for (u32 i = 0; i < value.num_address_ranges; i++)
@@ -118,25 +118,24 @@ bool srcdbg_import::on_read_local_constant_symbol_value(const local_constant_sym
 				std::pair<offs_t,offs_t>(value.ranges[i].address_first, value.ranges[i].address_last)));
 	}
 
-	srcdbg_provider_base::local_static_symbol sym(
+	srcdbg_provider_base::local_fixed_symbol sym(
 		m_symbol_names[value.symbol_name_index],
 		ranges,
 		value.symbol_value);
 
-	// TODO: names: static -> constant
-	m_srcdbg_simple.m_local_static_symbols.push_back(std::move(sym));
+	m_srcdbg_simple.m_local_fixed_symbols.push_back(std::move(sym));
 
 	return true;
 }
 
 
-bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value)
+bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_symbol_value & value)
 {
-	std::vector<srcdbg_provider_simple::scoped_value_internal> values;
-	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
+	std::vector<srcdbg_provider_simple::local_relative_range_internal> values;
+	for (u32 i = 0; i < value.num_local_relative_ranges; i++)
 	{
-		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
-		srcdbg_provider_simple::scoped_value_internal vi(
+		const local_relative_range & sv = value.local_relative_ranges[i];
+		srcdbg_provider_simple::local_relative_range_internal vi(
 			std::move(std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last)),
 			sv.reg,
 			sv.reg_offset);
@@ -144,8 +143,8 @@ bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbo
 		values.push_back(std::move(vi));
 	}
 
-	srcdbg_provider_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], values);
-	m_srcdbg_simple.m_local_dynamic_symbols_internal.push_back(std::move(sym));
+	srcdbg_provider_simple::local_relative_symbol_internal sym(m_symbol_names[value.symbol_name_index], values);
+	m_srcdbg_simple.m_local_relative_symbols_internal.push_back(std::move(sym));
 
 	return true;
 }
@@ -158,33 +157,33 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	, m_source_file_paths()
 	, m_linemaps_by_address()
 	, m_linemaps_by_line()
-	, m_global_static_symbols()
-	, m_local_static_symbols()
+	, m_global_fixed_symbols()
+	, m_local_fixed_symbols()
 {
 }
 
 void srcdbg_provider_simple::complete_initialization()
 {
-	assert (m_local_dynamic_symbols.empty());
+	assert (m_local_relative_symbols.empty());
 
 	device_state_interface * state = device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
 
-	for (local_dynamic_symbol_internal sym_internal : m_local_dynamic_symbols_internal)
+	for (local_relative_symbol_internal sym_internal : m_local_relative_symbols_internal)
 	{
-		std::vector<symbol_table::scoped_value> values;
-		for (scoped_value_internal & sv : sym_internal.m_scoped_values)
+		std::vector<symbol_table::local_range_expression> values;
+		for (local_relative_range_internal & sv : sym_internal.m_local_range_expressions)
 		{
 			std::ostringstream expr;
 			expr << "(" << state->state_find_entry(sv.m_reg)->symbol() << " + " << sv.m_reg_offset << ")";
-			symbol_table::scoped_value value(std::move(sv.m_range), std::move(std::move(expr).str()));
+			symbol_table::local_range_expression value(std::move(sv.m_range), std::move(std::move(expr).str()));
 			values.push_back(std::move(value));
 		}
 
-		srcdbg_provider_base::local_dynamic_symbol sym(sym_internal.m_name, std::move(values));
-		m_local_dynamic_symbols.push_back(std::move(sym));
+		srcdbg_provider_base::local_relative_symbol sym(sym_internal.m_name, std::move(values));
+		m_local_relative_symbols.push_back(std::move(sym));
 	}
 
-	m_local_dynamic_symbols_internal.clear();
+	m_local_relative_symbols_internal.clear();
 }
 
 

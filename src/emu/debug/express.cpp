@@ -267,11 +267,11 @@ u64 function_symbol_entry::execute(int numparams, const u64 *paramlist)
 //**************************************************************************
 
 // a symbol entry representing a lexically-scoped local symbol obtained from source-debugging info
-class local_static_symbol_entry : public symbol_entry
+class local_fixed_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	local_static_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
+	local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
 
 // 	// getters
 // 	u16 minparams() const { return m_minparams; }
@@ -302,11 +302,11 @@ private:
 };
 
 
-class local_dynamic_symbol_entry : public symbol_entry
+class local_relative_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	local_dynamic_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::scoped_value> & scoped_values);
+	local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values);
 
 // 	// getters
 // 	u16 minparams() const { return m_minparams; }
@@ -327,17 +327,20 @@ private:
 
 	// internal state
 	symbol_table::getter_func m_get_pc;
-	const std::vector<symbol_table::scoped_value> & m_scoped_values;
+
+	// Reference to avoid unnecessary copying.  Ultimately bound to
+	// srcdbg_provider_base::local_relative_symbols()[i]::m_ranges
+	const std::vector<symbol_table::local_range_expression> & m_local_range_expressions;
 };
 
 //-------------------------------------------------
-//  local_static_symbol_entry - constructor
+//  local_fixed_symbol_entry - constructor
 //-------------------------------------------------
 
 //-------------------------------------------------
 //-------------------------------------------------
 
-local_static_symbol_entry::local_static_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+local_fixed_symbol_entry::local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
 	: symbol_entry(table, SMT_INTEGER, name, "")
 	, m_get_pc(get_pc)
 	, m_scope_ranges(scope_ranges)
@@ -345,13 +348,13 @@ local_static_symbol_entry::local_static_symbol_entry(symbol_table &table, const 
 {	
 }
 
-void local_static_symbol_entry::set_value(u64 newvalue)
+void local_fixed_symbol_entry::set_value(u64 newvalue)
 {
 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
 }
 
 
-bool local_static_symbol_entry::is_in_scope() const
+bool local_fixed_symbol_entry::is_in_scope() const
 {
 	u64 pc = m_get_pc();
 	for (std::pair<offs_t, offs_t> range : m_scope_ranges)
@@ -366,24 +369,24 @@ bool local_static_symbol_entry::is_in_scope() const
 
 
 //-------------------------------------------------
-//  local_dynamic_symbol_entry - constructor
+//  local_relative_symbol_entry - constructor
 //-------------------------------------------------
 
 //-------------------------------------------------
 //-------------------------------------------------
 
-local_dynamic_symbol_entry::local_dynamic_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::scoped_value> & scoped_values)
+local_relative_symbol_entry::local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values)
 	: symbol_entry(table, SMT_INTEGER, name, "")
 	, m_get_pc(get_pc)
-	, m_scoped_values(scoped_values)
+	, m_local_range_expressions(scoped_values)
 {
 }
 
 
-u64 local_dynamic_symbol_entry::value() const
+u64 local_relative_symbol_entry::value() const
 {
 	u64 pc = m_get_pc();
-	for (symbol_table::scoped_value val : m_scoped_values)
+	for (symbol_table::local_range_expression val : m_local_range_expressions)
 	{
 		if (val.address_range().first <= pc && pc <= val.address_range().second)
 		{
@@ -391,21 +394,21 @@ u64 local_dynamic_symbol_entry::value() const
 		}
 	}
 
-	assert(false && "local_dynamic_symbol_entry::value() called when not in scope");
+	assert(false && "local_relative_symbol_entry::value() called when not in scope");
 	return 0;
 }
 
 
-void local_dynamic_symbol_entry::set_value(u64 newvalue)
+void local_relative_symbol_entry::set_value(u64 newvalue)
 {
 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
 }
 
 
-bool local_dynamic_symbol_entry::is_in_scope() const
+bool local_relative_symbol_entry::is_in_scope() const
 {
 	u64 pc = m_get_pc();
-	for (symbol_table::scoped_value val : m_scoped_values)
+	for (symbol_table::local_range_expression val : m_local_range_expressions)
 	{
 		if (val.address_range().first <= pc && pc <= val.address_range().second)
 		{
@@ -590,16 +593,16 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 
 symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
 {
-	return *m_symlist.emplace(name, std::make_unique<local_static_symbol_entry>(*this, name, get_pc, scope_ranges, value)).first->second;
+	return *m_symlist.emplace(name, std::make_unique<local_fixed_symbol_entry>(*this, name, get_pc, scope_ranges, value)).first->second;
 }
 
 
 //-------------------------------------------------
 //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<scoped_value> & scoped_values)
+symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values)
 {
-	return *m_symlist.emplace(name, std::make_unique<local_dynamic_symbol_entry>(*this, name, get_pc, scoped_values)).first->second;
+	return *m_symlist.emplace(name, std::make_unique<local_relative_symbol_entry>(*this, name, get_pc, scoped_values)).first->second;
 }
 
 

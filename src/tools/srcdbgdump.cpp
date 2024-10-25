@@ -26,9 +26,9 @@ public:
 		: m_printed_source_file_paths_title(false)
 		, m_printed_line_mapping_title(false)
 		, m_printed_symbol_names_title(false)
-		, m_printed_global_constant_symbol_value_title(false)
-		, m_printed_local_constant_symbol_value_title(false)
-		, m_printed_local_dynamic_symbol_value_title(false)
+		, m_printed_global_fixed_symbol_value_title(false)
+		, m_printed_local_fixed_symbol_value_title(false)
+		, m_printed_local_relative_symbol_value_title(false)
 		{}
 	int go();
 	void print_error(const char * when, const char * what);
@@ -37,17 +37,17 @@ public:
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
 	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
-	virtual bool on_read_global_constant_symbol_value(const global_constant_symbol_value & value) override;
-	virtual bool on_read_local_constant_symbol_value(const local_constant_symbol_value & value) override;
-	virtual bool on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value) override;
+	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) override;
+	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) override;
+	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) override;
 
 private:
 	bool m_printed_source_file_paths_title;
 	bool m_printed_line_mapping_title;
 	bool m_printed_symbol_names_title;
-	bool m_printed_global_constant_symbol_value_title;
-	bool m_printed_local_constant_symbol_value_title;
-	bool m_printed_local_dynamic_symbol_value_title;
+	bool m_printed_global_fixed_symbol_value_title;
+	bool m_printed_local_fixed_symbol_value_title;
+	bool m_printed_local_relative_symbol_value_title;
 };
 
 
@@ -65,9 +65,9 @@ bool srcdbg_dump::on_read_simp_header(const mame_debug_info_simple_header & simp
 	printf("source_file_paths_size:\t%u\n", simp_header.source_file_paths_size);
 	printf("num_line_mappings:\t%u\n", simp_header.num_line_mappings);
 	printf("symbol_names_size:\t%u\n", simp_header.symbol_names_size);
-	printf("num_global_constant_symbol_values:\t%u\n", simp_header.num_global_constant_symbol_values);
-	printf("local_constant_symbol_values_size:\t%u\n", simp_header.local_constant_symbol_values_size);
-	printf("local_dynamic_symbol_values_size:\t%u\n", simp_header.local_dynamic_symbol_values_size);
+	printf("num_global_fixed_symbol_values:\t%u\n", simp_header.num_global_fixed_symbol_values);
+	printf("local_fixed_symbol_values_size:\t%u\n", simp_header.local_fixed_symbol_values_size);
+	printf("local_relative_symbol_values_size:\t%u\n", simp_header.local_relative_symbol_values_size);
 	return true;
 }
 
@@ -108,23 +108,23 @@ bool srcdbg_dump::on_read_symbol_name(u16 symbol_name_index, std::string && symb
 	return true;
 }
 
-bool srcdbg_dump::on_read_global_constant_symbol_value(const global_constant_symbol_value & value)
+bool srcdbg_dump::on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value)
 {
-	if (!m_printed_global_constant_symbol_value_title)
+	if (!m_printed_global_fixed_symbol_value_title)
 	{
-		printf("\n**** Global constant symbol values: ****\n");
-		m_printed_global_constant_symbol_value_title = true;
+		printf("\n**** Global fixed symbol values: ****\n");
+		m_printed_global_fixed_symbol_value_title = true;
 	}
 	printf("Symbol name index: %u, symbol value: %d\n", value.symbol_name_index, value.symbol_value);
 	return true;
 } 	
 
-bool srcdbg_dump::on_read_local_constant_symbol_value(const local_constant_symbol_value & value)
+bool srcdbg_dump::on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value)
 {
-	if (!m_printed_local_constant_symbol_value_title)
+	if (!m_printed_local_fixed_symbol_value_title)
 	{
-		printf("\n**** Local constant symbol values: ****\n");
-		m_printed_local_constant_symbol_value_title = true;
+		printf("\n**** Local fixed symbol values: ****\n");
+		m_printed_local_fixed_symbol_value_title = true;
 	}
 	printf("Symbol name index: %u, symbol value: %d\n", value.symbol_name_index, value.symbol_value);
 	for (u32 i = 0; i < value.num_address_ranges; i++)
@@ -134,22 +134,22 @@ bool srcdbg_dump::on_read_local_constant_symbol_value(const local_constant_symbo
 	return true;
 }
 
-bool srcdbg_dump::on_read_local_dynamic_symbol_value(const local_dynamic_symbol_value & value)
+bool srcdbg_dump::on_read_local_relative_symbol_value(const local_relative_symbol_value & value)
 {
-	if (!m_printed_local_dynamic_symbol_value_title)
+	if (!m_printed_local_relative_symbol_value_title)
 	{
-		printf("\n**** Local dynamic symbol values: ****\n");
-		m_printed_local_dynamic_symbol_value_title = true;
+		printf("\n**** Local relative symbol values: ****\n");
+		m_printed_local_relative_symbol_value_title = true;
 	}
 	printf("Symbol name index: %u\n", value.symbol_name_index);
-	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
+	for (u32 i = 0; i < value.num_local_relative_ranges; i++)
 	{
 		printf(
 			"\tvalue: (reg idx %d) + %d\taddress range: %04X-%04X\n", 
-			value.local_dynamic_scoped_values[i].reg,
-			value.local_dynamic_scoped_values[i].reg_offset,
-			value.local_dynamic_scoped_values[i].range.address_first, 
-			value.local_dynamic_scoped_values[i].range.address_last);
+			value.local_relative_ranges[i].reg,
+			value.local_relative_ranges[i].reg_offset,
+			value.local_relative_ranges[i].range.address_first, 
+			value.local_relative_ranges[i].range.address_last);
 	}
 	return true;
 }

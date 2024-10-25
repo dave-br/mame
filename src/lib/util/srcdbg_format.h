@@ -46,11 +46,11 @@ typedef struct
 
 	unsigned int symbol_names_size;
 
-	unsigned int num_global_constant_symbol_values;
+	unsigned int num_global_fixed_symbol_values;
 
-	unsigned int local_constant_symbol_values_size;
+	unsigned int local_fixed_symbol_values_size;
 
-	unsigned int local_dynamic_symbol_values_size;
+	unsigned int local_relative_symbol_values_size;
 } mame_debug_info_simple_header;
 
 
@@ -86,7 +86,7 @@ typedef struct
 {
 	unsigned int symbol_name_index;
 	int symbol_value;
-} global_constant_symbol_value;
+} global_fixed_symbol_value;
 
 typedef struct
 {
@@ -94,13 +94,13 @@ typedef struct
 	int symbol_value;
 	unsigned int num_address_ranges;
 	address_range ranges[];
-} local_constant_symbol_value;
+} local_fixed_symbol_value;
 
 
-/* A local dynamic symbol consists of multiple address ranges, with each range 
+/* A local relative symbol consists of multiple address ranges, with each range 
  * corresponding to a (potentially distinct) register offset.  For example,
  * multiple local variables in different scopes, with the same name, would
- * be considered the "same" local dynamic symbol, though each one would be
+ * be considered the "same" local relative symbol, though each variable would be
  * accessed in a different way, depending on which address the PC is currently at.
  */
 
@@ -109,14 +109,14 @@ typedef struct
 	address_range range;
 	unsigned char reg;
 	int reg_offset;
-} local_dynamic_scoped_value;
+} local_relative_range;
 
 typedef struct
 {
 	unsigned int symbol_name_index;
-	unsigned int num_local_dynamic_scoped_values;
-	local_dynamic_scoped_value local_dynamic_scoped_values[];
-} local_dynamic_symbol_value;
+	unsigned int num_local_relative_ranges;
+	local_relative_range local_relative_ranges[];
+} local_relative_symbol_value;
 
 /*
 	mame_debug_info_simple format:
@@ -125,9 +125,9 @@ typedef struct
 	char                            source_file_paths[][]
 	srcdbg_line_mapping             line_mappings[num_line_mappings]
 	char                            symbol_names[][]
-	global_constant_symbol_value    global_constant_symbol_values[num_global_constant_symbol_values]
-	local_constant_symbol_value		local_constant_symbol_values[]
-	local_dynamic_symbol_value		local_dynamic_symbol_values[]
+	global_fixed_symbol_value    global_fixed_symbol_values[num_global_fixed_symbol_values]
+	local_fixed_symbol_value		local_fixed_symbol_values[]
+	local_relative_symbol_value		local_relative_symbol_values[]
 
 	Description:
 	- Each source_file_paths[i] is a null-terminated string path to a source file.  The
