@@ -575,12 +575,12 @@ device_debug::device_debug(device_t &device)
 			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_srcdbg_globals.get(), &device);
 			for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
 			{
-				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scope_ranges(), sym.value());
+				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
 			}
 			const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = device.machine().debugger().debug_info().local_relative_symbols();
 			for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
 			{
-				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.scoped_values());
+				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
 			}
 			m_symtable = m_symtable_srcdbg_locals.get();
 		}

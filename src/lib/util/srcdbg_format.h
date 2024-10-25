@@ -109,13 +109,13 @@ typedef struct
 	address_range range;
 	unsigned char reg;
 	int reg_offset;
-} local_relative_range;
+} local_relative_eval_rule;
 
 typedef struct
 {
 	unsigned int symbol_name_index;
-	unsigned int num_local_relative_ranges;
-	local_relative_range local_relative_ranges[];
+	unsigned int num_local_relative_eval_rules;
+	local_relative_eval_rule local_relative_eval_rules[];
 } local_relative_symbol_value;
 
 /*

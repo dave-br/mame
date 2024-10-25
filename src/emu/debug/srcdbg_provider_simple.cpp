@@ -26,19 +26,6 @@ srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	, m_read_line_mapping_yet(false)
 	, m_symbol_names()
 {
-	// device_t * cpu = m_srcdbg_simple.m_machine.device<cpu_device>("maincpu");
-	// 	for (device_t &device : device_enumerator(m_machine.root_device()))
-	// {
-	// 	auto *cpu = dynamic_cast<cpu_device *>(&device);
-	// 	if (cpu)
-	// 	{
-	// 		m_visiblecpu = cpu;
-	// 		break;
-	// 	}
-	// }
-
-	// .cpu	
-	// device.interface(m_state);
 }
 
 
@@ -120,7 +107,7 @@ bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_va
 
 	srcdbg_provider_base::local_fixed_symbol sym(
 		m_symbol_names[value.symbol_name_index],
-		ranges,
+		std::move(ranges),
 		value.symbol_value);
 
 	m_srcdbg_simple.m_local_fixed_symbols.push_back(std::move(sym));
@@ -131,19 +118,19 @@ bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_va
 
 bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_symbol_value & value)
 {
-	std::vector<srcdbg_provider_simple::local_relative_range_internal> values;
-	for (u32 i = 0; i < value.num_local_relative_ranges; i++)
+	std::vector<srcdbg_provider_simple::local_relative_eval_rule_internal> eval_rules_internal;
+	for (u32 i = 0; i < value.num_local_relative_eval_rules; i++)
 	{
-		const local_relative_range & sv = value.local_relative_ranges[i];
-		srcdbg_provider_simple::local_relative_range_internal vi(
-			std::move(std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last)),
-			sv.reg,
-			sv.reg_offset);
+		const local_relative_eval_rule & eval_rule = value.local_relative_eval_rules[i];
+		srcdbg_provider_simple::local_relative_eval_rule_internal eval_rule_internal(
+			std::move(std::pair<offs_t,offs_t>(eval_rule.range.address_first, eval_rule.range.address_last)),
+			eval_rule.reg,
+			eval_rule.reg_offset);
 
-		values.push_back(std::move(vi));
+		eval_rules_internal.push_back(std::move(eval_rule_internal));
 	}
 
-	srcdbg_provider_simple::local_relative_symbol_internal sym(m_symbol_names[value.symbol_name_index], values);
+	srcdbg_provider_simple::local_relative_symbol_internal sym(m_symbol_names[value.symbol_name_index], eval_rules_internal);
 	m_srcdbg_simple.m_local_relative_symbols_internal.push_back(std::move(sym));
 
 	return true;
@@ -171,11 +158,15 @@ void srcdbg_provider_simple::complete_initialization()
 	for (local_relative_symbol_internal sym_internal : m_local_relative_symbols_internal)
 	{
 		std::vector<symbol_table::local_range_expression> values;
-		for (local_relative_range_internal & sv : sym_internal.m_local_range_expressions)
+		for (local_relative_eval_rule_internal & eval_rule_internal : sym_internal.m_eval_rules)
 		{
 			std::ostringstream expr;
-			expr << "(" << state->state_find_entry(sv.m_reg)->symbol() << " + " << sv.m_reg_offset << ")";
-			symbol_table::local_range_expression value(std::move(sv.m_range), std::move(std::move(expr).str()));
+			expr << "(" 
+				<< state->state_find_entry(eval_rule_internal.m_reg)->symbol() 
+				<< " + " 
+				<< eval_rule_internal.m_reg_offset 
+				<< ")";
+			symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(std::move(expr).str()));
 			values.push_back(std::move(value));
 		}
 

@@ -44,10 +44,10 @@ private:
 		u16 address_last;
 		u32 line_number;
 	};
-	class local_relative_range_internal
+	class local_relative_eval_rule_internal
 	{
 	public:
-		local_relative_range_internal(std::pair<offs_t,offs_t> && range, char reg, s32 reg_offset)
+		local_relative_eval_rule_internal(std::pair<offs_t,offs_t> && range, char reg, s32 reg_offset)
 			: m_range(std::move(range))
 			, m_reg(reg)
 			, m_reg_offset(reg_offset)
@@ -60,13 +60,13 @@ private:
 	class local_relative_symbol_internal
 	{
 	public:
-		local_relative_symbol_internal(const std::string & name, std::vector<local_relative_range_internal> ranges)
+		local_relative_symbol_internal(const std::string & name, std::vector<local_relative_eval_rule_internal> eval_rules)
 			: m_name(name)
-			, m_ranges(ranges)
+			, m_eval_rules(eval_rules)
 		{
 		}
 		std::string m_name;
-		std::vector<local_relative_range_internal> m_ranges;
+		std::vector<local_relative_eval_rule_internal> m_eval_rules;
 	};
 
 	void generate_local_path(const std::string & built, std::string & local);

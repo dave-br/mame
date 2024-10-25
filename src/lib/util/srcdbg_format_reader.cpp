@@ -223,7 +223,7 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		const local_relative_symbol_value * value;
 		u32 value_start_idx = i;
 		if (!read_field<local_relative_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value->num_local_relative_ranges * sizeof(local_relative_range), data, i, error) ||
+			!scan_bytes(value->num_local_relative_eval_rules * sizeof(local_relative_eval_rule), data, i, error) ||
 			!callback.on_read_local_relative_symbol_value(*(const local_relative_symbol_value *) &data[value_start_idx]))
 		{
 			return false;

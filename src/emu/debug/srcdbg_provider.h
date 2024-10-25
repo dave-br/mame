@@ -73,9 +73,9 @@ public:
 	class global_fixed_symbol
 	{
 	public:
-		global_fixed_symbol(const std::string & name_p, s64 value_p)
-			: m_name(name_p)
-			, m_value(value_p)
+		global_fixed_symbol(const std::string & name, s64 value)
+			: m_name(name)
+			, m_value(value)
 		{
 		}
 
@@ -90,33 +90,33 @@ public:
 	class local_fixed_symbol
 	{
 	public:
-		local_fixed_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, s64 value)
+		local_fixed_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> && ranges, s64 value)
 			: m_name(name)
-			, m_scope_ranges(scope_ranges)
+			, m_ranges(std::move(ranges))
 			, m_value_integer(value)
 		{
 		}
 
 		const char * name() const { return m_name.c_str(); };
-		const std::vector<std::pair<offs_t,offs_t>> & scope_ranges() const { return m_scope_ranges; };
+		const std::vector<std::pair<offs_t,offs_t>> & ranges() const { return m_ranges; };
 		s64 value() const { return m_value_integer; };
 
 	private:
 		std::string m_name;
-		std::vector<std::pair<offs_t,offs_t>> m_scope_ranges;
+		std::vector<std::pair<offs_t,offs_t>> m_ranges;
 		s64 m_value_integer;
 	};
 
 	class local_relative_symbol
 	{
 	public:
-		local_relative_symbol(const std::string & name, std::vector<symbol_table::local_range_expression> && scoped_values)
+		local_relative_symbol(const std::string & name, std::vector<symbol_table::local_range_expression> && ranges)
 			: m_name(name)
-			, m_ranges(std::move(scoped_values))
+			, m_ranges(std::move(ranges))
 		{
 		}
 		const char * name() const { return m_name.c_str(); };
-		const std::vector<symbol_table::local_range_expression> & scoped_values() const { return m_ranges; };
+		const std::vector<symbol_table::local_range_expression> & ranges() const { return m_ranges; };
 
 	private:
 		std::string m_name;

@@ -142,14 +142,14 @@ bool srcdbg_dump::on_read_local_relative_symbol_value(const local_relative_symbo
 		m_printed_local_relative_symbol_value_title = true;
 	}
 	printf("Symbol name index: %u\n", value.symbol_name_index);
-	for (u32 i = 0; i < value.num_local_relative_ranges; i++)
+	for (u32 i = 0; i < value.num_local_relative_eval_rules; i++)
 	{
 		printf(
 			"\tvalue: (reg idx %d) + %d\taddress range: %04X-%04X\n", 
-			value.local_relative_ranges[i].reg,
-			value.local_relative_ranges[i].reg_offset,
-			value.local_relative_ranges[i].range.address_first, 
-			value.local_relative_ranges[i].range.address_last);
+			value.local_relative_eval_rules[i].reg,
+			value.local_relative_eval_rules[i].reg_offset,
+			value.local_relative_eval_rules[i].range.address_first, 
+			value.local_relative_eval_rules[i].range.address_last);
 	}
 	return true;
 }

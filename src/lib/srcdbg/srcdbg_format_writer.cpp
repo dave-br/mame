@@ -197,7 +197,7 @@ struct local_fixed
 struct local_relative
 {
 	unsigned int symbol_name_index;
-	unsigned int num_local_relative_ranges;
+	unsigned int num_local_relative_eval_rules;
 	resizeable_array values;
 };
 
@@ -307,7 +307,7 @@ public:
 		unsigned int entry_idx = m_local_relative_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
-			local.num_local_relative_ranges = 0;
+			local.num_local_relative_eval_rules = 0;
 			local.values.construct();
 			m_local_relative_symbol_values.push_back(&local, sizeof(local));
 			entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
@@ -317,14 +317,14 @@ public:
 		{
 			entry_ptr = ((local_relative *) m_local_relative_symbol_values.get()) + entry_idx;
 		}
-		local_relative_range value;
+		local_relative_eval_rule value;
 		value.range.address_first = address_first;
 		value.range.address_last = address_last;
 		value.reg = reg;
 		value.reg_offset = reg_offset;
 		entry_ptr->values.push_back(&value, sizeof(value));
 		m_header.local_relative_symbol_values_size += sizeof(value);
-		entry_ptr->num_local_relative_ranges++;
+		entry_ptr->num_local_relative_eval_rules++;
 	}
 
 
@@ -367,7 +367,7 @@ public:
 				continue;
 			}
 			fwrite(loc, sizeof(local_relative_symbol_value), 1, m_output);
-			fwrite(loc->values.get(), sizeof(local_relative_range), loc->values.size() / sizeof(local_relative_range), m_output);
+			fwrite(loc->values.get(), sizeof(local_relative_eval_rule), loc->values.size() / sizeof(local_relative_eval_rule), m_output);
 		}
 		fclose(m_output);
 		m_output = nullptr;
