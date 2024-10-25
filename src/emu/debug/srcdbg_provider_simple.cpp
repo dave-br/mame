@@ -176,7 +176,7 @@ void srcdbg_provider_simple::complete_initialization()
 		{
 			std::ostringstream expr;
 			expr << "(" << state->state_find_entry(sv.m_reg)->symbol() << " + " << sv.m_reg_offset << ")";
-			symbol_table::scoped_value value(sv.m_range, std::move(std::move(expr).str()));
+			symbol_table::scoped_value value(std::move(sv.m_range), std::move(std::move(expr).str()));
 			values.push_back(std::move(value));
 		}
 

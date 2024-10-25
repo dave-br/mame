@@ -175,15 +175,15 @@ public:
 	class scoped_value
 	{
 	public:
-		scoped_value(const std::pair<offs_t,offs_t> & address_range, std::string && expression)
-			: m_address_range(address_range)
+		scoped_value(std::pair<offs_t,offs_t> && address_range, std::string && expression)
+			: m_address_range(std::move(address_range))
 			, m_expression(std::move(expression))
 		{}
 		const std::pair<offs_t,offs_t> & address_range() const { return m_address_range; };
 		const std::string & expression() const { return m_expression; };
 
 	private:
-		const std::pair<offs_t,offs_t> & m_address_range;
+		std::pair<offs_t,offs_t> m_address_range;
 		std::string m_expression;
 	};
 
