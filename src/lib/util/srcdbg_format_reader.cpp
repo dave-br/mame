@@ -2,7 +2,7 @@
 // copyright-holders:David Broman
 /*********************************************************************
 
-    srcdbg_format.cpp
+    srcdbg_format_reader.cpp
 
     Helper for reading MAME source-level debugging info files
 

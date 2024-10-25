@@ -47,7 +47,7 @@ private:
 	class scoped_value_internal
 	{
 	public:
-		scoped_value_internal(std::pair<offs_t,offs_t> range, char reg, s32 reg_offset)
+		scoped_value_internal(std::pair<offs_t,offs_t> && range, char reg, s32 reg_offset)
 			: m_range(std::move(range))
 			, m_reg(reg)
 			, m_reg_offset(reg_offset)
@@ -60,7 +60,7 @@ private:
 	class local_dynamic_symbol_internal
 	{
 	public:
-		local_dynamic_symbol_internal(std::string & name, std::vector<scoped_value_internal> scoped_values)
+		local_dynamic_symbol_internal(const std::string & name, std::vector<scoped_value_internal> scoped_values)
 			: m_name(name)
 			, m_scoped_values(scoped_values)
 		{

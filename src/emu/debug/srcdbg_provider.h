@@ -49,9 +49,9 @@ public:
 	class source_file_path
 	{
 	public:
-		source_file_path(std::string & built_p, std::string & local_p) :
-			m_built(std::move(built_p)),
-			m_local(std::move(local_p))
+		source_file_path(std::string && built_p, std::string && local_p)
+			: m_built(std::move(built_p))
+			, m_local(std::move(local_p))
 		{
 		}
 
@@ -73,9 +73,9 @@ public:
 	class global_static_symbol
 	{
 	public:
-		global_static_symbol(std::string & name_p, s64 value_p) :
-			m_name(std::move(name_p)),
-			m_value(value_p)
+		global_static_symbol(const std::string & name_p, s64 value_p)
+			: m_name(name_p)
+			, m_value(value_p)
 		{
 		}
 
@@ -90,8 +90,8 @@ public:
 	class local_static_symbol
 	{
 	public:
-		local_static_symbol(std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, s64 value)
-			: m_name(std::move(name))
+		local_static_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> scope_ranges, s64 value)
+			: m_name(name)
 			, m_scope_ranges(scope_ranges)
 			, m_value_integer(value)
 		{
@@ -110,8 +110,8 @@ public:
 	class local_dynamic_symbol
 	{
 	public:
-		local_dynamic_symbol(std::string & name, std::vector<symbol_table::scoped_value> & scoped_values)
-			: m_name(std::move(name))
+		local_dynamic_symbol(const std::string & name, std::vector<symbol_table::scoped_value> && scoped_values)
+			: m_name(name)
 			, m_scoped_values(std::move(scoped_values))
 		{
 		}

@@ -2,7 +2,7 @@
 // copyright-holders:David Broman
 /*********************************************************************
 
-    srcdbg_provider_simple.h
+    srcdbg_provider_simple.cpp
 
     Implementation of interface to source-debugging info for the
 	"simple" format
@@ -49,7 +49,7 @@ bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && so
 
 	std::string local;
 	m_srcdbg_simple.generate_local_path(source_path, local);
-	srcdbg_provider_base::source_file_path sfp(source_path, local);
+	srcdbg_provider_base::source_file_path sfp(std::move(source_path), std::move(local));
 	m_srcdbg_simple.m_source_file_paths.push_back(std::move(sfp));
 	return true;
 }
@@ -136,12 +136,12 @@ bool srcdbg_import::on_read_local_dynamic_symbol_value(const local_dynamic_symbo
 	for (u32 i = 0; i < value.num_local_dynamic_scoped_values; i++)
 	{
 		const local_dynamic_scoped_value & sv = value.local_dynamic_scoped_values[i];
-		srcdbg_provider_simple::scoped_value_internal value(
-			std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last),
+		srcdbg_provider_simple::scoped_value_internal vi(
+			std::move(std::pair<offs_t,offs_t>(sv.range.address_first, sv.range.address_last)),
 			sv.reg,
 			sv.reg_offset);
 
-		values.push_back(std::move(value));
+		values.push_back(std::move(vi));
 	}
 
 	srcdbg_provider_simple::local_dynamic_symbol_internal sym(m_symbol_names[value.symbol_name_index], values);
@@ -180,7 +180,7 @@ void srcdbg_provider_simple::complete_initialization()
 			values.push_back(std::move(value));
 		}
 
-		srcdbg_provider_base::local_dynamic_symbol sym(sym_internal.m_name, values);
+		srcdbg_provider_base::local_dynamic_symbol sym(sym_internal.m_name, std::move(values));
 		m_local_dynamic_symbols.push_back(std::move(sym));
 	}
 
