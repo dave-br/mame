@@ -39,7 +39,7 @@ public:
 	std::optional<srcdbg_provider_base &> srcdbg_provider() const
 	{
 		 if (m_debug_info != nullptr)
-		 	return *m_debug_info; 
+		 	return std::optional<srcdbg_provider_base &>(*m_debug_info);
 		return std::optional<srcdbg_provider_base &>();
 	}
 
