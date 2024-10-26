@@ -53,7 +53,10 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
 
 	// populate the combobox with source file paths
+	// TODO: Make this a helper on debug_view_sourcecode:
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
+	size_t maxlength = 0;
+	/*
 	const srcdbg_provider_base & debug_info = dv_source->srcdbg_provider();
 	std::size_t num_files = debug_info.num_files();
 
@@ -69,7 +72,7 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 		}
 		auto t_name = osd::text::to_tstring(entry_text);
 		SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
-	}
+	} */
 
 	SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
 	SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);

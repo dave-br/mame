@@ -1784,7 +1784,11 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	parse_number(linenum_token, linenum_buffer.c_str(), 10, expression_error::INVALID_NUMBER);
 
 	// Convert file path and line number to an address
-	const srcdbg_provider_base & debug_info = symbols().machine().debugger().srcdbg_provider();
+	if (symbols().machine().debugger().srcdbg_provider() == nullptr)
+	{
+		// TODO: ERROR
+	}
+	const srcdbg_provider_base & debug_info = *symbols().machine().debugger().srcdbg_provider();
 	std::optional<int> file_index = debug_info.file_path_to_index(file_path.c_str());
 	if (!file_index.has_value())
 	{

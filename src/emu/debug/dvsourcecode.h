@@ -76,7 +76,7 @@ private:
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
 	device_state_interface *                          m_state;                 // state interface, if present
-	std::optional<const srcdbg_provider_base &>       m_srcdbg_provider;       // Interface to the loaded debugging info file
+	const srcdbg_provider_base *                      m_srcdbg_provider;       // Interface to the loaded debugging info file, can be null!
 	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view

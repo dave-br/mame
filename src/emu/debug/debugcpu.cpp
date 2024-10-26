@@ -636,12 +636,12 @@ device_debug::~device_debug()
 
 void device_debug::add_symbols_from_srcdbg()
 {
-	if (!m_device.machine().debugger().srcdbg_provider().has_value())
+	if (m_device.machine().debugger().srcdbg_provider() == nullptr)
 	{
 		return;
 	}
 
-	srcdbg_provider_base & srcdbg_provider = m_device.machine().debugger().srcdbg_provider().value();
+	srcdbg_provider_base & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
 	srcdbg_provider.complete_initialization();
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
 
@@ -1103,9 +1103,9 @@ void device_debug::wait_hook()
 	// of user source.
 	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
 		!m_step_source_start.has_value() &&
-		machine.debugger().srcdbg_provider().has_value())
+		machine.debugger().srcdbg_provider() != nullptr)
 	{
-		m_step_source_start = machine.debugger().srcdbg_provider().value().address_to_file_line(curpc);
+		m_step_source_start = machine.debugger().srcdbg_provider()->address_to_file_line(curpc);
 	}
 
 	// no longer in debugger code
@@ -1123,13 +1123,13 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 {
 	running_machine &machine = m_device.machine();
 	assert ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0);
-	assert (machine.debugger().srcdbg_provider().has_value());
+	assert (machine.debugger().srcdbg_provider() != nullptr);
 
 	// When source-stepping, stop if we're currently on a user source line AND either
 	// i) we started outside a user source line, or
 	// ii) current source line is different from where we started, or
 	// iii) there has been an unmatched return since we started (e.g., recursive return to same pc)
-	std::optional<file_line> file_line_cur = machine.debugger().srcdbg_provider().value().address_to_file_line(pc);
+	std::optional<file_line> file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc);
 	bool ret = (file_line_cur.has_value() &&
 		(!m_step_source_start.has_value() ||                         // i)
 		!(file_line_cur.value() == m_step_source_start.value()) ||   // ii)

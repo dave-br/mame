@@ -109,7 +109,7 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 
 bool sourcewin_info::show_src_window_if_srcdbg_enabled()
 {
-	if (!machine().debugger().srcdbg_provider().has_value())
+	if (machine().debugger().srcdbg_provider() == nullptr)
 	{
 		// TODO: POPUP EXPLAINING HOW TO ENABLE SRCDBG
 		return false;

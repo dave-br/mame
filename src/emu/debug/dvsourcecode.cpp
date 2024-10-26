@@ -147,7 +147,7 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 
 void debug_view_sourcecode::view_update()
 {
-	if (!m_srcdbg_provider.has_value())
+	if (m_srcdbg_provider != nullptr)
 	{
 		return;
 	}
@@ -164,7 +164,7 @@ void debug_view_sourcecode::view_update()
 
 	if (pc_changed)
 	{
-		std::optional<file_line> file_line = m_srcdbg_provider.value().address_to_file_line(pc);
+		std::optional<file_line> file_line = m_srcdbg_provider->address_to_file_line(pc);
 		if (file_line.has_value())
 		{
 			m_cur_src_index = file_line.value().file_index();
@@ -184,7 +184,7 @@ void debug_view_sourcecode::view_update()
 
 	// Print
 	// const char * local_path = srcdbg_provider().file_index_to_path(m_cur_src_index).local();
-	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider.value().file_index_to_path(m_cur_src_index);
+	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider->file_index_to_path(m_cur_src_index);
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_line(0, "Error opening file", DCA_NORMAL);
