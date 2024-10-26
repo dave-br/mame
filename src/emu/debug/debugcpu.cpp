@@ -646,7 +646,7 @@ void device_debug::add_symbols_from_srcdbg()
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
 
 	// Global fixed symbols
-	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_device.get(), &device);
+	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_device.get(), &m_device);
 	for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
 	{
 		m_symtable_srcdbg_globals->add(sym.name(), sym.value());
@@ -658,7 +658,7 @@ void device_debug::add_symbols_from_srcdbg()
 
 	// Local fixed symbols
 	const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = srcdbg_provider.local_fixed_symbols();
-	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_srcdbg_globals.get(), &device);
+	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_srcdbg_globals.get(), &m_device);
 	for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
 	{
 		m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());

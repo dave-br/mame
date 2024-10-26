@@ -92,13 +92,13 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 std::optional<offs_t> debug_view_sourcecode::selected_address()
 {
-	assert(m_srcdbg_provider.has_value());
+	assert(m_srcdbg_provider != nullptr);
 
 	flush_updates();
 	u32 line = m_cursor.y + 1;
 
 	std::vector<srcdbg_provider_base::address_range> ranges;
-	m_srcdbg_provider.value().file_line_to_address_ranges(m_cur_src_index, line, ranges);
+	m_srcdbg_provider->file_line_to_address_ranges(m_cur_src_index, line, ranges);
 
 	if (ranges.size() == 0)
 	{
@@ -111,13 +111,13 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 
 void debug_view_sourcecode::update_opened_file()
 {
-	assert(m_srcdbg_provider.has_value());
+	assert(m_srcdbg_provider != nullptr);
 	if (m_cur_src_index == m_displayed_src_index)
 	{
 		return;
 	}
 
-	const char * local_path = m_srcdbg_provider.value().file_index_to_path(m_cur_src_index).local();
+	const char * local_path = m_srcdbg_provider->file_index_to_path(m_cur_src_index).local();
 	if (local_path == nullptr)
 	{
 		return;
@@ -147,7 +147,7 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 
 void debug_view_sourcecode::view_update()
 {
-	if (m_srcdbg_provider != nullptr)
+	if (m_srcdbg_provider == nullptr)
 	{
 		return;
 	}
@@ -252,9 +252,9 @@ void debug_view_sourcecode::view_update()
 
 bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
-	assert(m_srcdbg_provider.has_value());
+	assert(m_srcdbg_provider != nullptr);
 	std::vector<srcdbg_provider_base::address_range> ranges;
-	m_srcdbg_provider.value().file_line_to_address_ranges(m_cur_src_index, line, ranges);
+	m_srcdbg_provider->file_line_to_address_ranges(m_cur_src_index, line, ranges);
 	const device_debug * debug = source()->device()->debug();
 	for (offs_t i = 0; i < ranges.size(); i++)
 	{
@@ -340,9 +340,9 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
-	if (!m_srcdbg_provider.has_value() ||
+	if (m_srcdbg_provider == nullptr ||
 		m_cur_src_index == new_src_index || 
-		new_src_index >= m_srcdbg_provider.value().num_files())
+		new_src_index >= m_srcdbg_provider->num_files())
 	{
 		return;
 	}
