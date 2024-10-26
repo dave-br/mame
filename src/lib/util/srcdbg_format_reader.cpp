@@ -35,9 +35,9 @@ static bool scan_bytes(u32 num_bytes, const std::vector<uint8_t>& data, u32& i, 
 {
 	if (data.size() < i + num_bytes)
 	{
-		error = "File ended prematurely while scanning ahead ";
-		error += num_bytes;
-		error += " bytes.";
+		std::ostringstream err;
+		err << "File ended prematurely while scanning ahead " << num_bytes << " bytes.";
+		error = std::move(std::move(err).str());
 		return false;
 	}
 
@@ -83,8 +83,9 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	u32 first_line_mapping = i + header->source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
 	{
-		error = "File too small to contain reported source_file_paths_size=";
-		error += header->source_file_paths_size;
+		std::ostringstream err;
+		err << "File too small to contain reported source_file_paths_size=" << header->source_file_paths_size;
+		error = std::move(std::move(err).str());
 		return false;
 	}
 	if (data[first_line_mapping - 1] != '\0')
@@ -99,8 +100,9 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	{
 		if (data.size() <= after_symbol_names)
 		{
-			error = "File too small to contain reported symbol_names_size=";
-			error += header->symbol_names_size;
+			std::ostringstream err;
+			err << "File too small to contain reported symbol_names_size=" << header->symbol_names_size;
+			error = std::move(std::move(err).str());
 			return false;
 		}
 
@@ -115,25 +117,27 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		after_symbol_names + header->num_global_fixed_symbol_values * sizeof(global_fixed_symbol_value);
 	if (data.size() < after_global_fixed_symbol_values)
 	{
-		error = "File too small to contain reported num_global_fixed_symbol_values=";
-		error += header->num_global_fixed_symbol_values;
+		std::ostringstream err;
+		err << "File too small to contain reported num_global_fixed_symbol_values=" << header->num_global_fixed_symbol_values;
+		error = std::move(std::move(err).str());
 		return false;
 	}
 
 	u32 after_local_fixed_symbol_values = after_global_fixed_symbol_values + header->local_fixed_symbol_values_size;
 	if (data.size() < after_local_fixed_symbol_values)
 	{
-		error = "File too small to contain reported local_fixed_symbol_values_size=";
-		error += header->local_fixed_symbol_values_size;
+		std::ostringstream err;
+		err << "File too small to contain reported local_fixed_symbol_values_size=" << header->local_fixed_symbol_values_size;
+		error = std::move(std::move(err).str());
 		return false;
 	}
 
 	u32 after_local_relative_symbol_values = after_local_fixed_symbol_values + header->local_relative_symbol_values_size;
 	if (data.size() != after_local_relative_symbol_values)
 	{
-		error = "File size (";
-		error += data.size();
-		error += ") not an exact match to the sum of section sizes reported in header";
+		std::ostringstream err;
+		err << "File size (" << data.size() << ") not an exact match to the sum of section sizes reported in header";
+		error = std::move(std::move(err).str());
 		return false;
 	}
 
@@ -165,8 +169,9 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 
 		if (line_map->source_file_index >= source_index)
 		{
-			error = "Invalid source_file_index encountered in line map: ";
-			error += line_map->source_file_index;
+			std::ostringstream err;
+			err << "Invalid source_file_index encountered in line map: " << line_map->source_file_index;
+			error = std::move(std::move(err).str());
 			return false;
 		}
 
