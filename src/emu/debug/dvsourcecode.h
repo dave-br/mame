@@ -48,7 +48,7 @@ class debug_view_sourcecode : public debug_view_disasm
 
 public:
 	// getters
-	const srcdbg_provider_base & debug_info() const { return m_debug_info; }
+	// const srcdbg_provider_base & srcdbg_provider() const { return m_srcdbg_provider; }
 	u16 cur_src_index() const { return m_cur_src_index; }
 	virtual std::optional<offs_t> selected_address() override;
 
@@ -76,7 +76,7 @@ private:
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
 	device_state_interface *                          m_state;                 // state interface, if present
-	const srcdbg_provider_base &                      m_debug_info;            // Interface to the loaded debugging info file
+	std::optional<const srcdbg_provider_base &>       m_srcdbg_provider;       // Interface to the loaded debugging info file
 	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view

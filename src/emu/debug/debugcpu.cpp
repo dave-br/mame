@@ -553,36 +553,7 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("totalcycles", symbol_table::READ_ONLY, &m_total_cycles);
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
-			// Add symbols from source debugging info, if any.  First, globals
-			srcdbg_provider_base & srcdbg_provider = device.machine().debugger().debug_info();
-			srcdbg_provider.complete_initialization();		// TODO: COMMENT
-			const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
-
-			// TODO: FIX COMMENT
-			// Source debugging information includes symbols, so point m_symtable to them,
-			// and set their parent to be the (old) m_symtable
-			m_symtable_srcdbg_globals = std::make_unique<symbol_table>(device.machine(), m_symtable_device.get(), &device);
-			for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
-			{
-				m_symtable_srcdbg_globals->add(sym.name(), sym.value());
-			}
-
-			// Next, lexically-scoped (local) symbols from source debugging info
-			const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = device.machine().debugger().debug_info().local_fixed_symbols();
-			// local symbols require a PC getter function so they can test if they're
-			// currently in scope
-			auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
-			m_symtable_srcdbg_locals = std::make_unique<symbol_table>(device.machine(), m_symtable_srcdbg_globals.get(), &device);
-			for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
-			{
-				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
-			}
-			const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = device.machine().debugger().debug_info().local_relative_symbols();
-			for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
-			{
-				m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
-			}
-			m_symtable = m_symtable_srcdbg_locals.get();
+			add_symbols_from_srcdbg();
 		}
 
 		// add entries to enable/disable unmap reporting for each space
@@ -655,6 +626,56 @@ device_debug::~device_debug()
 	registerpoint_clear_all();
 	exceptionpoint_clear_all();
 }
+
+
+//-------------------------------------------------
+//  add_symbols_from_srcdbg - add symbols
+//  obtained from source-level debugging
+//  information
+//-------------------------------------------------
+
+void device_debug::add_symbols_from_srcdbg()
+{
+	if (!m_device.machine().debugger().srcdbg_provider().has_value())
+	{
+		return;
+	}
+
+	srcdbg_provider_base & srcdbg_provider = m_device.machine().debugger().srcdbg_provider().value();
+	srcdbg_provider.complete_initialization();
+	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
+
+	// Global fixed symbols
+	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_device.get(), &device);
+	for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
+	{
+		m_symtable_srcdbg_globals->add(sym.name(), sym.value());
+	}
+
+	// Local symbols require a PC getter function so they can test if they're
+	// currently in scope
+	auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
+
+	// Local fixed symbols
+	const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = srcdbg_provider.local_fixed_symbols();
+	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_srcdbg_globals.get(), &device);
+	for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
+	{
+		m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
+	}
+
+	// Local "relative" symbols (values are offsets to a register)
+	const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = srcdbg_provider.local_relative_symbols();
+	for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
+	{
+		m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
+	}
+
+	// Establish the following symbol table parent chain:
+	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
+	m_symtable = m_symtable_srcdbg_locals.get();
+}
+
 
 void device_debug::write_tracking(address_space &space, offs_t address, u64 data)
 {
@@ -1080,9 +1101,11 @@ void device_debug::wait_hook()
 
 	// Once source-level stepping starts, keep track of the first encountered file/line
 	// of user source.
-	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 && !m_step_source_start.has_value())
+	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
+		!m_step_source_start.has_value() &&
+		machine.debugger().srcdbg_provider().has_value())
 	{
-		m_step_source_start = machine.debugger().debug_info().address_to_file_line(curpc);
+		m_step_source_start = machine.debugger().srcdbg_provider().value().address_to_file_line(curpc);
 	}
 
 	// no longer in debugger code
@@ -1098,14 +1121,15 @@ void device_debug::wait_hook()
 
 bool device_debug::is_source_stepping_complete(offs_t pc)
 {
-	assert ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0);
 	running_machine &machine = m_device.machine();
+	assert ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0);
+	assert (machine.debugger().srcdbg_provider().has_value());
 
 	// When source-stepping, stop if we're currently on a user source line AND either
 	// i) we started outside a user source line, or
 	// ii) current source line is different from where we started, or
 	// iii) there has been an unmatched return since we started (e.g., recursive return to same pc)
-	std::optional<file_line> file_line_cur = machine.debugger().debug_info().address_to_file_line(pc);
+	std::optional<file_line> file_line_cur = machine.debugger().srcdbg_provider().value().address_to_file_line(pc);
 	bool ret = (file_line_cur.has_value() &&
 		(!m_step_source_start.has_value() ||                         // i)
 		!(file_line_cur.value() == m_step_source_start.value()) ||   // ii)

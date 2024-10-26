@@ -32,7 +32,7 @@ protected:
 	// virtual void update_menu() override;
 	// virtual void save_configuration_to_node(util::xml::data_node &node) override;
 	void set_srcwnd_bounds(RECT const &bounds);
-	void show_src_window();
+	bool show_src_window_if_srcdbg_enabled();
 	void hide_src_window();
 
 private:

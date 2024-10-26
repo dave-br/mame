@@ -67,15 +67,12 @@ const std::error_condition & line_indexed_file::open(const char * file_path)
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
 	debug_view_disasm(machine, osdupdate, osdprivate, true /* source_code_debugging */),
 	m_state(nullptr),
-	m_debug_info(machine.debugger().debug_info()),
+	m_srcdbg_provider(machine.debugger().srcdbg_provider()),
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
 	m_line_for_cur_pc()
-	// m_first_visible_line(1)
 {
-	// device_t * live_cpu = machine.debugger().cpu().live_cpu();
-	// live_cpu->interface(m_state);
 	m_supports_cursor = true;
 }
 
@@ -95,11 +92,13 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 std::optional<offs_t> debug_view_sourcecode::selected_address()
 {
+	assert(m_srcdbg_provider.has_value());
+
 	flush_updates();
 	u32 line = m_cursor.y + 1;
 
 	std::vector<srcdbg_provider_base::address_range> ranges;
-	m_debug_info.file_line_to_address_ranges(m_cur_src_index, line, ranges);
+	m_srcdbg_provider.value().file_line_to_address_ranges(m_cur_src_index, line, ranges);
 
 	if (ranges.size() == 0)
 	{
@@ -112,12 +111,13 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 
 void debug_view_sourcecode::update_opened_file()
 {
+	assert(m_srcdbg_provider.has_value());
 	if (m_cur_src_index == m_displayed_src_index)
 	{
 		return;
 	}
 
-	const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
+	const char * local_path = m_srcdbg_provider.value().file_index_to_path(m_cur_src_index).local();
 	if (local_path == nullptr)
 	{
 		return;
@@ -147,6 +147,11 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 
 void debug_view_sourcecode::view_update()
 {
+	if (!m_srcdbg_provider.has_value())
+	{
+		return;
+	}
+
 	bool pc_changed = false;
 	offs_t pc = 0;
 	if (m_state != nullptr)
@@ -159,7 +164,7 @@ void debug_view_sourcecode::view_update()
 
 	if (pc_changed)
 	{
-		std::optional<file_line> file_line = debug_info().address_to_file_line(pc);
+		std::optional<file_line> file_line = m_srcdbg_provider.value().address_to_file_line(pc);
 		if (file_line.has_value())
 		{
 			m_cur_src_index = file_line.value().file_index();
@@ -178,8 +183,8 @@ void debug_view_sourcecode::view_update()
 	}
 
 	// Print
-	// const char * local_path = debug_info().file_index_to_path(m_cur_src_index).local();
-	const srcdbg_provider_base::source_file_path & path = m_debug_info.file_index_to_path(m_cur_src_index);
+	// const char * local_path = srcdbg_provider().file_index_to_path(m_cur_src_index).local();
+	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider.value().file_index_to_path(m_cur_src_index);
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_line(0, "Error opening file", DCA_NORMAL);
@@ -247,8 +252,9 @@ void debug_view_sourcecode::view_update()
 
 bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
+	assert(m_srcdbg_provider.has_value());
 	std::vector<srcdbg_provider_base::address_range> ranges;
-	m_debug_info.file_line_to_address_ranges(m_cur_src_index, line, ranges);
+	m_srcdbg_provider.value().file_line_to_address_ranges(m_cur_src_index, line, ranges);
 	const device_debug * debug = source()->device()->debug();
 	for (offs_t i = 0; i < ranges.size(); i++)
 	{
@@ -334,8 +340,9 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
-	if (m_cur_src_index == new_src_index || 
-		new_src_index >= m_debug_info.num_files())
+	if (!m_srcdbg_provider.has_value() ||
+		m_cur_src_index == new_src_index || 
+		new_src_index >= m_srcdbg_provider.value().num_files())
 	{
 		return;
 	}

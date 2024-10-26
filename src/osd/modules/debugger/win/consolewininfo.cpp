@@ -532,8 +532,10 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			debugger().set_color_theme(ui_metrics::THEME_DARK_BACKGROUND);
 			return true;
 		case ID_SHOW_SOURCE:
-			show_src_window();
-			m_views[VIEW_IDX_DISASM]->hide();
+			if (show_src_window_if_srcdbg_enabled())
+			{
+				m_views[VIEW_IDX_DISASM]->hide();
+			}
 			return true;
 		case ID_SHOW_DISASM:
 			hide_src_window();

@@ -54,7 +54,7 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 
 	// populate the combobox with source file paths
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
-	const srcdbg_provider_base & debug_info = dv_source->debug_info();
+	const srcdbg_provider_base & debug_info = dv_source->srcdbg_provider();
 	std::size_t num_files = debug_info.num_files();
 
 
