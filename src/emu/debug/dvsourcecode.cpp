@@ -173,18 +173,8 @@ void debug_view_sourcecode::view_update()
 	}
 
 	update_opened_file();
-
-	// Ensure correct set of lines to print
-
-	// TODO: MOVE THIS AFTER ERROR PRINT?
-	if (pc_changed)
-	{
-		update_visible_lines(pc);
-	}
-
-	// Print
-	// const char * local_path = srcdbg_provider().file_index_to_path(m_cur_src_index).local();
 	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider->file_index_to_path(m_cur_src_index);
+
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_line(0, "Error opening file", DCA_NORMAL);
@@ -211,6 +201,11 @@ void debug_view_sourcecode::view_update()
 			print_line(row, " ", DCA_NORMAL);
 		}
 		return;
+	}
+
+	if (pc_changed)
+	{
+		update_visible_lines(pc);
 	}
 
 	for (u32 row = 0; row < m_visible.y; row++)
