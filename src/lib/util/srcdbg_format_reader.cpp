@@ -45,34 +45,62 @@ static bool scan_bytes(u32 num_bytes, const std::vector<uint8_t>& data, u32& i, 
 	return true;
 }
 
-bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
+bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error)
 {
-	std::vector<uint8_t> data;
-	util::core_file::load(srcdbg_path, data);
-
-	// Read base header first to detemine type
-	u32 i = 0;
-	const mame_debug_info_header_base * header_base;
-	if (!read_field<mame_debug_info_header_base>(header_base, data, i, error) ||
-	 	!callback.on_read_header_base(*header_base))
+	util::core_file::ptr file;
+	std::error_condition err_code = util::core_file::open(srcdbg_path, OPEN_FLAG_READ, file);
+	if (err_code)
 	{
+		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code);
 		return false;
 	}
 
-	if (strncmp(header_base->type, "simp", 4) != 0)
+	mame_debug_info_header_base header;
+	std::size_t actual_size;
+	err_code = file->read_some(&header, sizeof(header), actual_size);
+	if (err_code)
 	{
-		error = "Error while reading header: Only type 'simp' is currently supported";
+		error = util::string_format("Error reading from file\n%s\n\nError code: %d", srcdbg_path, err_code);
+		return false;
+	}
+
+	if (actual_size != sizeof(header))
+	{
+		error = util::string_format("Error reading from file\n%s\n\nFile too small to contain header", srcdbg_path);
+		return false;
+	}
+
+	// FUTURE: If machines for which "simp" is unsuitable get their own formats created,
+	// add code here to read the format identifier and return the appropriate format enum
+
+	if (strncmp(header.type, "simp", 4) != 0)
+	{
+		error = util::string_format("Error while reading header from file\n%s\n\nOnly type 'simp' is currently supported", srcdbg_path);
 		return false;
 	};
 	
-	if (header_base->version != 1)
+	if (header.version != 1)
 	{
-		error = "Error while reading header: Only version 1 is currently supported";
+		error = util::string_format("Error while reading header from file\n%s\n\nOnly version 1 is currently supported", srcdbg_path);
 		return false;
 	};
 
-	// Reread header as simple ('simp') type
-	i = 0;
+	format = SRCDBG_FORMAT_SIMPLE;
+	return true;
+}
+
+
+bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
+{
+	std::vector<uint8_t> data;
+	std::error_condition err_code = util::core_file::load(srcdbg_path, data);
+	if (err_code)
+	{
+		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code);
+		return false;
+	}
+
+	u32 i = 0;
 	const mame_debug_info_simple_header * header;
 	if (!read_field<mame_debug_info_simple_header>(header, data, i, error) ||
 		!callback.on_read_simp_header(*header))
@@ -83,14 +111,12 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	u32 first_line_mapping = i + header->source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
 	{
-		std::ostringstream err;
-		err << "File too small to contain reported source_file_paths_size=" << header->source_file_paths_size;
-		error = std::move(std::move(err).str());
+		error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported source_file_paths_size=%d", srcdbg_path, header->source_file_paths_size);
 		return false;
 	}
 	if (data[first_line_mapping - 1] != '\0')
 	{
-		error = "null terminator missing at end of last source file";
+		error = util::string_format("Error reading file\n%s\n\nnull terminator missing at end of last source file", srcdbg_path);
 		return false;
 	}
 
@@ -100,15 +126,13 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 	{
 		if (data.size() <= after_symbol_names)
 		{
-			std::ostringstream err;
-			err << "File too small to contain reported symbol_names_size=" << header->symbol_names_size;
-			error = std::move(std::move(err).str());
+			error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported symbol_names_size=%d", srcdbg_path, header->symbol_names_size);
 			return false;
 		}
 
 		if (data[after_symbol_names - 1] != '\0')
 		{
-			error = "null terminator missing at end of last symbol name";
+			error = util::string_format("Error reading file\n%s\n\nnull terminator missing at end of last symbol name", srcdbg_path);
 			return false;
 		}
 	}
@@ -117,27 +141,21 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 		after_symbol_names + header->num_global_fixed_symbol_values * sizeof(global_fixed_symbol_value);
 	if (data.size() < after_global_fixed_symbol_values)
 	{
-		std::ostringstream err;
-		err << "File too small to contain reported num_global_fixed_symbol_values=" << header->num_global_fixed_symbol_values;
-		error = std::move(std::move(err).str());
+		error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported num_global_fixed_symbol_values=%d", srcdbg_path, header->num_global_fixed_symbol_values);
 		return false;
 	}
 
 	u32 after_local_fixed_symbol_values = after_global_fixed_symbol_values + header->local_fixed_symbol_values_size;
 	if (data.size() < after_local_fixed_symbol_values)
 	{
-		std::ostringstream err;
-		err << "File too small to contain reported local_fixed_symbol_values_size=" << header->local_fixed_symbol_values_size;
-		error = std::move(std::move(err).str());
+		error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported local_fixed_symbol_values_size=%d", srcdbg_path, header->local_fixed_symbol_values_size);
 		return false;
 	}
 
 	u32 after_local_relative_symbol_values = after_local_fixed_symbol_values + header->local_relative_symbol_values_size;
 	if (data.size() != after_local_relative_symbol_values)
 	{
-		std::ostringstream err;
-		err << "File size (" << data.size() << ") not an exact match to the sum of section sizes reported in header";
-		error = std::move(std::move(err).str());
+		error = util::string_format("Error reading file\n%s\n\nFile size (%d) not an exact match to the sum of section sizes reported in header", srcdbg_path, data.size());
 		return false;
 	}
 
@@ -169,9 +187,7 @@ bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback 
 
 		if (line_map->source_file_index >= source_index)
 		{
-			std::ostringstream err;
-			err << "Invalid source_file_index encountered in line map: " << line_map->source_file_index;
-			error = std::move(std::move(err).str());
+			error = util::string_format("Error reading file\n%s\n\nInvalid source_file_index encountered in line map: %d", srcdbg_path, line_map->source_file_index);
 			return false;
 		}
 

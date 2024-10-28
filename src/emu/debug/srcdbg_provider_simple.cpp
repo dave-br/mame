@@ -31,7 +31,7 @@ srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 
 bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && source_path)
 {
-	// srcdbg_format_read is required to notify in (contiguous) index order
+	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_srcdbg_simple.m_source_file_paths.size() == source_path_index);
 
 	std::string local;
@@ -80,7 +80,7 @@ bool srcdbg_import::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 
 bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name)
 {
-	// srcdbg_format_read is required to notify in (contiguous) index order
+	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_symbol_names.size() == symbol_name_index);
 	m_symbol_names.push_back(std::move(symbol_name));
 	return true;

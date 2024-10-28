@@ -30,9 +30,10 @@
 ***************************************************************************/
 
 #include "emu.h"
+#include "emuopts.h"
 #include "express.h"
 #include "debugger.h"
-#include "dvsourcecode.h"		// TODO: ONLY FOR srcdbg_provider_base, MOVE
+// #include "dvsourcecode.h"		// TODO: ONLY FOR srcdbg_provider_base, MOVE
 
 
 #include "corestr.h"
@@ -263,19 +264,16 @@ u64 function_symbol_entry::execute(int numparams, const u64 *paramlist)
 
 
 //**************************************************************************
-//  LOCAL SYMBOL ENTRY
+//  LOCAL FIXED SYMBOL ENTRY
 //**************************************************************************
 
-// a symbol entry representing a lexically-scoped local symbol obtained from source-debugging info
+// a symbol entry representing a lexically-scoped local symbol obtained from
+// source-debugging info.  Value is fixed (independent of PC)
 class local_fixed_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
 	local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
-
-// 	// getters
-// 	u16 minparams() const { return m_minparams; }
-// 	u16 maxparams() const { return m_maxparams; }
 
 	// symbol access
 	virtual bool is_lval() const override { return false; }
@@ -283,61 +281,17 @@ public:
 	virtual void set_value(u64 newvalue) override;
 	virtual bool is_in_scope() const override;
 
-
-// 	// execution helper
-// 	virtual u64 execute(int numparams, const u64 *paramlist);
-
 private:
-	// using Type = srcdbg_provider_base::local_symbol::Type;
-
 	// internal state
 	symbol_table::getter_func m_get_pc;
 	const std::vector<std::pair<offs_t,offs_t>> & m_scope_ranges;
-	// Type m_type;
-	// union
-	// {
-		u64 m_value_integer;
-		std::string m_value_expression;
-	// };
+	u64 m_value_integer;
+	std::string m_value_expression;
 };
 
-
-class local_relative_symbol_entry : public symbol_entry
-{
-public:
-	// construction/destruction
-	local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values);
-
-// 	// getters
-// 	u16 minparams() const { return m_minparams; }
-// 	u16 maxparams() const { return m_maxparams; }
-
-	// symbol access
-	virtual bool is_lval() const override { return false; }
-	virtual u64 value() const override;
-	virtual void set_value(u64 newvalue) override;
-	virtual bool is_in_scope() const override;
-
-
-// 	// execution helper
-// 	virtual u64 execute(int numparams, const u64 *paramlist);
-
-private:
-	// using Type = srcdbg_provider_base::local_symbol::Type;
-
-	// internal state
-	symbol_table::getter_func m_get_pc;
-
-	// Reference to avoid unnecessary copying.  Ultimately bound to
-	// srcdbg_provider_base::local_relative_symbols()[i]::m_ranges
-	const std::vector<symbol_table::local_range_expression> & m_local_range_expressions;
-};
 
 //-------------------------------------------------
 //  local_fixed_symbol_entry - constructor
-//-------------------------------------------------
-
-//-------------------------------------------------
 //-------------------------------------------------
 
 local_fixed_symbol_entry::local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
@@ -348,11 +302,21 @@ local_fixed_symbol_entry::local_fixed_symbol_entry(symbol_table &table, const ch
 {	
 }
 
+
+//-------------------------------------------------
+//  set_value - Disallowed, read-only
+//-------------------------------------------------
+
 void local_fixed_symbol_entry::set_value(u64 newvalue)
 {
 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
 }
 
+
+//-------------------------------------------------
+//  is_in_scope - Determines if symbol is
+//  currently in scope
+//-------------------------------------------------
 
 bool local_fixed_symbol_entry::is_in_scope() const
 {
@@ -368,11 +332,33 @@ bool local_fixed_symbol_entry::is_in_scope() const
 }
 
 
-//-------------------------------------------------
-//  local_relative_symbol_entry - constructor
-//-------------------------------------------------
+//**************************************************************************
+//  LOCAL RELATIVE SYMBOL ENTRY
+//**************************************************************************
+
+// a symbol entry representing a lexically-scoped local symbol obtained from
+// source-debugging info.  Value determined by an offset to a register
+class local_relative_symbol_entry : public symbol_entry
+{
+public:
+	// construction/destruction
+	local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values);
+
+	// symbol access
+	virtual bool is_lval() const override { return false; }
+	virtual u64 value() const override;
+	virtual void set_value(u64 newvalue) override;
+	virtual bool is_in_scope() const override;
+
+private:
+	// internal state
+	symbol_table::getter_func m_get_pc;
+	const std::vector<symbol_table::local_range_expression> & m_local_range_expressions;
+};
+
 
 //-------------------------------------------------
+//  local_relative_symbol_entry - constructor
 //-------------------------------------------------
 
 local_relative_symbol_entry::local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values)
@@ -382,6 +368,11 @@ local_relative_symbol_entry::local_relative_symbol_entry(symbol_table &table, co
 {
 }
 
+
+//-------------------------------------------------
+//	value - Calculates value by evaluating
+//  expression in the form of a register offset
+//-------------------------------------------------
 
 u64 local_relative_symbol_entry::value() const
 {
@@ -399,11 +390,20 @@ u64 local_relative_symbol_entry::value() const
 }
 
 
+//-------------------------------------------------
+//  set_value - Disallowed, read-only
+//-------------------------------------------------
+
 void local_relative_symbol_entry::set_value(u64 newvalue)
 {
 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
 }
 
+
+//-------------------------------------------------
+//  is_in_scope - Determines if symbol is
+//  currently in scope
+//-------------------------------------------------
 
 bool local_relative_symbol_entry::is_in_scope() const
 {
@@ -462,28 +462,31 @@ std::string expression_error::code_string() const
 {
 	switch (m_code)
 	{
-		case NOT_LVAL:              return "not an lvalue";
-		case NOT_RVAL:              return "not an rvalue";
-		case SYNTAX:                return "syntax error";
-		case UNKNOWN_SYMBOL:        return "unknown symbol";
-		case INVALID_NUMBER:        return "invalid number";
-		case INVALID_TOKEN:         return "invalid token";
-		case STACK_OVERFLOW:        return "stack overflow";
-		case STACK_UNDERFLOW:       return "stack underflow";
-		case UNBALANCED_PARENS:     return "unbalanced parentheses";
-		case DIVIDE_BY_ZERO:        return "divide by zero";
-		case OUT_OF_MEMORY:         return "out of memory";
-		case INVALID_PARAM_COUNT:   return "invalid number of parameters";
-		case TOO_FEW_PARAMS:        return util::string_format("too few parameters (at least %d required)", m_num);
-		case TOO_MANY_PARAMS:       return util::string_format("too many parameters (no more than %d accepted)", m_num);
-		case UNBALANCED_QUOTES:     return "unbalanced quotes";
-		case TOO_MANY_STRINGS:      return "too many strings";
-		case INVALID_MEMORY_SIZE:   return "invalid memory size (b/w/d/q expected)";
-		case NO_SUCH_MEMORY_SPACE:  return "non-existent memory space";
-		case INVALID_MEMORY_SPACE:  return "invalid memory space (p/d/i/o/r/m expected)";
-		case INVALID_MEMORY_NAME:   return "invalid memory name";
-		case MISSING_MEMORY_NAME:   return "missing memory name";
-		default:                    return "unknown error";
+		case NOT_LVAL:                      return "not an lvalue";
+		case NOT_RVAL:                      return "not an rvalue";
+		case SYNTAX:                        return "syntax error";
+		case UNKNOWN_SYMBOL:                return "unknown symbol";
+		case INVALID_NUMBER:                return "invalid number";
+		case INVALID_TOKEN:                 return "invalid token";
+		case STACK_OVERFLOW:                return "stack overflow";
+		case STACK_UNDERFLOW:               return "stack underflow";
+		case UNBALANCED_PARENS:             return "unbalanced parentheses";
+		case DIVIDE_BY_ZERO:                return "divide by zero";
+		case OUT_OF_MEMORY:                 return "out of memory";
+		case INVALID_PARAM_COUNT:           return "invalid number of parameters";
+		case TOO_FEW_PARAMS:                return util::string_format("too few parameters (at least %d required)", m_num);
+		case TOO_MANY_PARAMS:               return util::string_format("too many parameters (no more than %d accepted)", m_num);
+		case UNBALANCED_QUOTES:             return "unbalanced quotes";
+		case TOO_MANY_STRINGS:              return "too many strings";
+		case INVALID_MEMORY_SIZE:           return "invalid memory size (b/w/d/q expected)";
+		case NO_SUCH_MEMORY_SPACE:          return "non-existent memory space";
+		case INVALID_MEMORY_SPACE:          return "invalid memory space (p/d/i/o/r/m expected)";
+		case INVALID_MEMORY_NAME:           return "invalid memory name";
+		case MISSING_MEMORY_NAME:           return "missing memory name";
+		case SRCDBG_UNAVAILABLE:            return "source-level debugging information is unavailable; '" OPTION_DEBUGINFO "' option required";
+		case SRCDBG_FILE_UNAVAILABLE:       return "specified file path not found in source-level debugging information";
+		case SRCDBG_FILE_LINE_UNAVAILABLE:  return "no address is attributed to specified file + line number";
+		default:                            return "unknown error";
 	}
 }
 
@@ -1641,7 +1644,6 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 				parse_token &newtoken = m_tokenlist.back();
 				newtoken.configure_operator(TVL_EXECUTEFUNC, 0);
 			}
-			// TODO: SHOULD i ADD AN "EVAL" TOKEN
 			return;
 		}
 
@@ -1751,7 +1753,8 @@ void parsed_expression::parse_quoted_string(parse_token &token, const char *&str
 
 
 //-------------------------------------------------
-//  TODO
+//  parse_source_file_position - parse source
+//  file + line number pair into address
 //-------------------------------------------------
 
 void parsed_expression::parse_source_file_position(parse_token &token, const char *&string)
@@ -1786,19 +1789,19 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	// Convert file path and line number to an address
 	if (symbols().machine().debugger().srcdbg_provider() == nullptr)
 	{
-		// TODO: ERROR
+		throw expression_error(expression_error::SRCDBG_UNAVAILABLE, token.offset());
 	}
 	const srcdbg_provider_base & debug_info = *symbols().machine().debugger().srcdbg_provider();
 	std::optional<int> file_index = debug_info.file_path_to_index(file_path.c_str());
 	if (!file_index.has_value())
 	{
-		// TODO: ERROR
+		throw expression_error(expression_error::SRCDBG_FILE_UNAVAILABLE, token.offset());
 	}
 	std::vector<srcdbg_provider_base::address_range> ranges;
 	debug_info.file_line_to_address_ranges(file_index.value(), linenum_token.value(), ranges);
 	if (ranges.size() == 0)
 	{
-		// TODO: ERROR
+		throw expression_error(expression_error::SRCDBG_FILE_LINE_UNAVAILABLE, token.offset());
 	}
 
 	// make the token

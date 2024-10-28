@@ -23,6 +23,12 @@ using u16 = uint16_t;
 using u32 = uint32_t;
 
 
+enum srcdbg_format
+{
+	SRCDBG_FORMAT_SIMPLE,
+};
+
+
 class srcdbg_format_reader_callback
 {
 public:
@@ -36,7 +42,8 @@ public:
 	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) = 0;
 };
 
-bool srcdbg_format_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error);
+bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error);
+bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error);
 
 
 
