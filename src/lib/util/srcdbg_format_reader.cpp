@@ -51,7 +51,7 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 	std::error_condition err_code = util::core_file::open(srcdbg_path, OPEN_FLAG_READ, file);
 	if (err_code)
 	{
-		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code);
+		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
 		return false;
 	}
 
@@ -60,7 +60,7 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 	err_code = file->read_some(&header, sizeof(header), actual_size);
 	if (err_code)
 	{
-		error = util::string_format("Error reading from file\n%s\n\nError code: %d", srcdbg_path, err_code);
+		error = util::string_format("Error reading from file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
 		return false;
 	}
 
@@ -96,7 +96,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	std::error_condition err_code = util::core_file::load(srcdbg_path, data);
 	if (err_code)
 	{
-		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code);
+		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
 		return false;
 	}
 
