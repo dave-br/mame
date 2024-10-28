@@ -642,7 +642,7 @@ void device_debug::add_symbols_from_srcdbg()
 	}
 
 	srcdbg_provider_base & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
-	srcdbg_provider.complete_initialization();
+	srcdbg_provider.complete_local_relative_initialization();
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
 
 	// Global fixed symbols

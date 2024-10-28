@@ -149,7 +149,7 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 {
 }
 
-void srcdbg_provider_simple::complete_initialization()
+void srcdbg_provider_simple::complete_local_relative_initialization()
 {
 	assert (m_local_relative_symbols.empty());
 
