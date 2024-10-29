@@ -45,7 +45,6 @@ private:
 class srcdbg_provider_base
 {
 public:
-	// TODO: MAKE FRIEND CLASS, AND ONLY GETTERS PUBLIC
 	class source_file_path
 	{
 	public:
@@ -55,15 +54,8 @@ public:
 		{
 		}
 
-		// TODO: VERIFY THIS IS CALLED WHEN SFP IS PLACED IN VECTOR
-		// source_file_path(source_file_path && sfp) :
-		// 	m_built(sfp.m_built),
-		// 	m_local(sfp.m_local)
-		// {
-		// }
-		
 		const char * built() const { return m_built.c_str(); }
-		const char * local() const { return m_local.c_str(); }  // TODO: WORKS IF LOCAL EMPTY?
+		const char * local() const { return m_local.c_str(); }
 
 	private:
 		std::string m_built;
