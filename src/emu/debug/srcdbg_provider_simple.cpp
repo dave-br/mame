@@ -17,6 +17,8 @@
 #include "fileio.h"
 #include "path.h"
 
+#include "corestr.h"
+
 #include <filesystem>
 #include <sstream>
 
@@ -28,7 +30,7 @@ srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 }
 
 
-bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && source_path)
+bool srcdbg_import::on_read_source_path(u32 source_path_index, std::string && source_path)
 {
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_srcdbg_simple.m_source_file_paths.size() == source_path_index);
@@ -62,7 +64,7 @@ bool srcdbg_import::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 bool srcdbg_import::end_read_line_mappings()
 {
 	// For each source file, sort its linemaps_by_line by line number
-	for (u16 file_idx = 0; file_idx < m_srcdbg_simple.m_source_file_paths.size(); file_idx++)
+	for (u32 file_idx = 0; file_idx < m_srcdbg_simple.m_source_file_paths.size(); file_idx++)
 	{
 		std::sort(
 			m_srcdbg_simple.m_linemaps_by_line[file_idx].begin(),
@@ -89,7 +91,7 @@ bool srcdbg_import::end_read_line_mappings()
 	return true; 
 }
 
-bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name)
+bool srcdbg_import::on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name)
 {
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_symbol_names.size() == symbol_name_index);
@@ -243,26 +245,96 @@ void srcdbg_provider_simple::apply_source_map(std::string & local)
 	// If we made it here, no match.  So leave local alone
 }
 
-
-std::optional<int> srcdbg_provider_simple::file_path_to_index(const char * file_path) const
+static bool suffix_match(const char * full_string, const char * suffix, bool case_sensitive)
 {
+	size_t full_string_length = strlen(full_string);
+	size_t suffix_length = strlen(suffix);
+	if (full_string_length < suffix_length)
+	{
+		return false;
+	}
+
+	if (case_sensitive)
+	{
+		return strcmp(full_string + full_string_length - suffix_length, suffix) == 0;
+	}
+
+	return core_stricmp(full_string + full_string_length - suffix_length, suffix) == 0;
+}
+
+
+std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_path, std::string & error) const
+{
+	std::vector<std::pair<int, int>> full_insensitive;
+	std::vector<std::pair<int, int>> suffix_sensitive;
+	std::vector<std::pair<int, int>> suffix_insensitive;
 	// TODO: Fancy heuristics to match full paths of source file from
 	// dbginfo and local machine
-	for (int i=0; i < m_source_file_paths.size(); i++)
+	for (u32 i=0; i < m_source_file_paths.size(); i++)
 	{
-		// TODO: Use path helpers to deal with case-insensitivity on other platforms
-		if (stricmp(m_source_file_paths[i].built(), file_path) == 0 ||
-			stricmp(m_source_file_paths[i].local(), file_path) == 0)
+		// Full, case-sensitive match?  Done.
+		if (strcmp(m_source_file_paths[i].built(), file_path) == 0 ||
+			strcmp(m_source_file_paths[i].local(), file_path) == 0)
 		{
 			return i;
 		}
+		// Full, case-insensitive match?  Save and see if we find anything better
+		else if (core_stricmp(m_source_file_paths[i].built(), file_path) == 0)
+		{
+			full_insensitive.push_back(std::pair<int, int>(i, 0));
+		}
+		else if (core_stricmp(m_source_file_paths[i].local(), file_path) == 0)
+		{
+			full_insensitive.push_back(std::pair<int, int>(i, 1));
+		}
+		// Suffix, case-sensitive match?  Save and see if we find anything better
+		else if (suffix_match(m_source_file_paths[i].built(), file_path, true))
+		{
+			suffix_sensitive.push_back(std::pair<int, int>(i, 0));
+		}
+		else if (suffix_match(m_source_file_paths[i].local(), file_path, true))
+		{
+			suffix_sensitive.push_back(std::pair<int, int>(i, 1));
+		}
+		// Suffix, case-insensitive match?  Save and see if we find anything better
+		else if (suffix_match(m_source_file_paths[i].built(), file_path, false))
+		{
+			suffix_insensitive.push_back(std::pair<int, int>(i, 0));
+		}
+		else if (suffix_match(m_source_file_paths[i].local(), file_path, false))
+		{
+			suffix_insensitive.push_back(std::pair<int, int>(i, 1));
+		}
 	}
+
+	std::vector<std::pair<u32, u32>> * match_lists[] = { &full_insensitive, &suffix_sensitive, &suffix_insensitive };
+	for (u32 list_idx = 0; list_idx < 3; list_idx++)
+	{
+		if (match_lists[list_idx]->size() == 1)
+		{
+			return match_lists[list_idx]->at(0).first;
+		}
+
+		if (match_lists[list_idx]->size() > 1)
+		{
+			error = "Multiple source file paths matched, consider using a more complete path:\n";
+			for (std::pair<u32, u32> match : *match_lists[list_idx])
+			{
+				source_file_path path = m_source_file_paths[match.first];
+				error += (match.second == 0) ? path.built() : path.local();
+				error += "\n";
+			}
+			return std::optional<int>();
+		}
+	}
+
+	error = "No source file path found matching specified path.";
 	return std::optional<int>();
 }
 
 // Given a source file & line number, return the address of the first byte of
 // the first instruction of the range of instructions attributable to that line
-void srcdbg_provider_simple::file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const
+void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
 	if (file_index >= m_linemaps_by_line.size())
 	{

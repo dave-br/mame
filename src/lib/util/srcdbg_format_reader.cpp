@@ -160,7 +160,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	}
 
 	std::string str;
-	u16 source_index = 0;
+	u32 source_index = 0;
 	for (; i < first_line_mapping; i++)
 	{
 		if (data[i] == '\0')
@@ -207,7 +207,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		return false;
 	}
 
-	u16 symbol_index = 0;
+	u32 symbol_index = 0;
 	str.clear();
 	for (; i < after_symbol_names; i++)
 	{

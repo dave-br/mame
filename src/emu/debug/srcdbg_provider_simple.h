@@ -28,10 +28,11 @@ public:
 	srcdbg_provider_simple(const running_machine& machine);
 	~srcdbg_provider_simple() { }
 	virtual void complete_local_relative_initialization() override;		// TODO: COMMENT
-	virtual std::size_t num_files() const override { return m_source_file_paths.size(); }
-	virtual const source_file_path & file_index_to_path(u16 file_index) const override { return m_source_file_paths[file_index]; };
-	virtual std::optional<int> file_path_to_index(const char * file_path) const override;
-	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
+	virtual u32 num_files() const override { return m_source_file_paths.size(); }
+	virtual const source_file_path & file_index_to_path(u32 file_index) const override { return m_source_file_paths[file_index]; };
+	virtual std::optional<u32> file_path_to_index(const char * file_path, std::string & error) const override;
+
+	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const override { return m_global_fixed_symbols; };
 	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const override { return m_local_fixed_symbols; };
@@ -93,11 +94,11 @@ public:
 	srcdbg_import(srcdbg_provider_simple & srcdbg_simple);
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;};
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;};
-	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
+	virtual bool on_read_source_path(u32 source_path_index, std::string && source_path) override;
 	virtual bool end_read_source_paths() override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
 	virtual bool end_read_line_mappings() override;
-	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
+	virtual bool on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name) override;
 	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) override;
 	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) override;
 	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) override;

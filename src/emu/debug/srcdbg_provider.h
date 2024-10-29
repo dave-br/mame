@@ -22,13 +22,13 @@
 class file_line
 {
 public:
-	file_line(u16 file_index, u32 line_number)
+	file_line(u32 file_index, u32 line_number)
 	{
 		m_file_index = file_index;
 		m_line_number = line_number;
 	}
 
-	u16 file_index() { return m_file_index; };
+	u32 file_index() { return m_file_index; };
 	u32 line_number() { return m_line_number; };
 
 	bool operator == (const file_line & that)
@@ -37,7 +37,7 @@ public:
 	}
 
 private:
-	u16 m_file_index;
+	u32 m_file_index;
 	u32 m_line_number;
 };
 
@@ -120,10 +120,10 @@ public:
 	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine);
 	virtual ~srcdbg_provider_base() {};
 	virtual void complete_local_relative_initialization() = 0;
-	virtual std::size_t num_files() const = 0;
-	virtual const source_file_path & file_index_to_path(u16 file_index) const = 0;
-	virtual std::optional<int> file_path_to_index(const char * file_path) const = 0;
-	virtual void file_line_to_address_ranges(u16 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
+	virtual u32 num_files() const = 0;
+	virtual const source_file_path & file_index_to_path(u32 file_index) const = 0;
+	virtual std::optional<u32> file_path_to_index(const char * file_path, std::string & error) const = 0;
+	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
 	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;

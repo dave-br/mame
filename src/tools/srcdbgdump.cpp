@@ -15,9 +15,6 @@
 #include <cstdio>
 #include <string>
 
-using u16 = uint16_t;
-using u32 = uint32_t;
-
 
 class srcdbg_dump : public srcdbg_format_reader_callback
 {
@@ -32,9 +29,9 @@ public:
 		{}
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override;
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override;
-	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
+	virtual bool on_read_source_path(u32 source_path_index, std::string && source_path) override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
-	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
+	virtual bool on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name) override;
 	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) override;
 	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) override;
 	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) override;
@@ -69,7 +66,7 @@ bool srcdbg_dump::on_read_simp_header(const mame_debug_info_simple_header & simp
 	return true;
 }
 
-bool srcdbg_dump::on_read_source_path(u16 source_path_index, std::string && source_path)
+bool srcdbg_dump::on_read_source_path(u32 source_path_index, std::string && source_path)
 {
 	if (!m_printed_source_file_paths_title)
 	{
@@ -95,7 +92,7 @@ bool srcdbg_dump::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 	return true;
 }
 
-bool srcdbg_dump::on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name)
+bool srcdbg_dump::on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name)
 {
 	if (!m_printed_symbol_names_title)
 	{

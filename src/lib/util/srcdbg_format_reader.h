@@ -19,7 +19,6 @@
 #include <string>
 #include <cstdint>
 
-using u16 = uint16_t;
 using u32 = uint32_t;
 
 
@@ -34,11 +33,11 @@ class srcdbg_format_reader_callback
 public:
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) { return true; }
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) { return true; }
-	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) { return true; }
+	virtual bool on_read_source_path(u32 source_path_index, std::string && source_path) { return true; }
 	virtual bool end_read_source_paths() { return true; }
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) { return true; }
 	virtual bool end_read_line_mappings() { return true; }
-	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) { return true; }
+	virtual bool on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name) { return true; }
 	virtual bool end_read_symbol_names() { return true; }
 	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) { return true; }
 	virtual bool end_read_global_fixed_symbol_values() { return true; }

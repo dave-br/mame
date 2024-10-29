@@ -96,6 +96,13 @@ public:
 	{
 	}
 
+	expression_error(error_code code, int offset, std::string && str)
+		: m_code(code)
+		, m_offset(offset)
+		, m_str(std::move(str))
+	{
+	}
+
 	// operators
 	constexpr operator error_code() const { return m_code; }
 
@@ -109,6 +116,7 @@ private:
 	error_code          m_code;
 	int                 m_offset;
 	int                 m_num;
+	std::string         m_str;
 };
 
 
