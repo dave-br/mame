@@ -23,7 +23,6 @@
 
 srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	: m_srcdbg_simple(srcdbg_simple) 
-	, m_read_line_mapping_yet(false)
 	, m_symbol_names()
 {
 }
@@ -41,42 +40,54 @@ bool srcdbg_import::on_read_source_path(u16 source_path_index, std::string && so
 	return true;
 }
 
+
+bool srcdbg_import::end_read_source_paths()
+{
+	// Ensure m_linemaps_by_line is pre-sized so as we encounter a mapping, we'll always have
+	// an entry ready for its source file index.
+	m_srcdbg_simple.m_linemaps_by_line.reserve(m_srcdbg_simple.m_source_file_paths.size());
+	m_srcdbg_simple.m_linemaps_by_line.resize(m_srcdbg_simple.m_source_file_paths.size());
+	return true; 
+}
+
+
 bool srcdbg_import::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 {
-	if (!m_read_line_mapping_yet)
-	{
-  		// Ensure m_linemaps_by_line is pre-sized so as we encounter a mapping, we'll always have
-		// an entry ready for its source file index.
-		m_srcdbg_simple.m_linemaps_by_line.reserve(m_srcdbg_simple.m_source_file_paths.size());
-		m_srcdbg_simple.m_linemaps_by_line.resize(m_srcdbg_simple.m_source_file_paths.size());
-		m_read_line_mapping_yet = true;
-	}
 	m_srcdbg_simple.m_linemaps_by_address.push_back(line_map);
 	srcdbg_provider_simple::address_line addrline = {line_map.range.address_first, line_map.range.address_last, line_map.line_number};
 	m_srcdbg_simple.m_linemaps_by_line[line_map.source_file_index].push_back(addrline);
 	return true;
 }
 
-// TODO: SOMETIME AFTER READ ALL LINE MAPPINGS
-	// std::sort(
-	// 	m_linemaps_by_address.begin(),
-	// 	m_linemaps_by_address.end(), 
-	// 	[] (const srcdbg_line_mapping &linemap1, const srcdbg_line_mapping &linemap2) { return linemap1.address_first < linemap2.address_first; });
+bool srcdbg_import::end_read_line_mappings()
+{
+	// For each source file, sort its linemaps_by_line by line number
+	for (u16 file_idx = 0; file_idx < m_srcdbg_simple.m_source_file_paths.size(); file_idx++)
+	{
+		std::sort(
+			m_srcdbg_simple.m_linemaps_by_line[file_idx].begin(),
+			m_srcdbg_simple.m_linemaps_by_line[file_idx].end(), 
+			[] (const srcdbg_provider_simple::address_line& adrline1, const srcdbg_provider_simple::address_line &adrline2)
+			{
+				if (adrline1.line_number == adrline2.line_number)
+				{
+					return adrline1.address_first < adrline2.address_first;
+				}
+				return adrline1.line_number < adrline2.line_number; 
+			});
+	}
+
+	// Sort the linemaps_by_address by the first address of each range
+	std::sort(
+		m_srcdbg_simple.m_linemaps_by_address.begin(),
+		m_srcdbg_simple.m_linemaps_by_address.end(), 
+		[] (const srcdbg_line_mapping &linemap1, const srcdbg_line_mapping &linemap2)
+		{
+			return linemap1.range.address_first < linemap2.range.address_first;
+		});
 	
-	// for (u16 file_idx = 0; file_idx < m_source_file_paths.size(); file_idx++)
-	// {
-	// 	std::sort(
-	// 		m_linemaps_by_line[file_idx].begin(),
-	// 		m_linemaps_by_line[file_idx].end(), 
-	// 		[] (const address_line& adrline1, const address_line &adrline2)
-	// 		{
-	// 			if (adrline1.line_number == adrline2.line_number)
-	// 			{
-	// 				return adrline1.address_first < adrline2.address_first;
-	// 			}
-	// 			return adrline1.line_number < adrline2.line_number; 
-	// 		});
-	// }
+	return true; 
+}
 
 bool srcdbg_import::on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name)
 {
@@ -233,14 +244,6 @@ void srcdbg_provider_simple::apply_source_map(std::string & local)
 	// If we made it here, no match.  So leave local alone
 }
 
-
-// JUST NOW:
-/*
-
-use path_iterator against src map to create vector of prefix replacement pairs
-Use replacement pairs to adjust each source file (on demand or on init?)
-use file_enumerator to search one adjusted file within a set of search paths
-*/
 
 std::optional<int> srcdbg_provider_simple::file_path_to_index(const char * file_path) const
 {

@@ -94,7 +94,9 @@ public:
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;};
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;};
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
+	virtual bool end_read_source_paths() override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
+	virtual bool end_read_line_mappings() override;
 	virtual bool on_read_symbol_name(u16 symbol_name_index, std::string && symbol_name) override;
 	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) override;
 	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) override;
@@ -102,7 +104,6 @@ public:
 
 private:
 	srcdbg_provider_simple & m_srcdbg_simple;
-	bool m_read_line_mapping_yet;
 	std::vector<std::string> m_symbol_names;
 	device_state_interface * m_state;
 };

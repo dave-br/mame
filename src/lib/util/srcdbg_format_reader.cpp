@@ -177,6 +177,11 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		}
 	}
 
+	if (!callback.end_read_source_paths())
+	{
+		return false;
+	}
+
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
 		const srcdbg_line_mapping * line_map;
@@ -197,6 +202,11 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		}
 	}
 
+	if (!callback.end_read_line_mappings())
+	{
+		return false;
+	}
+
 	u16 symbol_index = 0;
 	str.clear();
 	for (; i < after_symbol_names; i++)
@@ -215,6 +225,11 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		}
 	}
 
+	if (!callback.end_read_symbol_names())
+	{
+		return false;
+	}
+
 	for (u32 global_fixed_idx = 0; global_fixed_idx < header->num_global_fixed_symbol_values; global_fixed_idx++)
 	{
 		const global_fixed_symbol_value * value;
@@ -224,6 +239,11 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
+	}
+
+	if (!callback.end_read_global_fixed_symbol_values())
+	{
+		return false;
 	}
 
 	while (i < after_local_fixed_symbol_values)
@@ -239,6 +259,11 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		// TODO: INVALID SYMBOL INDEX
 	}
 
+	if (!callback.end_read_local_fixed_symbol_values())
+	{
+		return false;
+	}
+
 	while (i < after_local_relative_symbol_values)
 	{
 		const local_relative_symbol_value * value;
@@ -250,6 +275,11 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 		// TODO: INVALID SYMBOL INDEX
+	}
+
+	if (!callback.end_read_local_relative_symbol_values())
+	{
+		return false;
 	}
 
 	// TODO: MORE CHECKING OF HEADER SIZE VALS AND NUM_SYMS FOR LOCS
