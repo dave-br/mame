@@ -482,7 +482,7 @@ std::string expression_error::code_string() const
 		case INVALID_MEMORY_NAME:           return "invalid memory name";
 		case MISSING_MEMORY_NAME:           return "missing memory name";
 		case SRCDBG_UNAVAILABLE:            return "source-level debugging information is unavailable; '" OPTION_DEBUGINFO "' option required";
-		case SRCDBG_FILE_UNAVAILABLE:       return m_str.c_str();
+		case SRCDBG_FILE_UNAVAILABLE:       return "specified file path does not uniquely identify a source path from the source-level debugging information";
 		case SRCDBG_FILE_LINE_UNAVAILABLE:  return "specified file path was found, but no address is attributed to specified line number";
 		default:                            return "unknown error";
 	}
@@ -1790,11 +1790,10 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 		throw expression_error(expression_error::SRCDBG_UNAVAILABLE, token.offset());
 	}
 	const srcdbg_provider_base & debug_info = *symbols().machine().debugger().srcdbg_provider();
-	std::string error;
-	std::optional<u32> file_index = debug_info.file_path_to_index(file_path.c_str(), error);
+	std::optional<u32> file_index = debug_info.file_path_to_index(file_path.c_str());
 	if (!file_index.has_value())
 	{
-		throw expression_error(expression_error::SRCDBG_FILE_UNAVAILABLE, token.offset(), std::move(error));
+		throw expression_error(expression_error::SRCDBG_FILE_UNAVAILABLE, token.offset());
 	}
 	std::vector<srcdbg_provider_base::address_range> ranges;
 	debug_info.file_line_to_address_ranges(file_index.value(), linenum_token.value(), ranges);

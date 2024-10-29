@@ -263,11 +263,11 @@ static bool suffix_match(const char * full_string, const char * suffix, bool cas
 }
 
 
-std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_path, std::string & error) const
+std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_path) const
 {
-	std::vector<std::pair<int, int>> full_insensitive;
-	std::vector<std::pair<int, int>> suffix_sensitive;
-	std::vector<std::pair<int, int>> suffix_insensitive;
+	std::vector<u32> full_insensitive;
+	std::vector<u32> suffix_sensitive;
+	std::vector<u32> suffix_insensitive;
 	// TODO: Fancy heuristics to match full paths of source file from
 	// dbginfo and local machine
 	for (u32 i=0; i < m_source_file_paths.size(); i++)
@@ -279,56 +279,42 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 			return i;
 		}
 		// Full, case-insensitive match?  Save and see if we find anything better
-		else if (core_stricmp(m_source_file_paths[i].built(), file_path) == 0)
+		else if (core_stricmp(m_source_file_paths[i].built(), file_path) == 0 ||
+			core_stricmp(m_source_file_paths[i].local(), file_path) == 0)
 		{
-			full_insensitive.push_back(std::pair<int, int>(i, 0));
-		}
-		else if (core_stricmp(m_source_file_paths[i].local(), file_path) == 0)
-		{
-			full_insensitive.push_back(std::pair<int, int>(i, 1));
+			full_insensitive.push_back(i);
 		}
 		// Suffix, case-sensitive match?  Save and see if we find anything better
-		else if (suffix_match(m_source_file_paths[i].built(), file_path, true))
+		else if (suffix_match(m_source_file_paths[i].built(), file_path, true) ||
+			suffix_match(m_source_file_paths[i].local(), file_path, true))
 		{
-			suffix_sensitive.push_back(std::pair<int, int>(i, 0));
-		}
-		else if (suffix_match(m_source_file_paths[i].local(), file_path, true))
-		{
-			suffix_sensitive.push_back(std::pair<int, int>(i, 1));
+			suffix_sensitive.push_back(i);
 		}
 		// Suffix, case-insensitive match?  Save and see if we find anything better
-		else if (suffix_match(m_source_file_paths[i].built(), file_path, false))
+		else if (suffix_match(m_source_file_paths[i].built(), file_path, false) ||
+			suffix_match(m_source_file_paths[i].local(), file_path, false))
 		{
-			suffix_insensitive.push_back(std::pair<int, int>(i, 0));
-		}
-		else if (suffix_match(m_source_file_paths[i].local(), file_path, false))
-		{
-			suffix_insensitive.push_back(std::pair<int, int>(i, 1));
+			suffix_insensitive.push_back(i);
 		}
 	}
 
-	std::vector<std::pair<u32, u32>> * match_lists[] = { &full_insensitive, &suffix_sensitive, &suffix_insensitive };
+	// Go through lists in priority order to find a match
+	const std::vector<u32> * match_lists[] = { &full_insensitive, &suffix_sensitive, &suffix_insensitive };
 	for (u32 list_idx = 0; list_idx < 3; list_idx++)
 	{
 		if (match_lists[list_idx]->size() == 1)
 		{
-			return match_lists[list_idx]->at(0).first;
+			return match_lists[list_idx]->at(0);
 		}
 
 		if (match_lists[list_idx]->size() > 1)
 		{
-			error = "Multiple source file paths matched, consider using a more complete path:\n";
-			for (std::pair<u32, u32> match : *match_lists[list_idx])
-			{
-				source_file_path path = m_source_file_paths[match.first];
-				error += (match.second == 0) ? path.built() : path.local();
-				error += "\n";
-			}
+			// Error: file_path ambiguous
 			return std::optional<int>();
 		}
 	}
 
-	error = "No source file path found matching specified path.";
+	// Error: file_path not found
 	return std::optional<int>();
 }
 

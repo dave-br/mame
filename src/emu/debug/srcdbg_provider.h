@@ -122,7 +122,7 @@ public:
 	virtual void complete_local_relative_initialization() = 0;
 	virtual u32 num_files() const = 0;
 	virtual const source_file_path & file_index_to_path(u32 file_index) const = 0;
-	virtual std::optional<u32> file_path_to_index(const char * file_path, std::string & error) const = 0;
+	virtual std::optional<u32> file_path_to_index(const char * file_path) const = 0;
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
