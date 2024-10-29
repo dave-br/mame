@@ -30,8 +30,6 @@ public:
 		, m_printed_local_fixed_symbol_value_title(false)
 		, m_printed_local_relative_symbol_value_title(false)
 		{}
-	int go();
-	void print_error(const char * when, const char * what);
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override;
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override;
 	virtual bool on_read_source_path(u16 source_path_index, std::string && source_path) override;
@@ -159,20 +157,37 @@ int main(int argc, char *argv[])
 {
 	if (argc != 2)
 	{
-		fprintf(stderr, "Usage:\ndbginfodump <path to MAME source debugging information file>\n");
+		fprintf(stderr, "Usage:\nsrcdbgdump <path to MAME source debugging information file>\n");
 		return 1;
 	}
 
 	printf("Dumping '%s'...\n", argv[1]);
 
-	srcdbg_dump dumper;
 	std::string error;
-	if (!srcdbg_format_read(argv[1], dumper, error))
+	srcdbg_format format;
+	if (!srcdbg_format_header_read(argv[1], format, error))
 	{
-		if (!error.empty())
+		fprintf(stderr, "Error reading source-level debugging information file\n%s\n\n%s", argv[1], error.c_str());
+		return 1;
+	}
+
+	switch (format)
+	{
+	case SRCDBG_FORMAT_SIMPLE:
+	{
+		srcdbg_dump dumper;
+		if (!srcdbg_format_simp_read(argv[1], dumper, error))
 		{
-			fprintf(stderr, "%s\n", error.c_str());
+			if (!error.empty())
+			{
+				fprintf(stderr, "Error reading source-level debugging information file\n%s\n\n%s", argv[1], error.c_str());
+			}
+			return 1;
 		}
+		return 0;
+	}
+	default:
+		assert(!"Unexpected source-level debugging information file format");
 		return 1;
 	}
 
