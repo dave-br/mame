@@ -23,10 +23,21 @@
 #include <sstream>
 
 
+static void normalize_path_separators(std::string & path)
+{
+	strreplace(path, "/", PATH_SEPARATOR);
+	strreplace(path, "\\", PATH_SEPARATOR);
+}
+
+
 srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	: m_srcdbg_simple(srcdbg_simple) 
 	, m_symbol_names()
+	, m_normalized_debug_source_path_map()
+
 {
+	m_normalized_debug_source_path_map = srcdbg_simple.m_machine.options().debug_source_path_map();
+	normalize_path_separators(m_normalized_debug_source_path_map);
 }
 
 
@@ -35,8 +46,10 @@ bool srcdbg_import::on_read_source_path(u32 source_path_index, std::string && so
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_srcdbg_simple.m_source_file_paths.size() == source_path_index);
 
+	normalize_path_separators(source_path);
+
 	std::string local;
-	m_srcdbg_simple.generate_local_path(source_path, local);
+	generate_local_path(source_path, local);
 	srcdbg_provider_base::source_file_path sfp(std::move(source_path), std::move(local));
 	m_srcdbg_simple.m_source_file_paths.push_back(std::move(sfp));
 	return true;
@@ -150,6 +163,60 @@ bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_sym
 }
 
 
+void srcdbg_import::generate_local_path(const std::string & built, std::string & local)
+{
+	namespace fs = std::filesystem;
+	local = built;                          // Default local path to the originally built source path
+	apply_source_prefix_map(local);         // If built matches a prefix, apply the map
+	if (osd_is_absolute_path(local))        // If local is already absolute, we're done
+	{
+		return;
+	}
+
+	// Go through source search path until we can construct an
+	// absolute path to an existing file
+	path_iterator path(m_srcdbg_simple.m_machine.options().debug_source_path());
+	std::string source_dir;
+	while (path.next(source_dir))
+	{
+		std::string new_local = util::path_append(source_dir, local);
+		if (fs::exists(fs::status(new_local)))
+		{
+			// Found an existing absolute path, done
+			local = std::move(new_local);
+			normalize_path_separators(local);
+			return;
+		}
+	}
+
+	// None found, leave local == built
+}
+
+void srcdbg_import::apply_source_prefix_map(std::string & local)
+{
+	path_iterator path(m_normalized_debug_source_path_map);
+	std::string prefix_find, prefix_replace;
+	while (path.next(prefix_find))
+	{
+		if (!path.next(prefix_replace))
+		{
+			// Invalid map string (odd number of paths), so just skip last entry
+			break;
+		}
+
+		if (strncmp(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
+		{
+			// Found a match; replace local's prefix_find with prefix_replace
+			std::string new_local = prefix_replace;
+			new_local += &local[prefix_find.size()];
+			local = std::move(new_local);
+			return;
+		}
+	}
+
+	// If we made it here, no match.  So leave local alone
+}
+
 
 srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	: srcdbg_provider_base()
@@ -191,60 +258,7 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 }
 
 
-
-void srcdbg_provider_simple::generate_local_path(const std::string & built, std::string & local)
-{
-	namespace fs = std::filesystem;
-	local = built;                          // Default local path to the originally built source path
-	apply_source_map(local);     			// Apply the source map if built matches a prefix
-	if (osd_is_absolute_path(local))        // If local is already absolute, we're done
-	{
-		return;
-	}
-
-	// Go through source search path until we can construct an
-	// absolute path to an existing file
-	path_iterator path(m_machine.options().debug_source_path());
-	std::string source_dir;
-	while (path.next(source_dir))
-	{
-		std::string new_local = util::path_append(source_dir, local);
-		if (fs::exists(fs::status(new_local)))
-		{
-			// Found an existing absolute path, done
-			local = std::move(new_local);
-			return;
-		}
-	}
-
-	// None found, leave local == built
-}
-
-void srcdbg_provider_simple::apply_source_map(std::string & local)
-{
-	path_iterator path(m_machine.options().debug_source_path_map());
-	std::string prefix_find, prefix_replace;
-	while (path.next(prefix_find))
-	{
-		if (!path.next(prefix_replace))
-		{
-			// Invalid map string (odd number of paths), so just skip last entry
-			break;
-		}
-
-		if (strncmp(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
-		{
-			// Found a match; replace local's prefix_find with prefix_replace
-			std::string new_local = prefix_replace;
-			new_local += &local[prefix_find.size()];
-			local = std::move(new_local);
-			return;
-		}
-	}
-
-	// If we made it here, no match.  So leave local alone
-}
-
+// Returns whether the right-most characters of full_string match suffix
 static bool suffix_match(const char * full_string, const char * suffix, bool case_sensitive)
 {
 	size_t full_string_length = strlen(full_string);
@@ -263,42 +277,53 @@ static bool suffix_match(const char * full_string, const char * suffix, bool cas
 }
 
 
+// Called during expression evaluation to convert a user-specified path to 
+// the corresponding source-file-path index.  Uses heuristics to allow
+// either path separator on all platforms, and to allow incomplete paths
+// when there is an unambiguous match
 std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_path) const
 {
+	std::string file_path_str = file_path;
+	normalize_path_separators(file_path_str);
+
+	// Keep track of file path matches as they're encountered.  In
+	// descending order of preference, these are considered matches:
+	// 1) Case-sensitive, full path match
+	// 2) Case-insensitive, full path match
+	// 3) Case-sensitive, suffix match
+	// 4) Case-insensitive, suffix match
 	std::vector<u32> full_insensitive;
 	std::vector<u32> suffix_sensitive;
 	std::vector<u32> suffix_insensitive;
-	// TODO: Fancy heuristics to match full paths of source file from
-	// dbginfo and local machine
 	for (u32 i=0; i < m_source_file_paths.size(); i++)
 	{
 		// Full, case-sensitive match?  Done.
-		if (strcmp(m_source_file_paths[i].built(), file_path) == 0 ||
-			strcmp(m_source_file_paths[i].local(), file_path) == 0)
+		if (strcmp(m_source_file_paths[i].built(), file_path_str.c_str()) == 0 ||
+			strcmp(m_source_file_paths[i].local(), file_path_str.c_str()) == 0)
 		{
 			return i;
 		}
 		// Full, case-insensitive match?  Save and see if we find anything better
-		else if (core_stricmp(m_source_file_paths[i].built(), file_path) == 0 ||
-			core_stricmp(m_source_file_paths[i].local(), file_path) == 0)
+		else if (core_stricmp(m_source_file_paths[i].built(), file_path_str) == 0 ||
+			core_stricmp(m_source_file_paths[i].local(), file_path_str) == 0)
 		{
 			full_insensitive.push_back(i);
 		}
 		// Suffix, case-sensitive match?  Save and see if we find anything better
-		else if (suffix_match(m_source_file_paths[i].built(), file_path, true) ||
-			suffix_match(m_source_file_paths[i].local(), file_path, true))
+		else if (suffix_match(m_source_file_paths[i].built(), file_path_str.c_str(), true) ||
+			suffix_match(m_source_file_paths[i].local(), file_path_str.c_str(), true))
 		{
 			suffix_sensitive.push_back(i);
 		}
 		// Suffix, case-insensitive match?  Save and see if we find anything better
-		else if (suffix_match(m_source_file_paths[i].built(), file_path, false) ||
-			suffix_match(m_source_file_paths[i].local(), file_path, false))
+		else if (suffix_match(m_source_file_paths[i].built(), file_path_str.c_str(), false) ||
+			suffix_match(m_source_file_paths[i].local(), file_path_str.c_str(), false))
 		{
 			suffix_insensitive.push_back(i);
 		}
 	}
 
-	// Go through lists in priority order to find a match
+	// Go through lists in descending priority order to find a match
 	const std::vector<u32> * match_lists[] = { &full_insensitive, &suffix_sensitive, &suffix_insensitive };
 	for (u32 list_idx = 0; list_idx < 3; list_idx++)
 	{

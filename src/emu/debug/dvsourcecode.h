@@ -48,7 +48,7 @@ class debug_view_sourcecode : public debug_view_disasm
 
 public:
 	// getters
-	// const srcdbg_provider_base & srcdbg_provider() const { return m_srcdbg_provider; }
+	const srcdbg_provider_base * srcdbg_provider() const { return m_srcdbg_provider; }
 	u16 cur_src_index() const { return m_cur_src_index; }
 	virtual std::optional<offs_t> selected_address() override;
 

@@ -69,11 +69,6 @@ private:
 		std::vector<local_relative_eval_rule_internal> m_eval_rules;
 	};
 
-	void generate_local_path(const std::string & built, std::string & local);
-	void apply_source_map(std::string & local);
-	void ensure_local_relatives_ready();
-
-
 	const running_machine& m_machine;
 	// std::vector<char>                        m_source_file_path_chars; // Storage for source file path characters
 	std::vector<source_file_path>            m_source_file_paths;      // Starting points for source file path strings
@@ -103,9 +98,13 @@ public:
 	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) override;
 
 private:
+	void generate_local_path(const std::string & built, std::string & local);
+	void apply_source_prefix_map(std::string & local);
+
 	srcdbg_provider_simple & m_srcdbg_simple;
 	std::vector<std::string> m_symbol_names;
 	device_state_interface * m_state;
+	std::string m_normalized_debug_source_path_map;
 };
 
 #endif // MAME_EMU_DEBUG_SRCDBG_PROVIDER_SIMPLE_H
