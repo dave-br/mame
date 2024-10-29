@@ -230,7 +230,6 @@ void srcdbg_provider_simple::apply_source_map(std::string & local)
 			break;
 		}
 
-		// TODO: VERIFY THIS WORKS WHEN LOCAL IS TOO SHORT
 		if (strncmp(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
 		{
 			// Found a match; replace local's prefix_find with prefix_replace
