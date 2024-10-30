@@ -535,11 +535,13 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			if (show_src_window_if_srcdbg_enabled())
 			{
 				m_views[VIEW_IDX_DISASM]->hide();
+				machine().debug_view().update_all(DVT_SOURCE);
 			}
 			return true;
 		case ID_SHOW_DISASM:
 			hide_src_window();
 			m_views[VIEW_IDX_DISASM]->show();
+			machine().debug_view().update_all(DVT_DISASSEMBLY);
 			return true;
 		}
 	}
