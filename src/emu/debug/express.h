@@ -242,8 +242,8 @@ private:
 	void notify_memory_modified();
 
 	// internal state
-	table_type              m_type;             // kind of symbols stored in this table
 	running_machine &       m_machine;          // reference to the machine
+	table_type              m_type;             // kind of symbols stored in this table
 	symbol_table *          m_parent;           // pointer to the parent symbol table
 	std::unordered_map<std::string,std::unique_ptr<symbol_entry>> m_symlist;        // list of symbols
 	device_memory_interface *const m_memintf;   // pointer to the local memory interface (if any)
