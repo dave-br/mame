@@ -3934,7 +3934,6 @@ void debugger_commands::execute_memdump(const std::vector<std::string_view> &par
 void debugger_commands::execute_symlist(const std::vector<std::string_view> &params)
 {
 	symbol_table *symtable;
-	int count = 0;
 	device_t *cpu = nullptr;
 
 	if (!params.empty())
@@ -3991,28 +3990,20 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		}
 
 		// sort the symbols
-		if (count > 1)
-		{
-			std::sort(
-					namelist.begin(),
-					namelist.end(),
-					[] (const char *item1, const char *item2) { return strcmp(item1, item2) < 0; });
-		}
+		std::sort(
+				namelist.begin(),
+				namelist.end(),
+				[] (const char *item1, const char *item2) { return strcmp(item1, item2) < 0; });
 
 		// iterate over symbols and print them
-		for (int symnum = 0; symnum < count; symnum++)
+		for (const char * symname : namelist)
 		{
-			symbol_entry const *const entry = symtable->find(namelist[symnum]);
+			symbol_entry const *const entry = symtable->find(symname);
 			assert(entry != nullptr);
 			if (entry->is_in_scope())
-			{
-				u64 value = entry->value();
-				m_console.printf("%s = %X", namelist[symnum], value);
-			}
+				m_console.printf("%s = %X", symname, entry->value());
 			else
-			{
-				m_console.printf("%s (not currently in scope)", namelist[symnum]);
-			}
+				m_console.printf("%s (not currently in scope)", symname);
 			if (!entry->is_lval())
 				m_console.printf("  (read-only)");
 			m_console.printf("\n");
