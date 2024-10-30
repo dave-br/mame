@@ -15,7 +15,7 @@
 #include "debug/debugcmd.h"
 #include "debug/debugcon.h"
 #include "debug/debugvw.h"
-#include "debug/dvsourcecode.h"		// TODO: THIS IS JUST FOR DEBUG_INFO STUFF; MOVE IT
+#include "debug/srcdbg_provider.h"
 #include <cctype>
 
 /***************************************************************************
@@ -88,11 +88,17 @@ debugger_manager::~debugger_manager()
 	g_machine = nullptr;
 }
 
-// TODO COMMENT
+
+/*-------------------------------------------------
+    load_debug_info - load the source-level
+	debugging information file if enabled
+-------------------------------------------------*/
+
 std::unique_ptr<srcdbg_provider_base> debugger_manager::load_debug_info(running_machine &machine)
 {
 	return srcdbg_provider_base::create_debug_info(machine);
 }
+
 
 /*-------------------------------------------------
     refresh_display - redraw the current
