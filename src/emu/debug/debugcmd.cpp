@@ -3949,10 +3949,11 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		symtable = &m_machine.debugger().cpu().global_symtable();
 	}
 
+	// Traverse symbol_table parent chain, printing each table's symbols in its own block
 	for (; symtable != nullptr; symtable = symtable->parent())
 	{
 		// Emit globals iff user requested them (as signified by cpu == nullptr)
-		if ((symtable->type() == BUILTIN_GLOBALS) != (cpu == nullptr))
+		if ((symtable->type() == symbol_table::BUILTIN_GLOBALS) != (cpu == nullptr))
 			continue;
 
 		if (symtable->entries().size() == 0)
@@ -3960,18 +3961,19 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 
 		std::vector<const char *> namelist;
 
+		// Print heading for table
 		switch (symtable->type())
 		{
-		case SRCDBG_LOCALS:
+		case symbol_table::SRCDBG_LOCALS:
 			m_console.printf("\nSource-level local variables:\n");
 			break;
-		case SRCDBG_GLOBALS:
+		case symbol_table::SRCDBG_GLOBALS:
 			m_console.printf("\nSource-level gloabal variables:\n");
 			break;
-		case CPU_STATE:
+		case symbol_table::CPU_STATE:
 			m_console.printf("\nCPU '%s' symbols:\n", cpu->tag());
 			break;
-		case BUILTIN_GLOBALS:
+		case symbol_table::BUILTIN_GLOBALS:
 			m_console.printf("\nGlobal symbols:\n");
 			break;
 		default:

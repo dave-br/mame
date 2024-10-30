@@ -175,13 +175,13 @@ public:
 		READ_WRITE
 	};
 
-	// Identifies the type of symbols 
-	enum type
+	// Identifies the type of symbols stored in this table
+	enum table_type
 	{
-		SRCDBG_LOCALS,
-		SRCDBG_GLOBALS,
-		CPU_STATE,
-		BUILTIN_GLOBALS,
+		SRCDBG_LOCALS,     // Source-level debugging local variables
+		SRCDBG_GLOBALS,    // Source-level debugging global variables
+		CPU_STATE,         // CPU registers, etc.
+		BUILTIN_GLOBALS,   // Built-in MAME global symbols (e.g., beamx, beamy, frame, etc.)
 	};
 
 	class local_range_expression
@@ -200,10 +200,11 @@ public:
 	};
 
 	// construction/destruction
-	symbol_table(running_machine &machine, symbol_table *parent = nullptr, device_t *device = nullptr);
+	symbol_table(running_machine &machine, table_type type, symbol_table *parent = nullptr, device_t *device = nullptr);
 
 	// getters
 	const std::unordered_map<std::string, std::unique_ptr<symbol_entry>> &entries() const { return m_symlist; }
+	table_type type() const { return m_type; }
 	symbol_table *parent() const { return m_parent; }
 	running_machine &machine() { return m_machine; }
 
@@ -241,6 +242,7 @@ private:
 	void notify_memory_modified();
 
 	// internal state
+	table_type              m_type;             // kind of symbols stored in this table
 	running_machine &       m_machine;          // reference to the machine
 	symbol_table *          m_parent;           // pointer to the parent symbol table
 	std::unordered_map<std::string,std::unique_ptr<symbol_entry>> m_symlist;        // list of symbols

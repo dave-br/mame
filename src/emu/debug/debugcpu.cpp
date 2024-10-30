@@ -58,7 +58,7 @@ debugger_cpu::debugger_cpu(running_machine &machine)
 	m_tempvar = make_unique_clear<u64[]>(NUM_TEMP_VARIABLES);
 
 	/* create a global symbol table */
-	m_symtable = std::make_unique<symbol_table>(machine);
+	m_symtable = std::make_unique<symbol_table>(machine, symbol_table::BUILTIN_GLOBALS);
 	m_symtable->set_memory_modified_func([this]() { set_memory_modified(true); });
 
 	/* add "wpaddr", "wpdata", "wpsize" to the global symbol table */
@@ -489,7 +489,7 @@ device_debug::device_debug(device_t &device)
 	, m_state(nullptr)
 	, m_disasm(nullptr)
 	, m_flags(0)
-	, m_symtable_device(std::make_unique<symbol_table>(device.machine(), &device.machine().debugger().cpu().global_symtable(), &device))
+	, m_symtable_device(std::make_unique<symbol_table>(device.machine(), symbol_table::CPU_STATE, &device.machine().debugger().cpu().global_symtable(), &device))
 	, m_symtable_srcdbg_globals()
 	, m_symtable_srcdbg_locals()
 	, m_stepaddr(0)
@@ -646,7 +646,7 @@ void device_debug::add_symbols_from_srcdbg()
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
 
 	// Global fixed symbols
-	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_device.get(), &m_device);
+	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(m_device.machine(), symbol_table::SRCDBG_GLOBALS, m_symtable_device.get(), &m_device);
 	for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
 	{
 		m_symtable_srcdbg_globals->add(sym.name(), sym.value());
@@ -658,7 +658,7 @@ void device_debug::add_symbols_from_srcdbg()
 
 	// Local fixed symbols
 	const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = srcdbg_provider.local_fixed_symbols();
-	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(m_device.machine(), m_symtable_srcdbg_globals.get(), &m_device);
+	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(m_device.machine(), symbol_table::SRCDBG_LOCALS, m_symtable_srcdbg_globals.get(), &m_device);
 	for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
 	{
 		m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
