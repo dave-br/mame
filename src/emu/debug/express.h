@@ -175,6 +175,15 @@ public:
 		READ_WRITE
 	};
 
+	// Identifies the type of symbols 
+	enum type
+	{
+		SRCDBG_LOCALS,
+		SRCDBG_GLOBALS,
+		CPU_STATE,
+		BUILTIN_GLOBALS,
+	};
+
 	class local_range_expression
 	{
 	public:

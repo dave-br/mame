@@ -3933,58 +3933,82 @@ void debugger_commands::execute_memdump(const std::vector<std::string_view> &par
 
 void debugger_commands::execute_symlist(const std::vector<std::string_view> &params)
 {
-	const char *namelist[1000];
 	symbol_table *symtable;
 	int count = 0;
+	device_t *cpu = nullptr;
 
 	if (!params.empty())
 	{
 		// validate parameters
-		device_t *cpu;
 		if (!m_console.validate_cpu_parameter(params[0], cpu))
 			return;
 		symtable = &cpu->debug()->symtable();
-		m_console.printf("CPU '%s' symbols:\n", cpu->tag());
 	}
 	else
 	{
 		symtable = &m_machine.debugger().cpu().global_symtable();
-		m_console.printf("Global symbols:\n");
 	}
 
-	// gather names for all symbols
-	for (auto &entry : symtable->entries())
+	for (; symtable != nullptr; symtable = symtable->parent())
 	{
-		// only display "register" type symbols
-		if (!entry.second->is_function())
+		// Emit globals iff user requested them (as signified by cpu == nullptr)
+		if ((symtable->type() == BUILTIN_GLOBALS) != (cpu == nullptr))
+			continue;
+
+		if (symtable->entries().size() == 0)
+			continue;
+
+		std::vector<const char *> namelist;
+
+		switch (symtable->type())
 		{
-			namelist[count++] = entry.second->name();
-			if (count >= std::size(namelist))
-				break;
+		case SRCDBG_LOCALS:
+			m_console.printf("\nSource-level local variables:\n");
+			break;
+		case SRCDBG_GLOBALS:
+			m_console.printf("\nSource-level gloabal variables:\n");
+			break;
+		case CPU_STATE:
+			m_console.printf("\nCPU '%s' symbols:\n", cpu->tag());
+			break;
+		case BUILTIN_GLOBALS:
+			m_console.printf("\nGlobal symbols:\n");
+			break;
+		default:
+			assert (!"Unrecognized symbol table type");
 		}
-	}
 
-	// sort the symbols
-	if (count > 1)
-	{
-		std::sort(
-				&namelist[0],
-				&namelist[count],
-				[] (const char *item1, const char *item2) { return strcmp(item1, item2) < 0; });
-	}
+		// gather names for all relevant symbols
+		for (auto &entry : symtable->entries())
+		{
+			// ignore built-in function symbols
+			if (!entry.second->is_function())
+			{
+				namelist.push_back(entry.second->name());
+			}
+		}
 
-	// iterate over symbols and print out relevant ones
-	for (int symnum = 0; symnum < count; symnum++)
-	{
-		symbol_entry const *const entry = symtable->find(namelist[symnum]);
-		assert(entry != nullptr);
-		u64 value = entry->value();
+		// sort the symbols
+		if (count > 1)
+		{
+			std::sort(
+					namelist.begin(),
+					namelist.end(),
+					[] (const char *item1, const char *item2) { return strcmp(item1, item2) < 0; });
+		}
 
-		// only display "register" type symbols
-		m_console.printf("%s = %X", namelist[symnum], value);
-		if (!entry->is_lval())
-			m_console.printf("  (read-only)");
-		m_console.printf("\n");
+		// iterate over symbols and print them
+		for (int symnum = 0; symnum < count; symnum++)
+		{
+			symbol_entry const *const entry = symtable->find(namelist[symnum]);
+			assert(entry != nullptr);
+			u64 value = entry->value();
+
+			m_console.printf("%s = %X", namelist[symnum], value);
+			if (!entry->is_lval())
+				m_console.printf("  (read-only)");
+			m_console.printf("\n");
+		}
 	}
 }
 
