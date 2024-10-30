@@ -48,10 +48,6 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 {
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
 	const srcdbg_provider_base * debug_info = dv_source->srcdbg_provider();
-	if (debug_info == nullptr)
-	{
-		return nullptr;
-	}
 
 	// create a combo box
 	HWND const result = CreateWindowEx(COMBO_BOX_STYLE_EX, TEXT("COMBOBOX"), nullptr, COMBO_BOX_STYLE,
@@ -59,23 +55,26 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	SetWindowLongPtr(result, GWLP_USERDATA, userdata);
 	SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
 
-	// populate the combobox with source file paths
-	size_t maxlength = 0;
-	std::size_t num_files = debug_info->num_files();
-	for (std::size_t i = 0; i < num_files; i++)
+	// populate the combobox with source file paths when present
+	if (debug_info != nullptr)
 	{
-		const char * entry_text = debug_info->file_index_to_path(i).built();
-		size_t const length = strlen(entry_text);
-		if (length > maxlength)
+		size_t maxlength = 0;
+		std::size_t num_files = debug_info->num_files();
+		for (std::size_t i = 0; i < num_files; i++)
 		{
-			maxlength = length;
+			const char * entry_text = debug_info->file_index_to_path(i).built();
+			size_t const length = strlen(entry_text);
+			if (length > maxlength)
+			{
+				maxlength = length;
+			}
+			auto t_name = osd::text::to_tstring(entry_text);
+			SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
 		}
-		auto t_name = osd::text::to_tstring(entry_text);
-		SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
-	}
 
-	SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
-	SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
+		SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
+		SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
+	}
 
 	m_combownd = result;
 	return result;

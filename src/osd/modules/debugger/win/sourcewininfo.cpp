@@ -33,7 +33,6 @@ sourcewin_info::sourcewin_info(debugger_windows_interface &debugger, bool is_mai
 	}
 	m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
 
-	// m_filecombownd will remain null when source-level debugging is not configured
 	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->
 		create_source_file_combobox(window(), (LONG_PTR)this);
 
@@ -51,8 +50,6 @@ sourcewin_info::~sourcewin_info()
 
 void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 {
-	assert (m_filecombownd != nullptr);
-
 	// combo box gets full width
 	RECT comborect;
 	comborect.top = bounds.top + EDGE_WIDTH;
@@ -89,20 +86,14 @@ bool sourcewin_info::show_src_window_if_srcdbg_enabled()
 void sourcewin_info::hide_src_window()
 {
 	m_views[VIEW_IDX_SOURCE]->hide(); 
-	if (m_filecombownd != nullptr)
-	{
-		smart_show_window(m_filecombownd, false);  
-	}
+	smart_show_window(m_filecombownd, false);  
 }
 
 
 void sourcewin_info::draw_contents(HDC dc)
 {
 	disasmbasewin_info::draw_contents(dc);
-	if (m_filecombownd != nullptr)
-	{
-		draw_border(dc, m_filecombownd);
-	}
+	draw_border(dc, m_filecombownd);
 }
 
 
