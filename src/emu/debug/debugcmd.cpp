@@ -4004,9 +4004,15 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		{
 			symbol_entry const *const entry = symtable->find(namelist[symnum]);
 			assert(entry != nullptr);
-			u64 value = entry->value();
-
-			m_console.printf("%s = %X", namelist[symnum], value);
+			if (entry->is_in_scope())
+			{
+				u64 value = entry->value();
+				m_console.printf("%s = %X", namelist[symnum], value);
+			}
+			else
+			{
+				m_console.printf("%s (not currently in scope)", namelist[symnum]);
+			}
 			if (!entry->is_lval())
 				m_console.printf("  (read-only)");
 			m_console.printf("\n");
