@@ -5,7 +5,12 @@
     srcdbg_format_writer.h
 
     Library of helper functions to generate MAME source-level
-	debugging info files
+	debugging info files.
+
+	This library makes only minimal use of C++ (e.g., no STL or even
+	new / delete) to avoid the need for consumers to link to the
+	standard C++ library .  This allows C-only tools to easily link
+	to this library.
 
 ***************************************************************************/
 
@@ -16,11 +21,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
+
+#define RET_IF_FAIL(expr)                         \
+	{                                             \
+		int _err = (expr);                        \
+		if (_err != MAME_SRCDBG_E_SUCCESS)        \
+			return _err;                          \
+	}
+
+
+
+// ------------------------------------------------------------------
+// resizeable_array - a cheap STL::vector replacement that
+// stores bytes
+// ------------------------------------------------------------------
 
 class resizeable_array
 {
 public:
-	// typedef bool (*data_compare)(const void * data1, const void * data2);
 	void construct()
 	{
 		m_data = nullptr;
@@ -41,32 +60,12 @@ public:
 		return m_data;
 	}
 
-	void push_back(const void * data_bytes, int data_size)
+	int push_back(const void * data_bytes, int data_size)
 	{
-		ensure_capacity(m_size + data_size);
+		RET_IF_FAIL(ensure_capacity(m_size + data_size));
 		memcpy(m_data + m_size, data_bytes, data_size); 
 		m_size += data_size;
 	}
-
-	// int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
-	// {
-	// 	const char * data = m_data;
-	// 	const char * data_end = m_data + m_size;
-	// 	int ret = 0;
-	// 	while (data < data_end)
-	// 	{
-	// 		if (comp(data, data_bytes))
-	// 		{
-	// 			return ret;
-	// 		}
-
-	// 		data += data_size;
-	// 		ret++;
-	// 	}
-
-	// 	push_back(data_bytes, data_size);
-	// 	return ret;
-	// }
 
 	unsigned int find(unsigned int search, unsigned int data_size)
 	{
@@ -87,18 +86,17 @@ public:
 		return (unsigned int) - 1;
 	}
 
-
 	unsigned int size()
 	{
 		return m_size;
 	}
 
 protected:
-	void ensure_capacity(unsigned int req_capacity)
+	int ensure_capacity(unsigned int req_capacity)
 	{
 		if (req_capacity <= m_capacity)
 		{
-			return;
+			return MAME_SRCDBG_E_SUCCESS;
 		}
 
 		unsigned int new_capacity = (m_capacity + 1) << 1;
@@ -110,13 +108,14 @@ protected:
 		void * new_data = malloc(new_capacity);
 		if (new_data == nullptr)
 		{
-			// TODO: ERROR
+			return MAME_SRCDBG_E_OUTOFMEMORY;
 		}
 
 		memcpy(new_data, m_data, m_size);
 		free(m_data);
 		m_data = (char *) new_data;
 		m_capacity = new_capacity;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 	char * m_data;
@@ -124,18 +123,19 @@ protected:
 	unsigned int m_capacity;
 };
 
+
+// ------------------------------------------------------------------
+// int_resizeable_array - a cheap STL::vector<unsigned int>
+// replacement 
+// ------------------------------------------------------------------
+
 class int_resizeable_array : public resizeable_array
 {
 public:
-	void push_back(unsigned int new_int)
+	int push_back(unsigned int new_int)
 	{
-		resizeable_array::push_back((char *) &new_int, sizeof(unsigned int));
+		return resizeable_array::push_back((char *) &new_int, sizeof(unsigned int));
 	}
-
-	// int find_or_push_back(const void * data_bytes, unsigned int data_size, data_compare comp /*, unsigned int & size */)
-	// {
-	// 	return 0;		// not implemented
-	// }
 
 	unsigned int get(unsigned int i)
 	{
@@ -148,44 +148,54 @@ public:
 	}	
 };
 
+
+
+// ------------------------------------------------------------------
+// string_resizeable_array - a cheap STL::unordered_set<const char *>
+// replacement.  Stores characters packed together, keeps
+// track of string starting-points with an int_resizeable_array
+// field, and avoid dupes when storing new elements
+// ------------------------------------------------------------------
+
 class string_resizeable_array : public resizeable_array
 {
 public:
 	void construct()
 	{
-		// TODO: are ctors / dtors really out?  I remember new/delete bad for C, but why ctors?
 		resizeable_array::construct();
 		m_offsets.construct();
 	}
 
-	unsigned int find_or_push_back(const char * new_string, unsigned int & size)
+	int find_or_push_back(const char * new_string, unsigned int & size, unsigned int & offset)
 	{
 		for (unsigned int i = 0; i < m_offsets.size(); i++)
 		{
 			const char * string = m_data + m_offsets.get(i);
 			if (strcmp(string, new_string) == 0)
 			{
-				return i;
+				offset = i;
+				return MAME_SRCDBG_E_SUCCESS;
 			}
 		}
 
 		// String not found, add it to the end.  Remember that
 		// offset in m_offsets array
-		m_offsets.push_back(m_size);
+		RET_IF_FAIL(m_offsets.push_back(m_size));
 		size_t length = strlen(new_string);
-		push_back(new_string, length);
+		RET_IF_FAIL(push_back(new_string, length));
 		char null_terminator = '\0';
-		push_back(&null_terminator, 1);
+		RET_IF_FAIL(push_back(&null_terminator, 1));
 		size += length + 1;
-		return m_offsets.size() - 1;		// Index into m_offsets representing newly-added string
+		offset = m_offsets.size() - 1;		// Index into m_offsets representing newly-added string
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 private:
 	int_resizeable_array m_offsets;
-	// data_compare m_comp;
 };
 
 
+// Interim storage of local fixed variables
 struct local_fixed
 {
 	unsigned int symbol_name_index;
@@ -194,6 +204,8 @@ struct local_fixed
 	resizeable_array ranges;
 };
 
+
+// Interim storage of local relative variables
 struct local_relative
 {
 	unsigned int symbol_name_index;
@@ -201,13 +213,19 @@ struct local_relative
 	resizeable_array values;
 };
 
+
+// ------------------------------------------------------------------
+// srcdbg_simple_generator - Primary class for implementing
+// the public API.
+// ------------------------------------------------------------------
+
 class srcdbg_simple_generator
 {
 public:
 	void construct()
 	{
 		m_output = nullptr;
-		m_num_source_file_paths = 0;
+		// m_num_source_file_paths = 0;
 		m_source_file_paths.construct();
 		m_line_mappings.construct();
 		m_symbol_names.construct();
@@ -249,33 +267,40 @@ public:
 		}
 	}
 
-	unsigned short add_source_file_path(const char * source_file_path)
+	int add_source_file_path(const char * source_file_path, unsigned short & index)
 	{
-		add_string(m_source_file_paths, m_header.source_file_paths_size, source_file_path);
-		return m_num_source_file_paths++;
+		unsigned int index_int;
+		RET_IF_FAIL(m_source_file_paths.find_or_push_back(source_file_path, m_header.source_file_paths_size, index_int));
+		if (index_int > USHRT_MAX)
+		{
+			return MAME_SRCDBG_E_INDEX_OVERFLOW;
+		}
+		index = (unsigned short) index_int;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
-	void add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
+	int add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
 	{
 		m_header.num_line_mappings++;
 		srcdbg_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
-		m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
+		return m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
 	}
 
-	void add_global_fixed_symbol(const char * symbol_name, int symbol_value)
+	int add_global_fixed_symbol(const char * symbol_name, int symbol_value)
 	{
 		global_fixed_symbol_value global;
-		global.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
+		RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, global.symbol_name_index));
 		global.symbol_value = symbol_value;
-		m_global_fixed_symbol_values.push_back(&global, sizeof(global));
+		RET_IF_FAIL(m_global_fixed_symbol_values.push_back(&global, sizeof(global)));
 		m_header.num_global_fixed_symbol_values++;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
-	void add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
+	int add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 	{
 		local_fixed * entry_ptr;
 		local_fixed local;
-		local.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
+		RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, local.symbol_name_index));
 		unsigned int entry_idx = m_local_fixed_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
@@ -283,7 +308,7 @@ public:
 			local.num_address_ranges = 0;
 			local.ranges.construct();
 			entry_ptr = &local;
-			m_local_fixed_symbol_values.push_back(&local, sizeof(local));
+			RET_IF_FAIL(m_local_fixed_symbol_values.push_back(&local, sizeof(local)));
 			m_header.local_fixed_symbol_values_size += sizeof(local_fixed_symbol_value);
 		}
 		else
@@ -294,22 +319,23 @@ public:
 		address_range range;
 		range.address_first = address_first;
 		range.address_last = address_last;
-		entry_ptr->ranges.push_back(&range, sizeof(range));
+		RET_IF_FAIL(entry_ptr->ranges.push_back(&range, sizeof(range)));
 		m_header.local_fixed_symbol_values_size += sizeof(range);
 		entry_ptr->num_address_ranges++;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
-	void add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
+	int add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 	{
 		local_relative * entry_ptr;
 		local_relative local;
-		local.symbol_name_index = m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size);
+		RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, local.symbol_name_index));
 		unsigned int entry_idx = m_local_relative_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
 			local.num_local_relative_eval_rules = 0;
 			local.values.construct();
-			m_local_relative_symbol_values.push_back(&local, sizeof(local));
+			RET_IF_FAIL(m_local_relative_symbol_values.push_back(&local, sizeof(local)));
 			entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
 			m_header.local_relative_symbol_values_size += sizeof(local_relative_symbol_value);
 		}
@@ -322,9 +348,10 @@ public:
 		value.range.address_last = address_last;
 		value.reg = reg;
 		value.reg_offset = reg_offset;
-		entry_ptr->values.push_back(&value, sizeof(value));
+		RET_IF_FAIL(entry_ptr->values.push_back(&value, sizeof(value)));
 		m_header.local_relative_symbol_values_size += sizeof(value);
 		entry_ptr->num_local_relative_eval_rules++;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 
@@ -374,22 +401,23 @@ public:
 	}
 
 private:
-	void add_string(resizeable_array & ra, unsigned int & size, const char * s)
+	int add_string(resizeable_array & ra, unsigned int & size, const char * s)
 	{
 		char null_terminator = '\0';
 		for (const char * c = s; *c != '\0'; c++)
 		{
-			ra.push_back(c, 1);
+			RET_IF_FAIL(ra.push_back(c, 1));
 			size++;
 		}
-		ra.push_back(&null_terminator, 1);
+		RET_IF_FAIL(ra.push_back(&null_terminator, 1));
 		size++;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 	FILE * m_output;
 	mame_debug_info_simple_header m_header;
-	unsigned short m_num_source_file_paths;
-	resizeable_array m_source_file_paths;
+	// unsigned short m_num_source_file_paths;
+	string_resizeable_array m_source_file_paths;
 	resizeable_array m_line_mappings;
 	string_resizeable_array m_symbol_names;
 	resizeable_array m_global_fixed_symbol_values;
@@ -399,50 +427,52 @@ private:
 
 
 
-// C Interface to assemblers / compilers
+// ------------------------------------------------------------------
+// Public API.  C Interface to assemblers / compilers
+// ------------------------------------------------------------------
 
-void * mame_srcdbg_simp_open_new(const char * file_path)
+int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
 {
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) malloc(sizeof(srcdbg_simple_generator));
 	if (generator == nullptr)
 	{
-		// TODO: ERROR
+		return MAME_SRCDBG_E_FOPEN_ERROR;
 	}
 	generator->construct();
 	generator->open(file_path);
-	return (void *) generator;
+	*handle_ptr = (void *) generator;
+	return MAME_SRCDBG_E_SUCCESS;
 }
 
-
-unsigned short mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path)
+int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned short * index_ptr)
 {
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_source_file_path(source_file_path);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_source_file_path(source_file_path, *index_ptr);
 }
 
-
-void mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
+int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
 }
 
-void mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
+int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_fixed_symbol(symbol_name, symbol_value);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_fixed_symbol(symbol_name, symbol_value);
 }
 
-void mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
+int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_fixed_symbol(symbol_name, address_first, address_last, symbol_value);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_fixed_symbol(symbol_name, address_first, address_last, symbol_value);
 }
-void mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
+int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 {
-	((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_relative_symbol(symbol_name, address_first, address_last, reg, reg_offset);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_relative_symbol(symbol_name, address_first, address_last, reg, reg_offset);
 }
 
-
-void mame_srcdbg_simp_close(void * srcdbg_simp_state)
+int mame_srcdbg_simp_close(void * srcdbg_simp_state)
 {
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) srcdbg_simp_state;
 	generator->close();
 	generator->destruct();
+	// TODO : JUST NOW: RETURN ERRS FROM ABOVE
+	return MAME_SRCDBG_E_SUCCESS;
 }
