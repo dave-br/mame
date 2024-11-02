@@ -13,10 +13,12 @@
 
 #include "corefile.h"
 
+#include "osdcomm.h"
+
 #include <cstdio>
 
 
-template <typename T> static bool read_field(const T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
+template <typename T> static bool read_field(T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
 {
 	if (data.size() < i + sizeof(T))
 	{
@@ -26,10 +28,11 @@ template <typename T> static bool read_field(const T * & var, const std::vector<
 		return false;
 	}
 
-	var = (const T *)(&data[i]);
+	var = (T *)(&data[i]);
 	i += sizeof(T);
 	return true;
 }
+
 
 static bool scan_bytes(u32 num_bytes, const std::vector<uint8_t>& data, u32& i, std::string & error)
 {
@@ -70,9 +73,6 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 		return false;
 	}
 
-	// FUTURE: If machines for which "simp" is unsuitable get their own formats created,
-	// add code here to read the format identifier and return the appropriate format enum
-
 	if (strncmp(header.type, "simp", 4) != 0)
 	{
 		error = util::string_format("Error while reading header from file\n%s\n\nOnly type 'simp' is currently supported", srcdbg_path);
@@ -86,6 +86,10 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 	};
 
 	format = SRCDBG_FORMAT_SIMPLE;
+
+	// FUTURE: If new formats are created (for machines where "simp" is unsuitable),
+	// add code here to read the format identifier and return the appropriate format enum
+
 	return true;
 }
 
@@ -101,12 +105,19 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	}
 
 	u32 i = 0;
-	const mame_debug_info_simple_header * header;
+	mame_debug_info_simple_header * header;
 	if (!read_field<mame_debug_info_simple_header>(header, data, i, error) ||
 		!callback.on_read_simp_header(*header))
 	{
 		return false;
 	}
+
+	header->source_file_paths_size = little_endianize_int32(header->source_file_paths_size);
+	header->num_line_mappings = little_endianize_int32(header->num_line_mappings);
+	header->symbol_names_size = little_endianize_int32(header->symbol_names_size);
+	header->num_global_fixed_symbol_values = little_endianize_int32(header->num_global_fixed_symbol_values);
+	header->local_fixed_symbol_values_size = little_endianize_int32(header->local_fixed_symbol_values_size);
+	header->local_relative_symbol_values_size = little_endianize_int32(header->local_relative_symbol_values_size);
 
 	u32 first_line_mapping = i + header->source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
@@ -184,11 +195,16 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
-		const srcdbg_line_mapping * line_map;
+		srcdbg_line_mapping * line_map;
 		if (!read_field<srcdbg_line_mapping>(line_map, data, i, error))
 		{
 			return false;
 		}
+
+		line_map->range.address_first = little_endianize_int16(line_map->range.address_first);
+		line_map->range.address_last = little_endianize_int16(line_map->range.address_last);
+		line_map->source_file_index = little_endianize_int16(line_map->source_file_index);
+		line_map->line_number = little_endianize_int32(line_map->line_number);
 
 		if (line_map->source_file_index >= source_index)
 		{
@@ -232,13 +248,25 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 	for (u32 global_fixed_idx = 0; global_fixed_idx < header->num_global_fixed_symbol_values; global_fixed_idx++)
 	{
-		const global_fixed_symbol_value * value;
-		if (!read_field<global_fixed_symbol_value>(value, data, i, error) ||
-			!callback.on_read_global_fixed_symbol_value(*value))
+		global_fixed_symbol_value * value;
+		if (!read_field<global_fixed_symbol_value>(value, data, i, error))
 		{
 			return false;
 		}
-		// TODO: INVALID SYMBOL INDEX
+
+		value->symbol_name_index = little_endianize_int32(value->symbol_name_index);
+		value->symbol_value = little_endianize_int32(value->symbol_value);
+
+		if (value->symbol_name_index >= symbol_index)
+		{
+			error = util::string_format("Error reading file\n%s\n\nInvalid symbol_name_index encountered in global_fixed_symbol_value: %d", srcdbg_path, value->symbol_name_index);
+			return false;
+		}
+
+		if (!callback.on_read_global_fixed_symbol_value(*value))
+		{
+			return false;
+		}
 	}
 
 	if (!callback.end_read_global_fixed_symbol_values())
@@ -248,15 +276,38 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 	while (i < after_local_fixed_symbol_values)
 	{
-		const local_fixed_symbol_value * value;
+		local_fixed_symbol_value * value;
 		u32 value_start_idx = i;
-		if (!read_field<local_fixed_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value->num_address_ranges * sizeof(address_range), data, i, error) ||
-			!callback.on_read_local_fixed_symbol_value(*(const local_fixed_symbol_value *) &data[value_start_idx]))
+		if (!read_field<local_fixed_symbol_value>(value, data, i, error))
 		{
 			return false;
 		}
-		// TODO: INVALID SYMBOL INDEX
+
+		value->symbol_name_index = little_endianize_int32(value->symbol_name_index);
+		value->symbol_value = little_endianize_int32(value->symbol_value);
+		value->num_address_ranges = little_endianize_int32(value->num_address_ranges);
+
+		if (value->symbol_name_index >= symbol_index)
+		{
+			error = util::string_format("Error reading file\n%s\n\nInvalid symbol_name_index encountered in local_fixed_symbol_value: %d", srcdbg_path, value->symbol_name_index);
+			return false;
+		}
+
+		for (u32 idx = 0; idx < value->num_address_ranges; idx++)
+		{
+			address_range * range;
+			if (!read_field<address_range>(range, data, i, error))
+			{
+				return false;
+			}
+			range->address_first = little_endianize_int16(range->address_first);
+			range->address_last = little_endianize_int16(range->address_last);
+		}
+
+		if (!callback.on_read_local_fixed_symbol_value(*(const local_fixed_symbol_value *) &data[value_start_idx]))
+		{
+			return false;
+		}
 	}
 
 	if (!callback.end_read_local_fixed_symbol_values())
@@ -266,15 +317,39 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 	while (i < after_local_relative_symbol_values)
 	{
-		const local_relative_symbol_value * value;
+		local_relative_symbol_value * value;
 		u32 value_start_idx = i;
-		if (!read_field<local_relative_symbol_value>(value, data, i, error) ||
-			!scan_bytes(value->num_local_relative_eval_rules * sizeof(local_relative_eval_rule), data, i, error) ||
-			!callback.on_read_local_relative_symbol_value(*(const local_relative_symbol_value *) &data[value_start_idx]))
+		if (!read_field<local_relative_symbol_value>(value, data, i, error))
 		{
 			return false;
 		}
-		// TODO: INVALID SYMBOL INDEX
+
+		value->symbol_name_index = little_endianize_int32(value->symbol_name_index);
+		value->num_local_relative_eval_rules = little_endianize_int32(value->num_local_relative_eval_rules);
+
+		if (value->symbol_name_index >= symbol_index)
+		{
+			error = util::string_format("Error reading file\n%s\n\nInvalid symbol_name_index encountered in local_relative_symbol_value: %d", srcdbg_path, value->symbol_name_index);
+			return false;
+		}
+
+		for (u32 idx = 0; idx < value->num_local_relative_eval_rules; idx++)
+		{
+			local_relative_eval_rule * rule;
+			if (!read_field<local_relative_eval_rule>(rule, data, i, error))
+			{
+				return false;
+			}
+
+			rule->range.address_first = little_endianize_int16(rule->range.address_first);
+			rule->range.address_last = little_endianize_int16(rule->range.address_last);
+			rule->reg_offset = little_endianize_int32(rule->reg_offset);
+		}
+
+		if (!callback.on_read_local_relative_symbol_value(*(const local_relative_symbol_value *) &data[value_start_idx]))
+		{
+			return false;
+		}
 	}
 
 	if (!callback.end_read_local_relative_symbol_values())
@@ -282,6 +357,5 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		return false;
 	}
 
-	// TODO: MORE CHECKING OF HEADER SIZE VALS AND NUM_SYMS FOR LOCS
 	return true;
 }
