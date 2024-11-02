@@ -23,12 +23,25 @@
 #include <string.h>
 #include <limits.h>
 
-#define RET_IF_FAIL(expr)                         \
-	{                                             \
-		int _err = (expr);                        \
-		if (_err != MAME_SRCDBG_E_SUCCESS)        \
-			return _err;                          \
+#define RET_IF_FAIL(expr)                              \
+	{                                                  \
+		int _err = (expr);                             \
+		if (_err != MAME_SRCDBG_E_SUCCESS)             \
+			return _err;                               \
 	}
+
+#define FWRITE_OR_RETURN(BUF, SIZE, COUNT, STREAM)     \
+	{                                                  \
+		int _ret = fwrite(BUF, SIZE, COUNT, STREAM);   \
+		if (_ret < COUNT)                              \
+			return MAME_SRCDBG_E_FWRITE_ERROR;         \
+	}
+
+#define FCLOSE_OR_RETURN(STREAM)                       \
+{                                                      \
+	if (fclose(STREAM) != 0)                           \
+		return MAME_SRCDBG_E_FCLOSE_ERROR;             \
+}
 
 
 
@@ -190,26 +203,26 @@ public:
 		return MAME_SRCDBG_E_SUCCESS;
 	}
 
+	unsigned int num_strings()
+	{
+		return m_offsets.size();
+	}
+
 private:
 	int_resizeable_array m_offsets;
 };
 
 
 // Interim storage of local fixed variables
-struct local_fixed
+struct local_fixed : local_fixed_symbol_value
 {
-	unsigned int symbol_name_index;
-	int symbol_value;
-	unsigned int num_address_ranges;
 	resizeable_array ranges;
 };
 
 
 // Interim storage of local relative variables
-struct local_relative
+struct local_relative : local_relative_symbol_value
 {
-	unsigned int symbol_name_index;
-	unsigned int num_local_relative_eval_rules;
 	resizeable_array values;
 };
 
@@ -225,7 +238,6 @@ public:
 	void construct()
 	{
 		m_output = nullptr;
-		// m_num_source_file_paths = 0;
 		m_source_file_paths.construct();
 		m_line_mappings.construct();
 		m_symbol_names.construct();
@@ -244,27 +256,28 @@ public:
 		m_header.local_relative_symbol_values_size = 0;
 	}
 
-	void destruct()
+	int destruct()
 	{
 		if (m_output != nullptr)
 		{
-			fclose(m_output);
+			FCLOSE_OR_RETURN(m_output);
 			m_output = nullptr;
 		}
 		m_source_file_paths.destruct();
 		m_line_mappings.destruct();
 		m_symbol_names.destruct();
 		m_global_fixed_symbol_values.destruct();
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
-	void open(const char * file_path)
+	int open(const char * file_path)
 	{
 		m_output = fopen(file_path, "wb");
 		if (m_output == nullptr)
 		{
-			// TODO: ERROR
-			return;
+			return MAME_SRCDBG_E_FOPEN_ERROR;
 		}
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 	int add_source_file_path(const char * source_file_path, unsigned short & index)
@@ -281,6 +294,10 @@ public:
 
 	int add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
 	{
+		if (source_file_index >= m_source_file_paths.num_strings())
+		{
+			return MAME_SRCDBG_E_INVALID_SRC_IDX;
+		}
 		m_header.num_line_mappings++;
 		srcdbg_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
 		return m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
@@ -355,26 +372,24 @@ public:
 	}
 
 
-	void close()
+	int close()
 	{
-		// TODO:
-		// verification code to ensure references to source_file_index are in range
-		fwrite(&m_header, sizeof(m_header), 1, m_output);
+		FWRITE_OR_RETURN(&m_header, sizeof(m_header), 1, m_output);
 		for (int i=0; i < m_source_file_paths.size(); i += sizeof(char))
 		{
-			fwrite(m_source_file_paths.get() + i, sizeof(char), 1, m_output);
+			FWRITE_OR_RETURN(m_source_file_paths.get() + i, sizeof(char), 1, m_output);
 		}
 		for (int i=0; i < m_line_mappings.size(); i += sizeof(srcdbg_line_mapping))
 		{
-			fwrite(m_line_mappings.get() + i, sizeof(srcdbg_line_mapping), 1, m_output);
+			FWRITE_OR_RETURN(m_line_mappings.get() + i, sizeof(srcdbg_line_mapping), 1, m_output);
 		}
 		for (int i=0; i < m_symbol_names.size(); i += sizeof(char))
 		{
-			fwrite(m_symbol_names.get() + i, sizeof(char), 1, m_output);
+			FWRITE_OR_RETURN(m_symbol_names.get() + i, sizeof(char), 1, m_output);
 		}
 		for (int i=0; i < m_global_fixed_symbol_values.size(); i += sizeof(global_fixed_symbol_value))
 		{
-			fwrite(m_global_fixed_symbol_values.get() + i, sizeof(global_fixed_symbol_value), 1, m_output);
+			FWRITE_OR_RETURN(m_global_fixed_symbol_values.get() + i, sizeof(global_fixed_symbol_value), 1, m_output);
 		}
 		for (int i=0; i < m_local_fixed_symbol_values.size(); i += sizeof(local_fixed))
 		{
@@ -383,8 +398,8 @@ public:
 			{
 				continue;
 			}
-			fwrite(loc, sizeof(local_fixed_symbol_value), 1, m_output);
-			fwrite(loc->ranges.get(), sizeof(address_range), loc->ranges.size() / sizeof(address_range), m_output);
+			FWRITE_OR_RETURN(loc, sizeof(local_fixed_symbol_value), 1, m_output);
+			FWRITE_OR_RETURN(loc->ranges.get(), sizeof(address_range), loc->ranges.size() / sizeof(address_range), m_output);
 		}
 		for (int i=0; i < m_local_relative_symbol_values.size(); i += sizeof(local_relative))
 		{
@@ -393,11 +408,12 @@ public:
 			{
 				continue;
 			}
-			fwrite(loc, sizeof(local_relative_symbol_value), 1, m_output);
-			fwrite(loc->values.get(), sizeof(local_relative_eval_rule), loc->values.size() / sizeof(local_relative_eval_rule), m_output);
+			FWRITE_OR_RETURN(loc, sizeof(local_relative_symbol_value), 1, m_output);
+			FWRITE_OR_RETURN(loc->values.get(), sizeof(local_relative_eval_rule), loc->values.size() / sizeof(local_relative_eval_rule), m_output);
 		}
-		fclose(m_output);
+		FCLOSE_OR_RETURN(m_output);
 		m_output = nullptr;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 private:
@@ -416,7 +432,6 @@ private:
 
 	FILE * m_output;
 	mame_debug_info_simple_header m_header;
-	// unsigned short m_num_source_file_paths;
 	string_resizeable_array m_source_file_paths;
 	resizeable_array m_line_mappings;
 	string_resizeable_array m_symbol_names;
@@ -428,7 +443,7 @@ private:
 
 
 // ------------------------------------------------------------------
-// Public API.  C Interface to assemblers / compilers
+// Public API - C Interface for assemblers / compilers
 // ------------------------------------------------------------------
 
 int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
@@ -436,10 +451,10 @@ int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) malloc(sizeof(srcdbg_simple_generator));
 	if (generator == nullptr)
 	{
-		return MAME_SRCDBG_E_FOPEN_ERROR;
+		return MAME_SRCDBG_E_OUTOFMEMORY;
 	}
 	generator->construct();
-	generator->open(file_path);
+	RET_IF_FAIL(generator->open(file_path));
 	*handle_ptr = (void *) generator;
 	return MAME_SRCDBG_E_SUCCESS;
 }
@@ -463,6 +478,7 @@ int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char
 {
 	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_fixed_symbol(symbol_name, address_first, address_last, symbol_value);
 }
+
 int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 {
 	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_relative_symbol(symbol_name, address_first, address_last, reg, reg_offset);
@@ -471,8 +487,7 @@ int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const c
 int mame_srcdbg_simp_close(void * srcdbg_simp_state)
 {
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) srcdbg_simp_state;
-	generator->close();
-	generator->destruct();
-	// TODO : JUST NOW: RETURN ERRS FROM ABOVE
+	RET_IF_FAIL(generator->close());
+	RET_IF_FAIL(generator->destruct());
 	return MAME_SRCDBG_E_SUCCESS;
 }

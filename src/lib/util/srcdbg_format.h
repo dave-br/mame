@@ -93,7 +93,7 @@ typedef struct
 	unsigned int symbol_name_index;
 	int symbol_value;
 	unsigned int num_address_ranges;
-	address_range ranges[];
+	address_range ranges[0];                                   /* Actual array length should be num_address_ranges */
 } local_fixed_symbol_value;
 
 
@@ -115,7 +115,7 @@ typedef struct
 {
 	unsigned int symbol_name_index;
 	unsigned int num_local_relative_eval_rules;
-	local_relative_eval_rule local_relative_eval_rules[];
+	local_relative_eval_rule local_relative_eval_rules[0];     /* Actual array length should be num_local_relative_eval_rules */
 } local_relative_symbol_value;
 
 /*
