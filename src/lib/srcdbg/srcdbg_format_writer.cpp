@@ -17,6 +17,7 @@
 
 #include "srcdbg_format_writer.h"
 #include "srcdbg_format.h"
+#include "osdcomm.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -298,8 +299,16 @@ public:
 		{
 			return MAME_SRCDBG_E_INVALID_SRC_IDX;
 		}
-		m_header.num_line_mappings++;
-		srcdbg_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
+		m_header.num_line_mappings = little_endianize_int32(little_endianize_int32(m_header.num_line_mappings) + 1);
+		srcdbg_line_mapping line_mapping =
+		{
+			{ 
+				little_endianize_int16(address_first),
+				little_endianize_int16(address_last)
+			},
+			little_endianize_int16(source_file_index),
+			little_endianize_int32(line_number)
+		};
 		return m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
 	}
 
@@ -307,9 +316,9 @@ public:
 	{
 		global_fixed_symbol_value global;
 		RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, global.symbol_name_index));
-		global.symbol_value = symbol_value;
+		global.symbol_value = little_endianize_int32(symbol_value);
 		RET_IF_FAIL(m_global_fixed_symbol_values.push_back(&global, sizeof(global)));
-		m_header.num_global_fixed_symbol_values++;
+		m_header.num_global_fixed_symbol_values = little_endianize_int32(little_endianize_int32(m_header.num_global_fixed_symbol_values) + 1);
 		return MAME_SRCDBG_E_SUCCESS;
 	}
 
@@ -321,12 +330,14 @@ public:
 		unsigned int entry_idx = m_local_fixed_symbol_values.find(local.symbol_name_index, sizeof(local));
 		if (entry_idx == (unsigned int) -1)
 		{
-			local.symbol_value = symbol_value;
+			local.symbol_value = little_endianize_int32(symbol_value);
 			local.num_address_ranges = 0;
 			local.ranges.construct();
 			entry_ptr = &local;
 			RET_IF_FAIL(m_local_fixed_symbol_values.push_back(&local, sizeof(local)));
-			m_header.local_fixed_symbol_values_size += sizeof(local_fixed_symbol_value);
+			m_header.local_fixed_symbol_values_size = little_endianize_int32(
+				little_endianize_int32(m_header.local_fixed_symbol_values_size) +
+				sizeof(local_fixed_symbol_value));
 		}
 		else
 		{
@@ -334,11 +345,13 @@ public:
 		}
 
 		address_range range;
-		range.address_first = address_first;
-		range.address_last = address_last;
+		range.address_first = little_endianize_int16(address_first);
+		range.address_last = little_endianize_int16(address_last);
 		RET_IF_FAIL(entry_ptr->ranges.push_back(&range, sizeof(range)));
-		m_header.local_fixed_symbol_values_size += sizeof(range);
-		entry_ptr->num_address_ranges++;
+		m_header.local_fixed_symbol_values_size = little_endianize_int32(
+			little_endianize_int32(m_header.local_fixed_symbol_values_size) +
+			sizeof(range));
+		entry_ptr->num_address_ranges = little_endianize_int32(little_endianize_int32(entry_ptr->num_address_ranges) + 1);
 		return MAME_SRCDBG_E_SUCCESS;
 	}
 
@@ -354,20 +367,24 @@ public:
 			local.values.construct();
 			RET_IF_FAIL(m_local_relative_symbol_values.push_back(&local, sizeof(local)));
 			entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
-			m_header.local_relative_symbol_values_size += sizeof(local_relative_symbol_value);
+			m_header.local_relative_symbol_values_size = little_endianize_int32(
+				little_endianize_int32(m_header.local_relative_symbol_values_size) +
+				sizeof(local_relative_symbol_value));
 		}
 		else
 		{
 			entry_ptr = ((local_relative *) m_local_relative_symbol_values.get()) + entry_idx;
 		}
 		local_relative_eval_rule value;
-		value.range.address_first = address_first;
-		value.range.address_last = address_last;
+		value.range.address_first = little_endianize_int16(address_first);
+		value.range.address_last = little_endianize_int16(address_last);
 		value.reg = reg;
-		value.reg_offset = reg_offset;
+		value.reg_offset = little_endianize_int32(reg_offset);
 		RET_IF_FAIL(entry_ptr->values.push_back(&value, sizeof(value)));
-		m_header.local_relative_symbol_values_size += sizeof(value);
-		entry_ptr->num_local_relative_eval_rules++;
+		m_header.local_relative_symbol_values_size = little_endianize_int32(
+			little_endianize_int32(m_header.local_relative_symbol_values_size) +
+			sizeof(value));
+		entry_ptr->num_local_relative_eval_rules = little_endianize_int32(little_endianize_int32(entry_ptr->num_local_relative_eval_rules) + 1);
 		return MAME_SRCDBG_E_SUCCESS;
 	}
 
