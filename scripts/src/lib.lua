@@ -159,6 +159,7 @@ project "srcdbg"
 
 	includedirs {
 		MAME_DIR .. "src/lib/util",
+		MAME_DIR .. "src/osd",
 	}
 
 	files {

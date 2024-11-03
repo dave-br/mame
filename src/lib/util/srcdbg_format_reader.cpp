@@ -34,20 +34,6 @@ template <typename T> static bool read_field(T * & var, const std::vector<uint8_
 }
 
 
-static bool scan_bytes(u32 num_bytes, const std::vector<uint8_t>& data, u32& i, std::string & error)
-{
-	if (data.size() < i + num_bytes)
-	{
-		std::ostringstream err;
-		err << "File ended prematurely while scanning ahead " << num_bytes << " bytes.";
-		error = std::move(std::move(err).str());
-		return false;
-	}
-
-	i += num_bytes;
-	return true;
-}
-
 bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error)
 {
 	util::core_file::ptr file;

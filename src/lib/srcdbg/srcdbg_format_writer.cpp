@@ -79,6 +79,7 @@ public:
 		RET_IF_FAIL(ensure_capacity(m_size + data_size));
 		memcpy(m_data + m_size, data_bytes, data_size); 
 		m_size += data_size;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 	unsigned int find(unsigned int search, unsigned int data_size)
