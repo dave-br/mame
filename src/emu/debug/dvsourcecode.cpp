@@ -73,7 +73,10 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
 	m_line_for_cur_pc()
 {
-	m_supports_cursor = true;
+	if (m_srcdbg_provider != nullptr)
+	{
+		m_supports_cursor = true;
+	}
 }
 
 
@@ -149,6 +152,7 @@ void debug_view_sourcecode::view_update()
 {
 	if (m_srcdbg_provider == nullptr)
 	{
+		print_line(1, "err roar", DCA_NORMAL);
 		return;
 	}
 

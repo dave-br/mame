@@ -72,11 +72,11 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 
 bool sourcewin_info::show_src_window_if_srcdbg_enabled()
 {
-	if (machine().debugger().srcdbg_provider() == nullptr)
-	{
-		// TODO: POPUP EXPLAINING HOW TO ENABLE SRCDBG
-		return false;
-	}
+	// if (machine().debugger().srcdbg_provider() == nullptr)
+	// {
+	// 	// TODO: POPUP EXPLAINING HOW TO ENABLE SRCDBG
+	// 	return false;
+	// }
 	m_views[VIEW_IDX_SOURCE]->show(); 
 	smart_show_window(m_filecombownd, true);
 	return true;
@@ -161,7 +161,8 @@ bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 
 bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	if (m_views[VIEW_IDX_SOURCE]->is_visible() &&
+	if (machine().debugger().srcdbg_provider() != nullptr &&
+		m_views[VIEW_IDX_SOURCE]->is_visible() &&
 		handle_sourcewin_command(wparam, lparam))
 	{
 		return true;
