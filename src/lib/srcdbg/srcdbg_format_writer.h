@@ -7,6 +7,14 @@
     Library of helper functions to generate MAME source-level
 	debugging info files
 
+	This header intentionally written in pure C to allow C-only tools
+	(assemblers, compilers) to #include.
+	
+	Tools should prefer using this header and linking with
+	-lsrcdbg to generate debugging info files where possible, over directly
+	including srcdbg_format.h to manually generate debugging info files.
+
+
 ***************************************************************************/
 
 #ifdef __cplusplus

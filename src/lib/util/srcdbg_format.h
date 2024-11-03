@@ -6,6 +6,14 @@
 
     File-format definition for MAME source-level debugging info files
 
+	This header intentionally written in pure C to allow C-only tools
+	(assemblers, compilers) to #include.
+	
+	Tools should prefer using srcdbg_format_writer.h to generate
+	debugging info files where possible, over directly including this file
+	to manually generate debugging info files.
+
+
 ***************************************************************************/
 
 

@@ -54,15 +54,15 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 	RECT comborect;
 	comborect.top = bounds.top + EDGE_WIDTH;
 	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
-	comborect.left = bounds.left /*+ EDGE_WIDTH*/;
-	comborect.right = bounds.right /*- EDGE_WIDTH*/;
+	comborect.left = bounds.left;
+	comborect.right = bounds.right;
 
 	// source view gets the rest
 	RECT srcrect;
 	srcrect.top = comborect.bottom + (2 * EDGE_WIDTH);
 	srcrect.bottom = bounds.bottom - EDGE_WIDTH;
-	srcrect.left = bounds.left /*+ EDGE_WIDTH*/;
-	srcrect.right = bounds.right /*- EDGE_WIDTH*/;
+	srcrect.left = bounds.left;
+	srcrect.right = bounds.right;
 
 	// set the bounds of things
 	smart_set_window_bounds(m_filecombownd, window(), comborect);
@@ -169,45 +169,5 @@ bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 	return disasmbasewin_info::handle_command(wparam, lparam);
 }
 
-
-// void sourcewin_info::restore_configuration_from_node(util::xml::data_node const &node)
-// {
-// 	switch (node.get_attribute_int(ATTR_WINDOW_POINTS_TYPE, -1))
-// 	{
-// 	case 0:
-// 		SendMessage(window(), WM_COMMAND, ID_SHOW_BREAKPOINTS, 0);
-// 		break;
-// 	case 1:
-// 		SendMessage(window(), WM_COMMAND, ID_SHOW_WATCHPOINTS, 0);
-// 		break;
-// 	case 2:
-// 		SendMessage(window(), WM_COMMAND, ID_SHOW_REGISTERPOINTS, 0);
-// 		break;
-// 	}
-
-// 	debugwin_info::restore_configuration_from_node(node);
-// }
-
-
-// void sourcewin_info::save_configuration_to_node(util::xml::data_node &node)
-// {
-// 	debugwin_info::save_configuration_to_node(node);
-
-// 	node.set_attribute_int(ATTR_WINDOW_TYPE, WINDOW_TYPE_POINTS_VIEWER);
-// 	switch (m_views[0]->type())
-// 	{
-// 	case DVT_BREAK_POINTS:
-// 		node.set_attribute_int(ATTR_WINDOW_POINTS_TYPE, 0);
-// 		break;
-// 	case DVT_WATCH_POINTS:
-// 		node.set_attribute_int(ATTR_WINDOW_POINTS_TYPE, 1);
-// 		break;
-// 	case DVT_REGISTER_POINTS:
-// 		node.set_attribute_int(ATTR_WINDOW_POINTS_TYPE, 2);
-// 		break;
-// 	default:
-// 		break;
-// 	}
-// }
 
 } // namespace osd::debugger::win
