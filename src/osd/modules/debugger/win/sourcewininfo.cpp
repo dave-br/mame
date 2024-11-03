@@ -70,15 +70,13 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 }
 
 
-bool sourcewin_info::show_src_window_if_srcdbg_enabled()
+bool sourcewin_info::show_src_window()
 {
-	// if (machine().debugger().srcdbg_provider() == nullptr)
-	// {
-	// 	// TODO: POPUP EXPLAINING HOW TO ENABLE SRCDBG
-	// 	return false;
-	// }
-	m_views[VIEW_IDX_SOURCE]->show(); 
-	smart_show_window(m_filecombownd, true);
+	m_views[VIEW_IDX_SOURCE]->show();
+	if (machine().debugger().srcdbg_provider() != nullptr)
+	{
+		smart_show_window(m_filecombownd, true);
+	}
 	return true;
 }
 

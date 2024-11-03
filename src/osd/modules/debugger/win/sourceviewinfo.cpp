@@ -55,9 +55,14 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	SetWindowLongPtr(result, GWLP_USERDATA, userdata);
 	SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
 
-	// populate the combobox with source file paths when present
-	if (debug_info != nullptr)
+	if (debug_info == nullptr)
 	{
+		// hide combobox when source-level debugging is off
+		smart_show_window(result, false);
+	}
+	else
+	{
+		// populate the combobox with source file paths when present
 		size_t maxlength = 0;
 		std::size_t num_files = debug_info->num_files();
 		for (std::size_t i = 0; i < num_files; i++)

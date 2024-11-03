@@ -95,7 +95,10 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 std::optional<offs_t> debug_view_sourcecode::selected_address()
 {
-	assert(m_srcdbg_provider != nullptr);
+	if (m_srcdbg_provider == nullptr)
+	{
+		return std::optional<offs_t>();
+	}
 
 	flush_updates();
 	u32 line = m_cursor.y + 1;
@@ -152,7 +155,12 @@ void debug_view_sourcecode::view_update()
 {
 	if (m_srcdbg_provider == nullptr)
 	{
-		print_line(1, "err roar", DCA_NORMAL);
+		print_line(0, "Source-level debugging is not active", DCA_CHANGED);
+		print_line(1, "Specify option '" OPTION_DEBUGINFO "' to enable", DCA_NORMAL);
+		for (u32 row = 2; row < m_visible.y; row++)
+		{
+			print_line(row, " ", DCA_NORMAL);
+		}
 		return;
 	}
 
