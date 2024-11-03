@@ -546,8 +546,6 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		}
 	}
 
-	// TODO: Explicitly pass to source window?
-
 	return sourcewin_info::handle_command(wparam, lparam);
 }
 

@@ -263,8 +263,6 @@ bool debugwin_info::handle_key(WPARAM wparam, LPARAM lparam)
 			return true;
 		}
 		break;
-
-	// TODO: KBD SHORTCUT FOR SOURCE WINDOW
 	}
 
 	return false;
