@@ -26,6 +26,8 @@ typedef struct
 	char type[4];
 
 	unsigned char version;
+
+	char info[150];
 } mame_debug_info_header_base;
 
 
