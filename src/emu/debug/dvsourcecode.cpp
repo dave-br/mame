@@ -181,25 +181,23 @@ void debug_view_sourcecode::view_update()
 
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
-		print_line(0, "Error opening file", DCA_NORMAL);
+		print_line(0, "Error opening file", DCA_CHANGED);
 		if (path.local() == nullptr)
 		{
-			print_line(1, "Could not find local file matching originally built source", DCA_NORMAL);
+			print_line(1, "Could not find local file matching originally built source", DCA_CHANGED);
 		}
 		else
 		{
-			print_line(1, path.local(), DCA_NORMAL);
-			print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_NORMAL);
+			print_line(1, path.local(), DCA_CHANGED);
+			print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_CHANGED);
 		}
-		std::ostringstream s;
-		s << "Originally built source: " << path.built();
-		print_line(3, std::move(s).str().c_str(), DCA_NORMAL);
-		s.str("");
-		s << "Source search path (" << OPTION_DEBUGSRCPATH << "): " << machine().options().debug_source_path();
-		print_line(4, std::move(s).str().c_str(), DCA_NORMAL);
-		s.str("");
-		s << "Source path prefix map (" << OPTION_DEBUGSRCPATHMAP << "): " << machine().options().debug_source_path_map();
-		print_line(5, std::move(s).str().c_str(), DCA_NORMAL);
+
+		std::string s = util::string_format("Originally built source: %s", path.built());
+		print_line(3, s.c_str(), DCA_NORMAL);
+		s = util::string_format("Source search path (%s): %s", OPTION_DEBUGSRCPATH, machine().options().debug_source_path());
+		print_line(4, s.c_str(), DCA_NORMAL);
+		s = util::string_format("Source path prefix map (%s): %s", OPTION_DEBUGSRCPATHMAP, machine().options().debug_source_path_map());
+		print_line(5, s.c_str(), DCA_NORMAL);
 		for (u32 row = 6; row < m_visible.y; row++)
 		{
 			print_line(row, " ", DCA_NORMAL);

@@ -22,9 +22,7 @@ template <typename T> static bool read_field(T * & var, const std::vector<uint8_
 {
 	if (data.size() < i + sizeof(T))
 	{
-		std::ostringstream err;
-		err << "File ended prematurely while reading next field of size " << sizeof(T);
-		error = std::move(std::move(err).str());
+		error = util::string_format("File ended prematurely while reading next field of size %d", sizeof(T));
 		return false;
 	}
 

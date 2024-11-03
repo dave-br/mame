@@ -240,13 +240,11 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 		std::vector<symbol_table::local_range_expression> values;
 		for (local_relative_eval_rule_internal & eval_rule_internal : sym_internal.m_eval_rules)
 		{
-			std::ostringstream expr;
-			expr << "(" 
-				<< state->state_find_entry(eval_rule_internal.m_reg)->symbol() 
-				<< " + " 
-				<< eval_rule_internal.m_reg_offset 
-				<< ")";
-			symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(std::move(expr).str()));
+			std::string expr = util::string_format(
+				"(%s + %d)",
+				state->state_find_entry(eval_rule_internal.m_reg)->symbol(),
+				eval_rule_internal.m_reg_offset);
+			symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
 			values.push_back(std::move(value));
 		}
 

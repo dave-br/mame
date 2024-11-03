@@ -43,7 +43,7 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 		{
 			if (!error.empty())
 			{
-				throw emu_fatalerror("Error reading source-level debugging information file\n%s\n\n%s", di_path, error.c_str());
+				throw emu_fatalerror("Error importing source-level debugging information\n\n%s", error.c_str());
 			}
 			return nullptr;
 		}
