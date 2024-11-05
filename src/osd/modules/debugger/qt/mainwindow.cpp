@@ -264,16 +264,20 @@ void MainWindow::toggleBreakpointAtCursor(bool changedTo)
 	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
 	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
 	{
-		offs_t const address = dasmView->selected_address();
+		std::optional<offs_t> const address = dasmView->selected_address();
+		if (!address.has_value())
+		{
+			return;
+		}
 		device_debug *const cpuinfo = dasmView->source()->device()->debug();
 
 		// Find an existing breakpoint at this address
-		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address);
+		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address.value());
 
 		// If none exists, add a new one
 		std::string command;
 		if (!bp)
-			command = string_format("bpset 0x%X", address);
+			command = string_format("bpset 0x%X", address.value());
 		else
 			command = string_format("bpclear 0x%X", bp->index());
 		m_machine.debugger().console().execute_command(command, true);
@@ -288,11 +292,15 @@ void MainWindow::enableBreakpointAtCursor(bool changedTo)
 	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
 	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
 	{
-		offs_t const address = dasmView->selected_address();
+		std::optional<offs_t> const address = dasmView->selected_address();
+		if (!address.has_value())
+		{
+			return;
+		}
 		device_debug *const cpuinfo = dasmView->source()->device()->debug();
 
 		// Find an existing breakpoint at this address
-		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address);
+		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address.value());
 
 		if (bp)
 		{
@@ -311,8 +319,12 @@ void MainWindow::runToCursor(bool changedTo)
 	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
 	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
 	{
-		offs_t address = dasmView->selected_address();
-		std::string command = string_format("go 0x%X", address);
+		std::optional<offs_t> address = dasmView->selected_address();
+		if (!address.has_value())
+		{
+			return;
+		}
+		std::string command = string_format("go 0x%X", address.value());
 		m_machine.debugger().console().execute_command(command, true);
 	}
 }
@@ -434,17 +446,20 @@ void MainWindow::dasmViewUpdated()
 	bool breakpointEnabled = false;
 	if (haveCursor)
 	{
-		offs_t const address = dasmView->selected_address();
-		device_t *const device = dasmView->source()->device();
-		device_debug *const cpuinfo = device->debug();
-
-		// Find an existing breakpoint at this address
-		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address);
-
-		if (bp)
+		std::optional<offs_t> const address = dasmView->selected_address();
+		if (address.has_value())
 		{
-			haveBreakpoint = true;
-			breakpointEnabled = bp->enabled();
+			device_t *const device = dasmView->source()->device();
+			device_debug *const cpuinfo = device->debug();
+
+			// Find an existing breakpoint at this address
+			const debug_breakpoint *bp = cpuinfo->breakpoint_find(address.value());
+
+			if (bp)
+			{
+				haveBreakpoint = true;
+				breakpointEnabled = bp->enabled();
+			}
 		}
 	}
 
