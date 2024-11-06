@@ -150,6 +150,9 @@ public:
 	QSize minimumSizeHint() const { return QSize(150, 150); }
 	QSize sizeHint() const { return QSize(150, 200); }
 
+private slots:
+	void srcfileChanged(int index);
+
 private:
 	running_machine &m_machine;
 

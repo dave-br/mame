@@ -620,7 +620,19 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 
 	// SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
 	// SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
+	// m_srcdbgCombo->setObjectName("???");
+	// m_srcdbgCombo->setMinimumWidth(300);
+	connect(m_srcdbgCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SrcdbgDockWidget::srcfileChanged);
 }
+
+void SrcdbgDockWidget::srcfileChanged(int index)
+{
+	downcast<debug_view_sourcecode*>(m_srcdbgView->view())->set_src_index(u16(index));
+
+	// reset the focus
+	// set_default_focus();
+}
+
 
 SrcdbgDockWidget::~SrcdbgDockWidget()
 {
