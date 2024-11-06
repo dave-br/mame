@@ -288,7 +288,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::toggleBreakpointAtCursor(bool changedTo)
 {
-	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
+	debug_view_disasm * dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
+	if (m_dasmDock->widget() == m_srcdbgFrame)
+	{
+		dasmView = m_srcdbgFrame->view()->view<debug_view_sourcecode>();
+	}
 	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
 	{
 		std::optional<offs_t> const address = dasmView->selected_address();
