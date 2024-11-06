@@ -20,6 +20,7 @@
 namespace osd::debugger::qt {
 
 class DasmDockWidget;
+class SrcdbgDockWidget;
 class ProcessorDockWidget;
 
 
@@ -52,6 +53,7 @@ private slots:
 	void enableBreakpointAtCursor(bool changedTo);
 	void runToCursor(bool changedTo);
 	void rightBarChanged(QAction *changedTo);
+	void srcdbgBarChanged(QAction *changedTo);
 
 	void executeCommandSlot();
 	void commandEditedSlot(QString const &text);
@@ -66,15 +68,23 @@ private slots:
 	virtual void debuggerExit() override;
 
 private:
+	enum
+	{
+		MENU_SHOW_SOURCE,
+		MENU_SHOW_DISASM
+	};
+
 	void createImagesMenu();
 
 	void executeCommand(bool withClear);
 
 	// Widgets and docks
+	QDockWidget *m_dasmDock;
 	QLineEdit *m_inputEdit;
 	DebuggerView *m_consoleView;
 	ProcessorDockWidget *m_procFrame;
 	DasmDockWidget *m_dasmFrame;
+	SrcdbgDockWidget *m_srcdbgFrame;
 
 	// Menu items
 	QAction *m_breakpointToggleAct;
@@ -121,6 +131,43 @@ private:
 	running_machine &m_machine;
 
 	DebuggerView *m_dasmView;
+};
+
+
+//============================================================
+//  Docks with the Main Window.  Source-level view.
+//============================================================
+class SrcdbgDockWidget : public QWidget
+{
+	Q_OBJECT
+
+public:
+	SrcdbgDockWidget(running_machine &machine, QWidget *parent = nullptr) :
+		QWidget(parent),
+		m_machine(machine)
+	{
+		m_srcdbgView = new DebuggerView(DVT_SOURCE, m_machine, this);
+
+		// Force a recompute of the disassembly region
+		// downcast<debug_view_disasm*>(m_dasmView->view())->set_expression("curpc");
+
+		QVBoxLayout *dvLayout = new QVBoxLayout(this);
+		// TODO: ADD FILENAME COMBO
+		dvLayout->addWidget(m_srcdbgView);
+		dvLayout->setContentsMargins(4,0,4,0);
+	}
+
+	virtual ~SrcdbgDockWidget();
+
+	DebuggerView *view() { return m_srcdbgView; }
+
+	QSize minimumSizeHint() const { return QSize(150, 150); }
+	QSize sizeHint() const { return QSize(150, 200); }
+
+private:
+	running_machine &m_machine;
+
+	DebuggerView *m_srcdbgView;
 };
 
 

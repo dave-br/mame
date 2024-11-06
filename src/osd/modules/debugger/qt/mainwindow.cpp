@@ -94,6 +94,22 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 	rightActRaw->setChecked(true);
 	connect(rightBarGroup, &QActionGroup::triggered, this, &MainWindow::rightBarChanged);
 
+	// Source vs. disassembly
+	QActionGroup *srcdbgGroup = new QActionGroup(this);
+	srcdbgGroup->setObjectName("srcdbggroup");
+	QAction *srcdbgSource = new QAction("Show Source", this);
+	QAction *srcdbgDasm = new QAction("Show Disassembly", this);
+	srcdbgSource->setData(int(MENU_SHOW_SOURCE));
+	srcdbgDasm->setData(int(MENU_SHOW_DISASM));
+	srcdbgSource->setCheckable(true);
+	srcdbgDasm->setCheckable(true);
+	srcdbgSource->setActionGroup(srcdbgGroup);
+	srcdbgDasm->setActionGroup(srcdbgGroup);
+	srcdbgSource->setShortcut(QKeySequence("Ctrl+U"));
+	srcdbgDasm->setShortcut(QKeySequence("Ctrl+Shift+U"));
+	srcdbgDasm->setChecked(true);
+	connect(srcdbgGroup, &QActionGroup::triggered, this, &MainWindow::srcdbgBarChanged);
+
 	// Assemble the options menu
 	QMenu *optionsMenu = menuBar()->addMenu("&Options");
 	optionsMenu->addAction(m_breakpointToggleAct);
@@ -101,6 +117,8 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 	optionsMenu->addAction(m_runToCursorAct);
 	optionsMenu->addSeparator();
 	optionsMenu->addActions(rightBarGroup->actions());
+	optionsMenu->addSeparator();
+	optionsMenu->addActions(srcdbgGroup->actions());
 
 	//
 	// Images menu
@@ -128,15 +146,18 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 	dockMenu->addAction(cpuDock->toggleViewAction());
 
 	// The disassembly dock
-	QDockWidget *dasmDock = new QDockWidget("dasm", this);
-	dasmDock->setObjectName("dasmdock");
-	dasmDock->setAllowedAreas(Qt::TopDockWidgetArea);
-	m_dasmFrame = new DasmDockWidget(m_machine, dasmDock);
-	dasmDock->setWidget(m_dasmFrame);
+	m_dasmDock = new QDockWidget("dasm", this);
+	m_dasmDock->setObjectName("dasmdock");
+	m_dasmDock->setAllowedAreas(Qt::TopDockWidgetArea);
+	m_srcdbgFrame = new SrcdbgDockWidget(m_machine, m_dasmDock);
+	m_srcdbgFrame->setVisible(false);
+	connect(m_srcdbgFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
+	m_dasmFrame = new DasmDockWidget(m_machine, m_dasmDock);
+	m_dasmDock->setWidget(m_dasmFrame);
 	connect(m_dasmFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
 
-	addDockWidget(Qt::TopDockWidgetArea, dasmDock);
-	dockMenu->addAction(dasmDock->toggleViewAction());
+	addDockWidget(Qt::TopDockWidgetArea, m_dasmDock);
+	dockMenu->addAction(m_dasmDock->toggleViewAction());
 }
 
 
@@ -337,6 +358,24 @@ void MainWindow::rightBarChanged(QAction *changedTo)
 	m_dasmFrame->view()->viewport()->update();
 }
 
+void MainWindow::srcdbgBarChanged(QAction *changedTo)
+{
+	if (changedTo->data().toInt() == MENU_SHOW_SOURCE)
+	{
+		m_dasmFrame->setVisible(false);
+		m_srcdbgFrame->setVisible(true);
+		m_dasmDock->setWidget(m_srcdbgFrame);
+		m_machine.debug_view().update_all(DVT_SOURCE);
+	}
+	else
+	{
+		m_dasmFrame->setVisible(true);
+		m_srcdbgFrame->setVisible(false);
+		m_dasmDock->setWidget(m_dasmFrame);
+		m_machine.debug_view().update_all(DVT_DISASSEMBLY);
+	}
+}
+
 void MainWindow::executeCommandSlot()
 {
 	executeCommand(true);
@@ -520,6 +559,10 @@ void MainWindow::createImagesMenu()
 
 
 DasmDockWidget::~DasmDockWidget()
+{
+}
+
+SrcdbgDockWidget::~SrcdbgDockWidget()
 {
 }
 
