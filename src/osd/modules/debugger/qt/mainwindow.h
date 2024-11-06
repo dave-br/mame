@@ -142,21 +142,7 @@ class SrcdbgDockWidget : public QWidget
 	Q_OBJECT
 
 public:
-	SrcdbgDockWidget(running_machine &machine, QWidget *parent = nullptr) :
-		QWidget(parent),
-		m_machine(machine)
-	{
-		m_srcdbgView = new DebuggerView(DVT_SOURCE, m_machine, this);
-
-		// Force a recompute of the disassembly region
-		// downcast<debug_view_disasm*>(m_dasmView->view())->set_expression("curpc");
-
-		QVBoxLayout *dvLayout = new QVBoxLayout(this);
-		// TODO: ADD FILENAME COMBO
-		dvLayout->addWidget(m_srcdbgView);
-		dvLayout->setContentsMargins(4,0,4,0);
-	}
-
+	SrcdbgDockWidget(running_machine &machine, QWidget *parent = nullptr);
 	virtual ~SrcdbgDockWidget();
 
 	DebuggerView *view() { return m_srcdbgView; }
@@ -167,6 +153,7 @@ public:
 private:
 	running_machine &m_machine;
 
+	QComboBox *m_srcdbgCombo;
 	DebuggerView *m_srcdbgView;
 };
 

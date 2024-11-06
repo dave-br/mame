@@ -8,6 +8,7 @@
 #include "debug/debugcpu.h"
 #include "debug/dvdisasm.h"
 #include "debug/points.h"
+#include "debug/dvsourcecode.h"
 
 #include "util/xmlfile.h"
 
@@ -94,7 +95,7 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 	rightActRaw->setChecked(true);
 	connect(rightBarGroup, &QActionGroup::triggered, this, &MainWindow::rightBarChanged);
 
-	// Source vs. disassembly
+	// Source-level debugging vs. disassembly
 	QActionGroup *srcdbgGroup = new QActionGroup(this);
 	srcdbgGroup->setObjectName("srcdbggroup");
 	QAction *srcdbgSource = new QAction("Show Source", this);
@@ -145,16 +146,21 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 	addDockWidget(Qt::LeftDockWidgetArea, cpuDock);
 	dockMenu->addAction(cpuDock->toggleViewAction());
 
-	// The disassembly dock
+	// The disassembly / source-level debugging dock
 	m_dasmDock = new QDockWidget("dasm", this);
 	m_dasmDock->setObjectName("dasmdock");
 	m_dasmDock->setAllowedAreas(Qt::TopDockWidgetArea);
+
+	// Disassembly frame
+	m_dasmFrame = new DasmDockWidget(m_machine, m_dasmDock);
+	connect(m_dasmFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
+
+	// Source-level debugging frame
 	m_srcdbgFrame = new SrcdbgDockWidget(m_machine, m_dasmDock);
 	m_srcdbgFrame->setVisible(false);
 	connect(m_srcdbgFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
-	m_dasmFrame = new DasmDockWidget(m_machine, m_dasmDock);
-	m_dasmDock->setWidget(m_dasmFrame);
-	connect(m_dasmFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
+
+	m_dasmDock->setWidget(m_dasmFrame);							// Initially show disassembly view
 
 	addDockWidget(Qt::TopDockWidgetArea, m_dasmDock);
 	dockMenu->addAction(m_dasmDock->toggleViewAction());
@@ -560,6 +566,60 @@ void MainWindow::createImagesMenu()
 
 DasmDockWidget::~DasmDockWidget()
 {
+}
+
+SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* = nullptr */) :
+	QWidget(parent),
+	m_machine(machine)
+{
+	m_srcdbgCombo = new QComboBox(this);
+	m_srcdbgView = new DebuggerView(DVT_SOURCE, m_machine, this);
+
+	// Force a recompute of the disassembly region
+	// downcast<debug_view_disasm*>(m_dasmView->view())->set_expression("curpc");
+
+	QVBoxLayout *dvLayout = new QVBoxLayout(this);
+	dvLayout->addWidget(m_srcdbgCombo);
+	dvLayout->addWidget(m_srcdbgView);
+	dvLayout->setContentsMargins(4,0,4,0);
+	dvLayout->setSpacing(3);
+// srcdbgLayout->setContentsMargins(4,0,4,2);
+
+
+	// // create a combo box
+	// HWND const result = CreateWindowEx(COMBO_BOX_STYLE_EX, TEXT("COMBOBOX"), nullptr, COMBO_BOX_STYLE,
+	// 		0, 0, 100, 1000, parent, nullptr, GetModuleHandleUni(), nullptr);
+	// SetWindowLongPtr(result, GWLP_USERDATA, userdata);
+	// SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
+
+	const debug_view_sourcecode *dvSource = downcast<debug_view_sourcecode*>(m_srcdbgView->view());
+	const srcdbg_provider_base * debugInfo = dvSource->srcdbg_provider();
+
+	if (debugInfo == nullptr)
+	{
+		// hide combobox when source-level debugging is off
+		m_srcdbgCombo->setVisible(false);
+		return;
+	}
+
+	// populate the combobox with source file paths when present
+	// size_t maxlength = 0;
+	std::size_t numFiles = debugInfo->num_files();
+	for (std::size_t i = 0; i < numFiles; i++)
+	{
+		const char * entryText = debugInfo->file_index_to_path(i).built();
+		// size_t const length = strlen(entry_text);
+		// if (length > maxlength)
+		// {
+		// 	maxlength = length;
+		// }
+		// auto t_name = osd::text::to_tstring(entry_text);
+		// SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
+		m_srcdbgCombo->addItem(entryText);
+	}
+
+	// SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
+	// SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
 }
 
 SrcdbgDockWidget::~SrcdbgDockWidget()
