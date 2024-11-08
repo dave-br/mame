@@ -1509,7 +1509,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 	std::string original_symbol_name;
 	while (1)
 	{
-		static const char valid[] = "abcdefghijklmnopqrstuvwxyz0123456789_$#.:";
+		static const char valid[] = "abcdefghijklmnopqrstuvwxyz0123456789_$#.:\\";
 		char val = tolower(u8(string[0]));
 		if (val == 0 || strchr(valid, val) == nullptr)
 			break;
@@ -1631,7 +1631,7 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 		// wants a built-in or device symbol, and not a source-level debugging symbol
 		bool skip_srcdbg = false;
 		u32 symbol_start_offset = 0;
-		constexpr char skip_srcdbg_prefix[] = "bi:";
+		constexpr char skip_srcdbg_prefix[] = "ns\\";
 		if (buffer.compare(0, sizeof(skip_srcdbg_prefix) - 1, skip_srcdbg_prefix) == 0)
 		{
 			skip_srcdbg = true;
