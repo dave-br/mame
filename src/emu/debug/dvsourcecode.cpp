@@ -172,8 +172,7 @@ void debug_view_sourcecode::view_update()
 		pc_changed = update_previous_pc(pc);
 	}
 
-	// Ensure correct file is opened
-
+	// If pc has changed, find its file & line number if possible
 	if (pc_changed)
 	{
 		std::optional<file_line> file_line = m_srcdbg_provider->address_to_file_line(pc);
@@ -182,42 +181,31 @@ void debug_view_sourcecode::view_update()
 			m_cur_src_index = file_line.value().file_index();
 			m_line_for_cur_pc = file_line.value().line_number();
 		}
-	}
-
-	update_opened_file();
-	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider->file_index_to_path(m_cur_src_index);
-
-	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
-	{
-		print_line(0, "Error opening file", DCA_CHANGED);
-		if (path.local() == nullptr)
-		{
-			print_line(1, "Could not find local file matching originally built source", DCA_CHANGED);
-		}
 		else
 		{
-			print_line(1, path.local(), DCA_CHANGED);
-			print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_CHANGED);
+			pc_changed = false;
 		}
+	}
 
-		std::string s = util::string_format("Originally built source: %s", path.built());
-		print_line(3, s.c_str(), DCA_NORMAL);
-		s = util::string_format("Source search path (%s): %s", OPTION_DEBUGSRCPATH, machine().options().debug_source_path());
-		print_line(4, s.c_str(), DCA_NORMAL);
-		s = util::string_format("Source path prefix map (%s): %s", OPTION_DEBUGSRCPATHMAP, machine().options().debug_source_path_map());
-		print_line(5, s.c_str(), DCA_NORMAL);
-		for (u32 row = 6; row < m_visible.y; row++)
-		{
-			print_line(row, " ", DCA_NORMAL);
-		}
+	// Ensure the correct file is open.  First time view is displayed, this opens
+	// the top of file index 0
+	update_opened_file();
+
+	// Verify the open succeeded
+	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider->file_index_to_path(m_cur_src_index);
+	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
+	{
+		print_file_open_error(path);
 		return;
 	}
 
+	// Scroll current line into view if necessary
 	if (pc_changed)
 	{
 		update_visible_lines(pc);
 	}
 
+	// Populate view with the correct text
 	for (u32 row = 0; row < m_visible.y; row++)
 	{
 		u32 line = row + m_topleft.y + 1;
@@ -252,6 +240,31 @@ void debug_view_sourcecode::view_update()
 				m_displayed_src_file->get_line_text(line),
 				attrib);
 		}
+	}
+}
+
+void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::source_file_path & path)
+{
+	print_line(0, "Error opening file", DCA_CHANGED);
+	if (path.local() == nullptr)
+	{
+		print_line(1, "Could not find local file matching originally built source", DCA_CHANGED);
+	}
+	else
+	{
+		print_line(1, path.local(), DCA_CHANGED);
+		print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_CHANGED);
+	}
+
+	std::string s = util::string_format("Originally built source: %s", path.built());
+	print_line(3, s.c_str(), DCA_NORMAL);
+	s = util::string_format("Source search path (%s): %s", OPTION_DEBUGSRCPATH, machine().options().debug_source_path());
+	print_line(4, s.c_str(), DCA_NORMAL);
+	s = util::string_format("Source path prefix map (%s): %s", OPTION_DEBUGSRCPATHMAP, machine().options().debug_source_path_map());
+	print_line(5, s.c_str(), DCA_NORMAL);
+	for (u32 row = 6; row < m_visible.y; row++)
+	{
+		print_line(row, " ", DCA_NORMAL);
 	}
 }
 

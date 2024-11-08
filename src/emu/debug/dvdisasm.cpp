@@ -316,7 +316,7 @@ int debug_view_disasm::address_position(offs_t pc) const
 
 bool debug_view_disasm::update_previous_pc(offs_t pc)
 {
-	bool pc_changed = pc != m_previous_pc;
+	bool pc_changed = (pc != m_previous_pc);
 	m_previous_pc = pc;
 	return pc_changed;
 }

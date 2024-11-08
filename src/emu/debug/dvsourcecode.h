@@ -68,6 +68,7 @@ protected:
 private:
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
+	void print_file_open_error(const srcdbg_provider_base::source_file_path & path);
 
 	u32 first_visible_line() { return m_topleft.y + 1; }
 	bool is_visible(u32 line) { return (first_visible_line() <= line && line < first_visible_line() + m_visible.y); }

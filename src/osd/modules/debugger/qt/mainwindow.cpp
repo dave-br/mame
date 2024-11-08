@@ -573,7 +573,6 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 	QWidget(parent),
 	m_machine(machine)
 {
-	// TODO: JUST NOW: While running in basic repl, cannot scroll source view without it snapping back
 	m_srcdbgCombo = new QComboBox(this);
 	m_srcdbgView = new DebuggerView(DVT_SOURCE, m_machine, this);
 
