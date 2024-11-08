@@ -48,6 +48,12 @@ protected:
 	// Used to intercept the user hitting the up arrow in the input widget
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;
 
+protected slots:
+	// Overrides allow different behavior when source-level debugging is active
+	virtual void debugActStepInto() override;
+	virtual void debugActStepOver() override;
+	virtual void debugActStepOut() override;
+
 private slots:
 	void toggleBreakpointAtCursor(bool changedTo);
 	void enableBreakpointAtCursor(bool changedTo);
@@ -77,6 +83,8 @@ private:
 	void createImagesMenu();
 
 	void executeCommand(bool withClear);
+
+	bool sourceFrameActive();
 
 	// Widgets and docks
 	QDockWidget *m_dasmDock;

@@ -290,7 +290,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 void MainWindow::toggleBreakpointAtCursor(bool changedTo)
 {
 	debug_view_disasm * dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
-	if (m_dasmDock->widget() == m_srcdbgFrame)
+	if (sourceFrameActive())
 	{
 		dasmView = m_srcdbgFrame->view()->view<debug_view_sourcecode>();
 	}
@@ -399,7 +399,7 @@ void MainWindow::executeCommand(bool withClear)
 	if (command == "")
 	{
 		// A blank command is a "silent step"
-		m_machine.debugger().console().get_visible_cpu()->debug()->single_step();
+		debugActStepInto();
 		m_inputHistory.reset();
 	}
 	else
@@ -417,6 +417,30 @@ void MainWindow::executeCommand(bool withClear)
 			m_inputHistory.edit();
 		}
 	}
+}
+
+
+bool MainWindow::sourceFrameActive()
+{
+	 return m_dasmDock->widget() == m_srcdbgFrame; 
+}
+
+
+void MainWindow::debugActStepInto()
+{
+	m_machine.debugger().console().get_visible_cpu()->debug()->single_step(1, sourceFrameActive());
+}
+
+
+void MainWindow::debugActStepOver()
+{
+	m_machine.debugger().console().get_visible_cpu()->debug()->single_step_over(1, sourceFrameActive());
+}
+
+
+void MainWindow::debugActStepOut()
+{
+	m_machine.debugger().console().get_visible_cpu()->debug()->single_step_out(sourceFrameActive());
 }
 
 
