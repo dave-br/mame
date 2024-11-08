@@ -74,6 +74,7 @@ bool srcdbg_import::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 	return true;
 }
 
+
 bool srcdbg_import::end_read_line_mappings()
 {
 	// For each source file, sort its linemaps_by_line by line number
@@ -341,8 +342,7 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 	return std::optional<int>();
 }
 
-// Given a source file & line number, return the address of the first byte of
-// the first instruction of the range of instructions attributable to that line
+// Given a source file & line number, return all address ranges attributable to that line
 void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
 	if (file_index >= m_linemaps_by_line.size())
@@ -361,15 +361,10 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 		list.cend(), 
 		line_number,
 		[] (auto const &adrline, u32 line) { return adrline.line_number < line; });
-	if (answer == list.cend())
-	{
-		// line_number > last mapped line, so just use the last mapped line
-		return ranges.push_back(address_range((answer-1)->address_first, (answer-1)->address_last));
-	}
 
 	// m_line_maps_by_line is sorted by line, then address.  answer is the leftmost entry
 	// with line_number <= answer->line_number.  Add all ranges with matching line number
-	while (answer->line_number == line_number)
+	while (answer < list.cend() && answer->line_number == line_number)
 	{
 		ranges.push_back(address_range(answer->address_first, answer->address_last));
 		answer++;
