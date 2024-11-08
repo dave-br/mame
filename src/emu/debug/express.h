@@ -219,7 +219,7 @@ public:
 	symbol_entry &add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
 	symbol_entry &add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values);
 	symbol_entry *find(const char *name) const { if (name) { auto search = m_symlist.find(name); if (search != m_symlist.end()) return search->second.get(); else return nullptr; } else return nullptr; }
-	symbol_entry *find_deep(const char *name);
+	symbol_entry *find_deep(const char *name, bool skip_srcdbg = false);
 
 	// value getter/setter
 	u64 value(const char *symbol);

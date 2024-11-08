@@ -613,11 +613,13 @@ symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_
 //  looking in the parent if needed
 //-------------------------------------------------
 
-symbol_entry *symbol_table::find_deep(const char *symbol)
+symbol_entry *symbol_table::find_deep(const char *symbol, bool skip_srcdbg /* = false */)
 {
 	// walk up the table hierarchy to find the owner
 	for (symbol_table *symtable = this; symtable != nullptr; symtable = symtable->m_parent)
 	{
+		if (skip_srcdbg && (symtable->type() == SRCDBG_LOCALS || symtable->type() == SRCDBG_GLOBALS))
+			continue;
 		symbol_entry *entry = symtable->find(symbol);
 		if (entry != nullptr && entry->is_in_scope())
 			return entry;
@@ -1624,13 +1626,25 @@ void parsed_expression::parse_symbol_or_number(parse_token &token, const char *&
 
 	default:
 		// check for a symbol match
+		//
+		// If the symbol starts with the disambiguation prefix, user explicitly
+		// wants a built-in or device symbol, and not a source-level debugging symbol
+		bool skip_srcdbg = false;
+		u32 symbol_start_offset = 0;
+		constexpr char skip_srcdbg_prefix[] = "bi:";
+		if (buffer.compare(0, sizeof(skip_srcdbg_prefix) - 1, skip_srcdbg_prefix) == 0)
+		{
+			skip_srcdbg = true;
+			symbol_start_offset = sizeof(skip_srcdbg_prefix) - 1;
+		}
+
 		// Symbols loaded via source-debugging info are case-sensitive, so first try
 		// with the original case specified by user
-		symbol_entry *symbol = m_symtable.get().find_deep(original_symbol_name.c_str());
+		symbol_entry *symbol = m_symtable.get().find_deep(original_symbol_name.c_str() + symbol_start_offset, skip_srcdbg);
 		if (symbol == nullptr)
 		{
 			// Not found, try again with lower case
-			symbol = m_symtable.get().find_deep(buffer.c_str());
+			symbol = m_symtable.get().find_deep(buffer.c_str() + symbol_start_offset, skip_srcdbg);
 		}
 		if (symbol != nullptr)
 		{
