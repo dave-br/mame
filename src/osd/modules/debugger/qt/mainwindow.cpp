@@ -157,10 +157,10 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 
 	// Source-level debugging frame
 	m_srcdbgFrame = new SrcdbgDockWidget(m_machine, m_dasmDock);
-	m_srcdbgFrame->setVisible(false);
 	connect(m_srcdbgFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
 
-	m_dasmDock->setWidget(m_dasmFrame);							// Initially show disassembly view
+	m_dasmDock->setWidget(m_srcdbgFrame);    // Temporary, so view can initialize its size fields
+	m_dasmDock->setWidget(m_dasmFrame);      // Disassembly is the actual view to show on startup
 
 	addDockWidget(Qt::TopDockWidgetArea, m_dasmDock);
 	dockMenu->addAction(m_dasmDock->toggleViewAction());
@@ -373,15 +373,11 @@ void MainWindow::srcdbgBarChanged(QAction *changedTo)
 {
 	if (changedTo->data().toInt() == MENU_SHOW_SOURCE)
 	{
-		m_dasmFrame->setVisible(false);
-		m_srcdbgFrame->setVisible(true);
 		m_dasmDock->setWidget(m_srcdbgFrame);
 		m_machine.debug_view().update_all(DVT_SOURCE);
 	}
 	else
 	{
-		m_dasmFrame->setVisible(true);
-		m_srcdbgFrame->setVisible(false);
 		m_dasmDock->setWidget(m_dasmFrame);
 		m_machine.debug_view().update_all(DVT_DISASSEMBLY);
 	}
@@ -577,65 +573,39 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 	QWidget(parent),
 	m_machine(machine)
 {
+	// TODO: JUST NOW: While running in basic repl, cannot scroll source view without it snapping back
 	m_srcdbgCombo = new QComboBox(this);
 	m_srcdbgView = new DebuggerView(DVT_SOURCE, m_machine, this);
-
-	// Force a recompute of the disassembly region
-	// downcast<debug_view_disasm*>(m_dasmView->view())->set_expression("curpc");
 
 	QVBoxLayout *dvLayout = new QVBoxLayout(this);
 	dvLayout->addWidget(m_srcdbgCombo);
 	dvLayout->addWidget(m_srcdbgView);
 	dvLayout->setContentsMargins(4,0,4,0);
 	dvLayout->setSpacing(3);
-// srcdbgLayout->setContentsMargins(4,0,4,2);
-
-
-	// // create a combo box
-	// HWND const result = CreateWindowEx(COMBO_BOX_STYLE_EX, TEXT("COMBOBOX"), nullptr, COMBO_BOX_STYLE,
-	// 		0, 0, 100, 1000, parent, nullptr, GetModuleHandleUni(), nullptr);
-	// SetWindowLongPtr(result, GWLP_USERDATA, userdata);
-	// SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
 
 	const debug_view_sourcecode *dvSource = downcast<debug_view_sourcecode*>(m_srcdbgView->view());
 	const srcdbg_provider_base * debugInfo = dvSource->srcdbg_provider();
 
 	if (debugInfo == nullptr)
 	{
-		// hide combobox when source-level debugging is off
-		m_srcdbgCombo->setVisible(false);
+		// Nothing else to do if source-level debugging is off
 		return;
 	}
 
 	// populate the combobox with source file paths when present
-	// size_t maxlength = 0;
 	std::size_t numFiles = debugInfo->num_files();
 	for (std::size_t i = 0; i < numFiles; i++)
 	{
 		const char * entryText = debugInfo->file_index_to_path(i).built();
-		// size_t const length = strlen(entry_text);
-		// if (length > maxlength)
-		// {
-		// 	maxlength = length;
-		// }
-		// auto t_name = osd::text::to_tstring(entry_text);
-		// SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
 		m_srcdbgCombo->addItem(entryText);
 	}
 
-	// SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
-	// SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
-	// m_srcdbgCombo->setObjectName("???");
-	// m_srcdbgCombo->setMinimumWidth(300);
 	connect(m_srcdbgCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SrcdbgDockWidget::srcfileChanged);
 }
 
 void SrcdbgDockWidget::srcfileChanged(int index)
 {
 	downcast<debug_view_sourcecode*>(m_srcdbgView->view())->set_src_index(u16(index));
-
-	// reset the focus
-	// set_default_focus();
 }
 
 
