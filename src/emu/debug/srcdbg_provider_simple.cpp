@@ -29,7 +29,12 @@ static void normalize_path_separators(std::string & path)
 	strreplace(path, "\\", PATH_SEPARATOR);
 }
 
+// ------------------------------------------------------------------------------------
+// srcdbg_import class (callbacks) implementation
+// ------------------------------------------------------------------------------------
 
+// Constructor receives the srcdbg_provider_simple instance this is reponsible for
+// importing data into
 srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	: m_srcdbg_simple(srcdbg_simple) 
 	, m_symbol_names()
@@ -105,6 +110,7 @@ bool srcdbg_import::end_read_line_mappings()
 	return true; 
 }
 
+
 bool srcdbg_import::on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name)
 {
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
@@ -163,7 +169,13 @@ bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_sym
 	return true;
 }
 
-
+// Helper to take the source file's "built" path (as output by the assembler / compiler
+// that generated the source-debugging information file), and find the local path
+// on the MAME user's system where the source file can be found.
+// Makes use of (1) the source prefix map (specified by the user, which replaces a
+// left substring of a built path with a local-friendly substring, e.g., to change
+// drive letters or parent folders), and (2) a source file search path (set of
+// paths specified by the user where source files can be found).
 void srcdbg_import::generate_local_path(const std::string & built, std::string & local)
 {
 	namespace fs = std::filesystem;
@@ -193,6 +205,10 @@ void srcdbg_import::generate_local_path(const std::string & built, std::string &
 	// None found, leave local == built
 }
 
+
+// Helper to apply the source prefix map specified by the user, which replaces a
+// left substring of a built path with a local-friendly substring, e.g., to change
+// drive letters or parent folders
 void srcdbg_import::apply_source_prefix_map(std::string & local)
 {
 	path_iterator path(m_normalized_debug_source_path_map);
@@ -219,6 +235,10 @@ void srcdbg_import::apply_source_prefix_map(std::string & local)
 }
 
 
+// ------------------------------------------------------------------------------------
+// srcdbg_provider_simple class implementation
+// ------------------------------------------------------------------------------------
+
 srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	: srcdbg_provider_base()
 	, m_machine(machine)
@@ -230,6 +250,8 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 {
 }
 
+// Called later during startup, after device_state_interfaces are available.
+// Generates expressions required to implement local relative symbol evaluation rules.
 void srcdbg_provider_simple::complete_local_relative_initialization()
 {
 	assert (m_local_relative_symbols.empty());
@@ -257,7 +279,7 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 }
 
 
-// Returns whether the right-most characters of full_string match suffix
+// Helper: returns whether the right-most characters of full_string match suffix
 static bool suffix_match(const char * full_string, const char * suffix, bool case_sensitive)
 {
 	size_t full_string_length = strlen(full_string);
@@ -334,12 +356,12 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 		if (match_lists[list_idx]->size() > 1)
 		{
 			// Error: file_path ambiguous
-			return std::optional<int>();
+			return std::optional<u32>();
 		}
 	}
 
 	// Error: file_path not found
-	return std::optional<int>();
+	return std::optional<u32>();
 }
 
 // Given a source file & line number, return all address ranges attributable to that line
@@ -370,6 +392,7 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 		answer++;
 	}
 }
+
 
 // Given an address, return the source file & line number attributable to the
 // range of addresses that includes the specified address

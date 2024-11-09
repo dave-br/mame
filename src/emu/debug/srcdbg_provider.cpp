@@ -49,6 +49,9 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 		}
 		return ret;
 	}
+
+	// FUTURE: If more file formats are invented, add cases for them here to read them
+	
 	default:
 		assert(!"Unexpected source-level debugging information file format");
 		return nullptr;

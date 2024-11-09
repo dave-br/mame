@@ -18,7 +18,7 @@
 
 #include "express.h"
 
-
+// Simple file index / line number pair
 class file_line
 {
 public:
@@ -41,10 +41,18 @@ private:
 	u32 m_line_number;
 };
 
-// abstract base class for debug-info (symbols) file readers
+
+// Each source-debugging information file format derives from this
+// abstract base class to provide debugging information to the rest of
+// the debugger
 class srcdbg_provider_base
 {
 public:
+	// Represents a single source file to be debugged.  Includes the original
+	// "built" path (as output by the assembler / compiler that generated the
+	// source-debugging information file), and a "local" path as it appears on
+	// the MAME user's system.  These can be different when the debugged
+	// program was built on a different system from the one in which MAME runs
 	class source_file_path
 	{
 	public:
@@ -62,6 +70,10 @@ public:
 		std::string m_local;
 	};
 
+
+	// Represents a global fixed symbol to the rest of the debugger.  Such symbols
+	// are not limited to a scope, and represent a single value (such as a
+	// single variable address)
 	class global_fixed_symbol
 	{
 	public:
@@ -79,6 +91,10 @@ public:
 		s64 m_value;
 	};
 
+
+	// Represents a local fixed symbol to the rest of the debugger.  Such symbols
+	// are limited to ranges of addresses (scopes), and represent a single value
+	// (such as a single variable address).
 	class local_fixed_symbol
 	{
 	public:
@@ -99,6 +115,12 @@ public:
 		s64 m_value_integer;
 	};
 
+	
+	// Represents a local fixed symbol to the rest of the debugger.  Such symbols
+	// are limited to ranges of addresses (scopes), and represent a value calculated
+	// as an offset to a register (such	as an offset to a stack or frame register).
+	// Each scope has its own, potentially different, register-offset calculation
+	// to determine the symbol's value.
 	class local_relative_symbol
 	{
 	public:
@@ -115,16 +137,34 @@ public:
 		std::vector<symbol_table::local_range_expression> m_ranges;
 	};
 
-
 	typedef std::pair<offs_t,offs_t> address_range;
+
+	// Called on startup to load the source-debugging information file and return
+	// an instance of a subclass of this abstract base class
 	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine);
+
 	virtual ~srcdbg_provider_base() {};
+
+	// Called later during startup, after device_state_interfaces are available.
+	// Generates expressions required to implement local relative symbol evaluation rules.
 	virtual void complete_local_relative_initialization() = 0;
+
+	// Returns the number of source file paths
 	virtual u32 num_files() const = 0;
+
+	// Returns the source_file_path corresponding to the specified 0-based file index
 	virtual const source_file_path & file_index_to_path(u32 file_index) const = 0;
+
+	// Returns the 0-based file index corresponding to the specified source file path
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const = 0;
+
+	// Returns all address ranges corresponding to the specified source file / line number pair
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
+
+	// Returns the source file / line number pair corresponding to the specified address,
+	// or an empty std::optional if no such pair exists
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
+
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
 	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
 	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;

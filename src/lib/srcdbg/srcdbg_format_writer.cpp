@@ -9,7 +9,7 @@
 
 	This library makes only minimal use of C++ (e.g., no STL or even
 	new / delete) to avoid the need for consumers to link to the
-	standard C++ library .  This allows C-only tools to easily link
+	standard C++ library.  This allows C-only tools to easily link
 	to this library.
 
 ***************************************************************************/
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+
 
 #define RET_IF_FAIL(expr)                              \
 	{                                                  \
@@ -397,7 +398,6 @@ public:
 		return MAME_SRCDBG_E_SUCCESS;
 	}
 
-
 	int close()
 	{
 		FWRITE_OR_RETURN(&m_header, sizeof(m_header), 1, m_output);
@@ -469,7 +469,9 @@ private:
 
 
 // ------------------------------------------------------------------
-// Public API - C Interface for assemblers / compilers
+// Public API - C Interface for assemblers / compilers.  These
+// are simple wrappers around public member functions from
+// srcdbg_simple_generator
 // ------------------------------------------------------------------
 
 int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
