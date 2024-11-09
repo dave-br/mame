@@ -17,7 +17,7 @@
 
 #include <cstdio>
 
-
+// Helper to read some bytes and advance the index
 template <typename T> static bool read_field(T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
 {
 	if (data.size() < i + sizeof(T))
@@ -32,6 +32,12 @@ template <typename T> static bool read_field(T * & var, const std::vector<uint8_
 }
 
 
+// Reads the source-level debugging information file format and base
+// header fields.
+// [in] srcdbg_path - Path to source-level debugging information file
+// [out] format - On success, the format reported by the header
+// [out] error - On failure, explanatory error text
+// Returns true on success, false on failure.
 bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error)
 {
 	util::core_file::ptr file;
@@ -71,15 +77,24 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 
 	format = SRCDBG_FORMAT_SIMPLE;
 
-	// FUTURE: If new formats are created (for machines where "simp" is unsuitable),
+	// FUTURE: If new formats are created (for emulated machines where "simp" is unsuitable),
 	// add code here to read the format identifier and return the appropriate format enum
 
 	return true;
 }
 
 
+// Reads the source-level debugging information file already
+// determined to be in the "simple" format
+// [in] srcdbg_path - Path to source-level debugging information file
+// [in] callback - An implementation of a subclass of srcdbg_format_reader_callback
+//		to receive callbacks while reading the file
+// [out] error - On failure, explanatory error text
+// Returns true on success, false on failure or if a caller-supplied callback returns false
 bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
 {
+	// ** Load full binary contents into memory **
+
 	std::vector<uint8_t> data;
 	std::error_condition err_code = util::core_file::load(srcdbg_path, data);
 	if (err_code)
@@ -87,6 +102,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
 		return false;
 	}
+
+	// ** Simple format header **
 
 	u32 i = 0;
 	mame_debug_info_simple_header * header;
@@ -102,6 +119,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	header->num_global_fixed_symbol_values = little_endianize_int32(header->num_global_fixed_symbol_values);
 	header->local_fixed_symbol_values_size = little_endianize_int32(header->local_fixed_symbol_values_size);
 	header->local_relative_symbol_values_size = little_endianize_int32(header->local_relative_symbol_values_size);
+
+	// ** Validate some sizes and null terminators **
 
 	u32 first_line_mapping = i + header->source_file_paths_size;
 	if (data.size() <= first_line_mapping - 1)
@@ -154,6 +173,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		return false;
 	}
 
+	// ** Source file paths **
+
 	std::string str;
 	u32 source_index = 0;
 	for (; i < first_line_mapping; i++)
@@ -176,6 +197,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	{
 		return false;
 	}
+
+	// ** Line mappings **
 
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
@@ -207,6 +230,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		return false;
 	}
 
+	// ** Symbol names **
+
 	u32 symbol_index = 0;
 	str.clear();
 	for (; i < after_symbol_names; i++)
@@ -229,6 +254,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	{
 		return false;
 	}
+
+	// ** Global fixed symbols **
 
 	for (u32 global_fixed_idx = 0; global_fixed_idx < header->num_global_fixed_symbol_values; global_fixed_idx++)
 	{
@@ -257,6 +284,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	{
 		return false;
 	}
+
+	// ** Local fixed symbols **
 
 	while (i < after_local_fixed_symbol_values)
 	{
@@ -298,6 +327,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	{
 		return false;
 	}
+
+	// ** Local relative symbols **
 
 	while (i < after_local_relative_symbol_values)
 	{
