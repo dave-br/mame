@@ -15,14 +15,25 @@
 #include "emuopts.h"
 
 
-line_indexed_file::line_indexed_file() :
+
+//-------------------------------------------------
+// line_indexed_file - constructor
+//-------------------------------------------------
+
+debug_view_sourcecode::line_indexed_file::line_indexed_file() :
 	m_err(),
 	m_data(),
 	m_line_starts()
 {
 }
 
-const std::error_condition & line_indexed_file::open(const char * file_path)
+
+//-------------------------------------------------
+// open - Reads full contents of text file,
+// and initializes line index
+//-------------------------------------------------
+
+const std::error_condition & debug_view_sourcecode::line_indexed_file::open(const char * file_path)
 {
 	m_data.resize(0);
 	m_line_starts.resize(0);
@@ -115,6 +126,11 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 }
 
 
+//-------------------------------------------------
+// update_opened_file - Modifies state to ensure
+// the file identified by m_cur_src_index is shown
+//-------------------------------------------------
+
 void debug_view_sourcecode::update_opened_file()
 {
 	assert(m_srcdbg_provider != nullptr);
@@ -140,6 +156,11 @@ void debug_view_sourcecode::update_opened_file()
 }
 
 
+//-------------------------------------------------
+// set_source - Update m_state with the
+// specified debug_view_source
+//-------------------------------------------------
+
 void debug_view_sourcecode::set_source(const debug_view_source &source)
 {
 	source.device()->interface(m_state);
@@ -147,12 +168,13 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 
 
 //-------------------------------------------------
-//  view_update - update the contents of the
-//  source code view
+// view_update - update the contents of the
+// source code view
 //-------------------------------------------------
 
 void debug_view_sourcecode::view_update()
 {
+	// Show explanatory text if source-level debugging is not active
 	if (m_srcdbg_provider == nullptr)
 	{
 		print_line(0, "Source-level debugging is not active", DCA_CHANGED);
@@ -199,7 +221,8 @@ void debug_view_sourcecode::view_update()
 		return;
 	}
 
-	// Scroll current line into view if necessary
+	// Scroll current line into view, but only if the user has been
+	// stepping or running so we don't trample on manual scrolling
 	if (pc_changed)
 	{
 		update_visible_lines(pc);
@@ -243,6 +266,12 @@ void debug_view_sourcecode::view_update()
 	}
 }
 
+
+//-------------------------------------------------
+// print_file_open_error - Helper to print
+// explanatory text when file opening fails
+//-------------------------------------------------
+
 void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::source_file_path & path)
 {
 	print_line(0, "Error opening file", DCA_CHANGED);
@@ -268,6 +297,12 @@ void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::so
 	}
 }
 
+
+//-------------------------------------------------
+// exists_bp_for_line - Helper to determine if
+// there is a breakpoint on the specified line
+//-------------------------------------------------
+
 bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
 	assert(m_srcdbg_provider != nullptr);
@@ -287,9 +322,14 @@ bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 	return false;
 }
 
-// Center m_line_for_cur_pc vertically in view (with
-// corner cases to account for file size and to minimize unnecessary
+
+//-------------------------------------------------
+// update_visible_lines - center m_line_for_cur_pc
+// vertically in view (with corner cases to account
+// for file size and to minimize unnecessary
 // movement).
+//-------------------------------------------------
+
 void debug_view_sourcecode::update_visible_lines(offs_t pc)
 {
 	if (!m_line_for_cur_pc.has_value() || is_visible(m_line_for_cur_pc.value()))
@@ -320,6 +360,12 @@ void debug_view_sourcecode::update_visible_lines(offs_t pc)
 		m_topleft.y = line_for_cur_pc - 1 - m_visible.y / 2;
 	}
 }
+
+
+//-------------------------------------------------
+// print_line - Helper to print a single line
+// plus optional line number to view
+//-------------------------------------------------
 
 void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib)
 {
@@ -356,6 +402,11 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 }
 
 
+//-------------------------------------------------
+// set_src_index - Called when user selects a
+// file to show in the view
+//-------------------------------------------------
+
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
 	if (m_srcdbg_provider == nullptr ||
@@ -371,15 +422,3 @@ void debug_view_sourcecode::set_src_index(u16 new_src_index)
 	// No need to call view_notify()
 	end_update();
 }
-
-
-
-
-//-------------------------------------------------
-//  view_click - handle a mouse click within the
-//  current view
-//-------------------------------------------------
-
-// void debug_view_sourcecode::view_click(const int button, const debug_view_xy& pos)
-// {
-// }
