@@ -15,6 +15,9 @@
 #include <cstdio>
 #include <string>
 
+// --------------------------------------------------------------------------
+// Subclass of srcdbg_format_reader_callback to receive data as it is read
+// --------------------------------------------------------------------------
 
 class srcdbg_dump : public srcdbg_format_reader_callback
 {
@@ -150,6 +153,10 @@ bool srcdbg_dump::on_read_local_relative_symbol_value(const local_relative_symbo
 }
 
 
+// --------------------------------------------------------------------------
+// main
+// --------------------------------------------------------------------------
+
 int main(int argc, char *argv[])
 {
 	if (argc != 2)
@@ -183,6 +190,9 @@ int main(int argc, char *argv[])
 		}
 		return 0;
 	}
+
+	// FUTURE: If more file formats are invented, add cases for them here to read them
+
 	default:
 		assert(!"Unexpected source-level debugging information file format");
 		return 1;
