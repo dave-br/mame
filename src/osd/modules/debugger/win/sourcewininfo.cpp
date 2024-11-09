@@ -115,6 +115,8 @@ bool sourcewin_info::handle_key(WPARAM wparam, LPARAM lparam)
 }
 
 
+// Helper called by handle_command to handle commands specific to
+// only the source-code window
 bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 {
 	if (HIWORD(wparam) == 0)

@@ -15,7 +15,7 @@
 
 namespace osd::debugger::win {
 
-// Manages GUI half of source code view.  Shares a lot of code with disasmview_info, especially
+// Manages GUI half of source code view.  Shares code with disasmview_info, especially
 // for breakpoint handling, but with some customizations
 class sourceview_info : public disasmview_info
 {
@@ -24,7 +24,6 @@ public:
 	virtual ~sourceview_info() {}
 	HWND create_source_file_combobox(HWND parent, LONG_PTR userdata);
 
-	// Overrides to customize view behavior from disasmview_info
 	virtual std::optional<offs_t> selected_address() const override;
 
 	// Helpers to access portions of debug_view_sourcecode

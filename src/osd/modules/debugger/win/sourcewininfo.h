@@ -13,7 +13,6 @@
 #include "disasmbasewininfo.h"
 #include "debugwininfo.h"
 
-
 namespace osd::debugger::win {
 
 // Manages source-code-level debugging window.  Derives from disasmbasewin_info to reuse
@@ -24,13 +23,10 @@ public:
 	sourcewin_info(debugger_windows_interface &debugger, bool is_main_console, LPCSTR title, WNDPROC handler);
 	virtual ~sourcewin_info();
 	virtual bool handle_key(WPARAM wparam, LPARAM lparam) override;
-	// virtual void restore_configuration_from_node(util::xml::data_node const &node) override;
 
 protected:
 	virtual void draw_contents(HDC dc) override;
 	virtual bool handle_command(WPARAM wparam, LPARAM lparam) override;
-	// virtual void update_menu() override;
-	// virtual void save_configuration_to_node(util::xml::data_node &node) override;
 	void set_srcwnd_bounds(RECT const &bounds);
 	bool show_src_window();
 	void hide_src_window();
