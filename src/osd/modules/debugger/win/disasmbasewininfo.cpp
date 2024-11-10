@@ -179,6 +179,9 @@ bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 }
 
 
+// Helper called by handle_command to handle commands specific to the
+// disassembly window, and not to other child classes, like the source
+// debugging window
 bool disasmbasewin_info::handle_disasm_command(WPARAM wparam, LPARAM lparam)
 {
 	auto *const dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
@@ -209,6 +212,8 @@ bool disasmbasewin_info::handle_disasm_command(WPARAM wparam, LPARAM lparam)
 }
 
 
+// Helper called by handle_command to handle commands that could apply
+// to any subclasses (i.e., both disasembly and source debugging windows).
 bool disasmbasewin_info::handle_common_command(WPARAM wparam, LPARAM lparam)
 {
 	disasmview_info const *  dasmview = downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get());
