@@ -3967,7 +3967,7 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 			m_console.printf("\nSource-level local variables:\n");
 			break;
 		case symbol_table::SRCDBG_GLOBALS:
-			m_console.printf("\nSource-level gloabal variables:\n");
+			m_console.printf("\nSource-level global variables:\n");
 			break;
 		case symbol_table::CPU_STATE:
 			m_console.printf("\nCPU '%s' symbols:\n", cpu->tag());

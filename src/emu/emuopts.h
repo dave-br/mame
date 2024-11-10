@@ -159,9 +159,9 @@
 #define OPTION_UPDATEINPAUSE        "update_in_pause"
 #define OPTION_DEBUGSCRIPT          "debugscript"
 #define OPTION_DEBUGLOG             "debuglog"
-#define OPTION_DEBUGINFO            "debuginfo"
-#define OPTION_DEBUGSRCPATH         "debug_src_path"
-#define OPTION_DEBUGSRCPATHMAP      "debug_src_path_map"
+#define OPTION_DEBUGINFO            "src_debug_info_file"
+#define OPTION_DEBUGSRCPATH         "src_debug_path"
+#define OPTION_DEBUGSRCPATHMAP      "src_debug_prefix_map"
 
 // core misc options
 #define OPTION_DRC                  "drc"

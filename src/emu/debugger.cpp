@@ -90,7 +90,7 @@ debugger_manager::~debugger_manager()
 
 
 /*-------------------------------------------------
-    load_debug_info - load the source-level
+	load_debug_info - load the source-level
 	debugging information file if enabled
 -------------------------------------------------*/
 

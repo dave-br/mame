@@ -192,18 +192,18 @@ private:
 	device_disasm_interface *  m_disasm;                // disasm interface, if present
 
 	// global state
-	u32                         m_flags;                // debugging flags for this CPU
-	std::unique_ptr<symbol_table> m_symtable_device;    // symbol table for expression evaluation
-	std::unique_ptr<symbol_table> m_symtable_srcdbg_globals;// symbol table for expression evaluation
-	std::unique_ptr<symbol_table> m_symtable_srcdbg_locals;
-	symbol_table *                m_symtable;
+	u32                           m_flags;                   // debugging flags for this CPU
+	std::unique_ptr<symbol_table> m_symtable_device;         // storage for device symbols for expression evaluation
+	std::unique_ptr<symbol_table> m_symtable_srcdbg_globals; // storage for source-debugging globals
+	std::unique_ptr<symbol_table> m_symtable_srcdbg_locals;  // storage for source-debugging locals
+	symbol_table *                m_symtable;                // Root of symbol table chain exposed by this class
 
 	// stepping information
-	offs_t                  m_stepaddr;                 // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH
-	int                     m_stepsleft;                // number of steps left until done
-	int                     m_delay_steps;              // number of steps until target address check
-	std::optional<file_line> m_step_source_start;       // When source-level stepping, where did the step start?
-	int                     m_step_source_call_nesting; // When source-level stepping, how many calls minus returns have we encountered?
+	offs_t                   m_stepaddr;                 // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH
+	int                      m_stepsleft;                // number of steps left until done
+	int                      m_delay_steps;              // number of steps until target address check
+	std::optional<file_line> m_step_source_start;        // When source-level stepping, where did the step start?
+	int                      m_step_source_call_nesting; // When source-level stepping, how many calls minus returns have we encountered?
 
 	// execution information
 	offs_t                  m_stopaddr;                 // stop address for DEBUG_FLAG_STOP_PC
