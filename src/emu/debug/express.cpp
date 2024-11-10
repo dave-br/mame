@@ -481,7 +481,7 @@ std::string expression_error::code_string() const
 		case INVALID_MEMORY_SPACE:          return "invalid memory space (p/d/i/o/r/m expected)";
 		case INVALID_MEMORY_NAME:           return "invalid memory name";
 		case MISSING_MEMORY_NAME:           return "missing memory name";
-		case SRCDBG_UNAVAILABLE:            return "source-level debugging information is unavailable; '" OPTION_DEBUGINFO "' option required";
+		case SRCDBG_UNAVAILABLE:            return "source-level debugging information is unavailable; '" OPTION_SRCDBGINFO "' option required";
 		case SRCDBG_FILE_UNAVAILABLE:       return "specified file path does not uniquely identify a source path from the source-level debugging information";
 		case SRCDBG_FILE_LINE_UNAVAILABLE:  return "specified file path was found, but no address is attributed to specified line number";
 		default:                            return "unknown error";

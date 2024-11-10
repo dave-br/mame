@@ -178,7 +178,7 @@ void debug_view_sourcecode::view_update()
 	if (m_srcdbg_provider == nullptr)
 	{
 		print_line(0, "Source-level debugging is not active", DCA_CHANGED);
-		print_line(1, "Specify option '" OPTION_DEBUGINFO "' to enable", DCA_NORMAL);
+		print_line(1, "Specify option '" OPTION_SRCDBGINFO "' to enable", DCA_NORMAL);
 		for (u32 row = 2; row < m_visible.y; row++)
 		{
 			print_line(row, " ", DCA_NORMAL);
@@ -287,9 +287,9 @@ void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::so
 
 	std::string s = util::string_format("Originally built source: %s", path.built());
 	print_line(3, s.c_str(), DCA_NORMAL);
-	s = util::string_format("Source search path (%s): %s", OPTION_DEBUGSRCPATH, machine().options().debug_source_path());
+	s = util::string_format("Source search path (%s): %s", OPTION_SRCDBGSEARCHPATH, machine().options().srcdbg_search_path());
 	print_line(4, s.c_str(), DCA_NORMAL);
-	s = util::string_format("Source path prefix map (%s): %s", OPTION_DEBUGSRCPATHMAP, machine().options().debug_source_path_map());
+	s = util::string_format("Source path prefix map (%s): %s", OPTION_SRCDBGPREFIXMAP, machine().options().srcdbg_prefix_map());
 	print_line(5, s.c_str(), DCA_NORMAL);
 	for (u32 row = 6; row < m_visible.y; row++)
 	{

@@ -187,9 +187,9 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_UPDATEINPAUSE,                              "0",         core_options::option_type::BOOLEAN,    "keep calling video updates while in pause" },
 	{ OPTION_DEBUGSCRIPT,                                nullptr,     core_options::option_type::PATH,       "script for debugger" },
 	{ OPTION_DEBUGLOG,                                   "0",         core_options::option_type::BOOLEAN,    "write debug console output to debug.log" },
-	{ OPTION_DEBUGINFO,                                  nullptr,     core_options::option_type::PATH,       "source-level debugging information for use debugging emulated machine" },
-	{ OPTION_DEBUGSRCPATH,                               nullptr,     core_options::option_type::MULTIPATH,  "search path for source files referenced by source-level debugging information" },
-	{ OPTION_DEBUGSRCPATHMAP,                            nullptr,     core_options::option_type::MULTIPATH,  "map of source file path prefixes from those built into source-level debugging information to those found on the local machine" },
+	{ OPTION_SRCDBGINFO,                                 nullptr,     core_options::option_type::PATH,       "source-level debugging information for use debugging emulated machine" },
+	{ OPTION_SRCDBGSEARCHPATH,                           nullptr,     core_options::option_type::MULTIPATH,  "search path for source files referenced by source-level debugging information" },
+	{ OPTION_SRCDBGPREFIXMAP,                            nullptr,     core_options::option_type::MULTIPATH,  "map of source file path prefixes from those built into source-level debugging information to those found on the local machine" },
 
 	// comm options
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "CORE COMM OPTIONS" },

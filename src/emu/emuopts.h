@@ -159,9 +159,9 @@
 #define OPTION_UPDATEINPAUSE        "update_in_pause"
 #define OPTION_DEBUGSCRIPT          "debugscript"
 #define OPTION_DEBUGLOG             "debuglog"
-#define OPTION_DEBUGINFO            "src_debug_info_file"
-#define OPTION_DEBUGSRCPATH         "src_debug_path"
-#define OPTION_DEBUGSRCPATHMAP      "src_debug_prefix_map"
+#define OPTION_SRCDBGINFO           "src_debug_info"
+#define OPTION_SRCDBGSEARCHPATH     "src_debug_search_path"
+#define OPTION_SRCDBGPREFIXMAP      "src_debug_prefix_map"
 
 // core misc options
 #define OPTION_DRC                  "drc"
@@ -446,9 +446,9 @@ public:
 	const char *debug_script() const { return value(OPTION_DEBUGSCRIPT); }
 	bool update_in_pause() const { return bool_value(OPTION_UPDATEINPAUSE); }
 	bool debuglog() const { return bool_value(OPTION_DEBUGLOG); }
-	const char *debug_info() const { return value(OPTION_DEBUGINFO); }
-	const char *debug_source_path() const { return value(OPTION_DEBUGSRCPATH); }
-	const char *debug_source_path_map() const { return value(OPTION_DEBUGSRCPATHMAP); }
+	const char *srcdbg_info() const { return value(OPTION_SRCDBGINFO); }
+	const char *srcdbg_search_path() const { return value(OPTION_SRCDBGSEARCHPATH); }
+	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
 
 	// core misc options
 	bool drc() const { return bool_value(OPTION_DRC); }

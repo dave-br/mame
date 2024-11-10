@@ -41,7 +41,7 @@ srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	, m_normalized_debug_source_path_map()
 
 {
-	m_normalized_debug_source_path_map = srcdbg_simple.m_machine.options().debug_source_path_map();
+	m_normalized_debug_source_path_map = srcdbg_simple.m_machine.options().srcdbg_prefix_map();
 	normalize_path_separators(m_normalized_debug_source_path_map);
 }
 
@@ -188,7 +188,7 @@ void srcdbg_import::generate_local_path(const std::string & built, std::string &
 
 	// Go through source search path until we can construct an
 	// absolute path to an existing file
-	path_iterator path(m_srcdbg_simple.m_machine.options().debug_source_path());
+	path_iterator path(m_srcdbg_simple.m_machine.options().srcdbg_search_path());
 	std::string source_dir;
 	while (path.next(source_dir))
 	{
