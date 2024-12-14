@@ -88,8 +88,8 @@ class srcdbg_import : public srcdbg_format_reader_callback
 {
 public:
 	srcdbg_import(srcdbg_provider_simple & srcdbg_simple);
-	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true;}
-	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true;}
+	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override { return true; }
+	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true; }
 	virtual bool on_read_source_path(u32 source_path_index, std::string && source_path) override;
 	virtual bool end_read_source_paths() override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
@@ -106,7 +106,7 @@ private:
 	srcdbg_provider_simple & m_srcdbg_simple;
 	std::vector<std::string> m_symbol_names;
 	device_state_interface * m_state;
-	std::string m_normalized_debug_source_path_map;
+	std::string              m_normalized_debug_source_path_map;
 };
 
 #endif // MAME_EMU_DEBUG_SRCDBG_PROVIDER_SIMPLE_H
