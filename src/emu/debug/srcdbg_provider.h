@@ -116,7 +116,7 @@ public:
 	};
 
 	
-	// Represents a local fixed symbol to the rest of the debugger.  Such symbols
+	// Represents a local relative symbol to the rest of the debugger.  Such symbols
 	// are limited to ranges of addresses (scopes), and represent a value calculated
 	// as an offset to a register (such	as an offset to a stack or frame register).
 	// Each scope has its own, potentially different, register-offset calculation
