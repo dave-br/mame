@@ -271,7 +271,7 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	, m_linemaps_by_line()
 	, m_global_fixed_symbols()
 	, m_local_fixed_symbols()
-	, m_offset(0)
+	, m_offset(machine.options().srcdbg_offset())
 {
 }
 

@@ -451,8 +451,7 @@ public:
 	const char *srcdbg_info() const { return value(OPTION_SRCDBGINFO); }
 	const char *srcdbg_search_path() const { return value(OPTION_SRCDBGSEARCHPATH); }
 	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
-	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
-	const char *srcdbg_offset() const { return value(OPTION_SRCDBGOFFSET); }
+	int srcdbg_offset() const { return int_value(OPTION_SRCDBGOFFSET); }
 
 	// core misc options
 	bool drc() const { return bool_value(OPTION_DRC); }
