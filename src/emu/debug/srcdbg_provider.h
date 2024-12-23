@@ -165,15 +165,18 @@ public:
 	// or an empty std::optional if no such pair exists
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
 
-	// TODO
-	virtual void set_offset (s32 offset) const = 0;
-
+	// Return lists of various types of symbols
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
 	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
 	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
 
+	// Called to process command-line option or user-invoked command to change the
+	// address offsets for line numbers and symbols
+	virtual void set_offset(s32 offset) = 0;
+
 private:
-	s32 m_offset;
+	// Used internally when populating symbol tables
+	virtual s32 get_offset() const = 0;
 };
 
 

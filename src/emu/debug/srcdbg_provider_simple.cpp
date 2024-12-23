@@ -23,25 +23,49 @@
 #include <sstream>
 
 
+// ------------------------------------------------------------------------------------
+// Static helpers
+// ------------------------------------------------------------------------------------
+
+
 static void normalize_path_separators(std::string & path)
 {
 	strreplace(path, "/", PATH_SEPARATOR);
 	strreplace(path, "\\", PATH_SEPARATOR);
 }
 
+
+// Returns whether the right-most characters of full_string match suffix
+static bool suffix_match(const char * full_string, const char * suffix, bool case_sensitive)
+{
+	size_t full_string_length = strlen(full_string);
+	size_t suffix_length = strlen(suffix);
+	if (full_string_length < suffix_length)
+	{
+		return false;
+	}
+
+	if (case_sensitive)
+	{
+		return strcmp(full_string + full_string_length - suffix_length, suffix) == 0;
+	}
+
+	return core_stricmp(full_string + full_string_length - suffix_length, suffix) == 0;
+}
+
+
 // ------------------------------------------------------------------------------------
 // srcdbg_import class (callbacks) implementation
 // ------------------------------------------------------------------------------------
+
 
 // Constructor receives the srcdbg_provider_simple instance this is reponsible for
 // importing data into
 srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	: m_srcdbg_simple(srcdbg_simple) 
 	, m_symbol_names()
-	, m_normalized_debug_source_path_map()
-
+	, m_normalized_debug_source_path_map(srcdbg_simple.m_machine.options().srcdbg_prefix_map())
 {
-	m_normalized_debug_source_path_map = srcdbg_simple.m_machine.options().srcdbg_prefix_map();
 	normalize_path_separators(m_normalized_debug_source_path_map);
 }
 
@@ -247,6 +271,7 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	, m_linemaps_by_line()
 	, m_global_fixed_symbols()
 	, m_local_fixed_symbols()
+	, m_offset(0)
 {
 }
 
@@ -276,25 +301,6 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 	}
 
 	m_local_relative_symbols_internal.clear();
-}
-
-
-// Helper: returns whether the right-most characters of full_string match suffix
-static bool suffix_match(const char * full_string, const char * suffix, bool case_sensitive)
-{
-	size_t full_string_length = strlen(full_string);
-	size_t suffix_length = strlen(suffix);
-	if (full_string_length < suffix_length)
-	{
-		return false;
-	}
-
-	if (case_sensitive)
-	{
-		return strcmp(full_string + full_string_length - suffix_length, suffix) == 0;
-	}
-
-	return core_stricmp(full_string + full_string_length - suffix_length, suffix) == 0;
 }
 
 
@@ -364,6 +370,7 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 	return std::optional<u32>();
 }
 
+
 // Given a source file & line number, return all address ranges attributable to that line
 void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
@@ -388,7 +395,8 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 	// with line_number <= answer->line_number.  Add all ranges with matching line number
 	while (answer < list.cend() && answer->line_number == line_number)
 	{
-		ranges.push_back(address_range(answer->address_first, answer->address_last));
+		// Add range, applying offset first
+		ranges.push_back(address_range(answer->address_first + m_offset, answer->address_last + m_offset));
 		answer++;
 	}
 }
@@ -399,6 +407,9 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 std::optional<file_line> srcdbg_provider_simple::address_to_file_line (offs_t address) const
 {
 	assert(m_linemaps_by_address.size() > 0);
+
+	// Undo offset so lookup uses addresses originally present in debugging information file
+	address -= m_offset;
 
 	auto guess = std::lower_bound(
 		m_linemaps_by_address.cbegin(), 

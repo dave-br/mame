@@ -1273,7 +1273,18 @@ void debugger_commands::execute_time(const std::vector<std::string_view> &params
 
 void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_view> &params)
 {
-	// TODO
+	if (m_machine.debugger().srcdbg_provider() == nullptr)
+	{
+		m_console.printf("Error : source-level debugging is not enabled\n");
+		return;
+	}
+
+	u64 offset;
+	if (!m_console.validate_number_parameter(params[0], offset))
+		return;
+
+	m_machine.debugger().srcdbg_provider()->set_offset(s32(offset));
+	m_console.printf("Offset successfully applied\n");
 }
 
 

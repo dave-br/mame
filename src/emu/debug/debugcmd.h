@@ -104,7 +104,7 @@ private:
 	void execute_next(const std::vector<std::string_view> &params);
 	void execute_cpulist(const std::vector<std::string_view> &params);
 	void execute_time(const std::vector<std::string_view> &params);
-	void execute_srcdbg_set_offset(const std::vector<std::string_view> &params)
+	void execute_srcdbg_set_offset(const std::vector<std::string_view> &params);
 	void execute_comment_add(const std::vector<std::string_view> &params);
 	void execute_comment_del(const std::vector<std::string_view> &params);
 	void execute_comment_save(const std::vector<std::string_view> &params);
