@@ -223,6 +223,7 @@ debugger_commands::debugger_commands(running_machine& machine, debugger_cpu& cpu
 	m_console.register_command("resume",    CMDFLAG_NONE, 0, MAX_COMMAND_PARAMS, std::bind(&debugger_commands::execute_resume, this, _1));
 	m_console.register_command("cpulist",   CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_cpulist, this, _1));
 	m_console.register_command("time",      CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_time, this, _1));
+	m_console.register_command("sdoffset",  CMDFLAG_NONE, 1, 1, std::bind(&debugger_commands::execute_srcdbg_set_offset, this, _1));
 
 	m_console.register_command("comadd",    CMDFLAG_NONE, 1, 2, std::bind(&debugger_commands::execute_comment_add, this, _1));
 	m_console.register_command("//",        CMDFLAG_NONE, 1, 2, std::bind(&debugger_commands::execute_comment_add, this, _1));
@@ -1264,6 +1265,17 @@ void debugger_commands::execute_time(const std::vector<std::string_view> &params
 {
 	m_console.printf("%s\n", m_machine.time().as_string());
 }
+
+//-------------------------------------------------
+//  execute_srcdbg_set_offset - execute the
+//  source-level debugging set offset command
+//-------------------------------------------------
+
+void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_view> &params)
+{
+	// TODO
+}
+
 
 /*-------------------------------------------------
     execute_comment - add a comment to a line

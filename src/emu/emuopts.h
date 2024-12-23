@@ -162,6 +162,8 @@
 #define OPTION_SRCDBGINFO           "src_debug_info"
 #define OPTION_SRCDBGSEARCHPATH     "src_debug_search_path"
 #define OPTION_SRCDBGPREFIXMAP      "src_debug_prefix_map"
+#define OPTION_SRCDBGOFFSET         "src_debug_offset"
+
 
 // core misc options
 #define OPTION_DRC                  "drc"
@@ -449,6 +451,8 @@ public:
 	const char *srcdbg_info() const { return value(OPTION_SRCDBGINFO); }
 	const char *srcdbg_search_path() const { return value(OPTION_SRCDBGSEARCHPATH); }
 	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
+	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
+	const char *srcdbg_offset() const { return value(OPTION_SRCDBGOFFSET); }
 
 	// core misc options
 	bool drc() const { return bool_value(OPTION_DRC); }

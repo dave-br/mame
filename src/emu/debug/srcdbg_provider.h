@@ -77,18 +77,18 @@ public:
 	class global_fixed_symbol
 	{
 	public:
-		global_fixed_symbol(const std::string & name, s64 value)
+		global_fixed_symbol(const std::string & name, offs_t value)
 			: m_name(name)
 			, m_value(value)
 		{
 		}
 
 		const char * name() const { return m_name.c_str(); };
-		s64 value() const { return m_value; };
+		offs_t value() const { return m_value; };
 
 	private:
 		std::string m_name;
-		s64 m_value;
+		offs_t m_value;
 	};
 
 
@@ -98,7 +98,7 @@ public:
 	class local_fixed_symbol
 	{
 	public:
-		local_fixed_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> && ranges, s64 value)
+		local_fixed_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> && ranges, offs_t value)
 			: m_name(name)
 			, m_ranges(std::move(ranges))
 			, m_value_integer(value)
@@ -107,12 +107,12 @@ public:
 
 		const char * name() const { return m_name.c_str(); };
 		const std::vector<std::pair<offs_t,offs_t>> & ranges() const { return m_ranges; };
-		s64 value() const { return m_value_integer; };
+		offs_t value() const { return m_value_integer; };
 
 	private:
 		std::string m_name;
 		std::vector<std::pair<offs_t,offs_t>> m_ranges;
-		s64 m_value_integer;
+		offs_t m_value_integer;
 	};
 
 	
@@ -165,9 +165,15 @@ public:
 	// or an empty std::optional if no such pair exists
 	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
 
+	// TODO
+	virtual void set_offset (s32 offset) const = 0;
+
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
 	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
 	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
+
+private:
+	s32 m_offset;
 };
 
 
