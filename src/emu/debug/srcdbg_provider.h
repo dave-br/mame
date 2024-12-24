@@ -145,6 +145,8 @@ public:
 
 	virtual ~srcdbg_provider_base() {};
 
+	virtual void get_srcdbg_symbols(symbol_table ** symtable_srcdbg_globals, symbol_table ** symtable_srcdbg_locals, symbol_table * parent, device_t * device, const device_state_interface * state) const;
+
 	// Called later during startup, after device_state_interfaces are available.
 	// Generates expressions required to implement local relative symbol evaluation rules.
 	virtual void complete_local_relative_initialization() = 0;

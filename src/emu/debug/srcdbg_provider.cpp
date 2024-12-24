@@ -61,3 +61,37 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 	return nullptr;
 }
 
+void srcdbg_provider_base::get_srcdbg_symbols(
+	symbol_table ** symtable_srcdbg_globals,
+	symbol_table ** symtable_srcdbg_locals,
+	symbol_table * parent,
+	device_t * device,
+	const device_state_interface * state) const
+{
+	// Global fixed symbols
+	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = global_fixed_symbols();
+	*symtable_srcdbg_globals = new symbol_table(parent->machine(), symbol_table::SRCDBG_GLOBALS, parent, device);
+	for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
+	{
+		(*symtable_srcdbg_globals)->add(sym.name(), sym.value());
+	}
+
+	// Local symbols require a PC getter function so they can test if they're
+	// currently in scope
+	auto pc_getter_binding = std::bind(&device_state_entry::value, state->state_find_entry(STATE_GENPC));
+
+	// Local fixed symbols
+	const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = local_fixed_symbols();
+	*symtable_srcdbg_locals = new symbol_table(parent->machine(), symbol_table::SRCDBG_LOCALS, *symtable_srcdbg_globals, device);
+	for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
+	{
+		(*symtable_srcdbg_locals)->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
+	}
+
+	// Local "relative" symbols (values are offsets to a register)
+	const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = local_relative_symbols();
+	for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
+	{
+		(*symtable_srcdbg_locals)->add(sym.name(), pc_getter_binding, sym.ranges());
+	}
+}

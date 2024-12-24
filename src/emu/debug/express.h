@@ -206,7 +206,7 @@ public:
 	const std::unordered_map<std::string, std::unique_ptr<symbol_entry>> &entries() const { return m_symlist; }
 	table_type type() const { return m_type; }
 	symbol_table *parent() const { return m_parent; }
-	running_machine &machine() { return m_machine; }
+	running_machine &machine() const { return m_machine; }
 
 	// setters
 	void set_memory_modified_func(memory_modified_func modified);

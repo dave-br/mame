@@ -553,7 +553,13 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("totalcycles", symbol_table::READ_ONLY, &m_total_cycles);
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
-			add_symbols_from_srcdbg();
+			// Add symbols from source-level debugging information file
+			if (m_device.machine().debugger().srcdbg_provider() != nullptr)
+			{
+				srcdbg_provider_base & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
+				srcdbg_provider.complete_local_relative_initialization();
+				update_symbols_from_srcdbg(srcdbg_provider);
+			}
 		}
 
 		// add entries to enable/disable unmap reporting for each space
@@ -629,50 +635,24 @@ device_debug::~device_debug()
 
 
 //-------------------------------------------------
-//  add_symbols_from_srcdbg - add symbols
-//  obtained from source-level debugging
-//  information
+//  update_symbols_from_srcdbg - called to intialize
+//  symbol table chain to include symbols from
+//	source-level debugging AND to update source-
+//  level debugging symbols when the offset changes
 //-------------------------------------------------
 
-void device_debug::add_symbols_from_srcdbg()
+void device_debug::update_symbols_from_srcdbg(const srcdbg_provider_base & srcdbg_provider)
 {
-	if (m_device.machine().debugger().srcdbg_provider() == nullptr)
-	{
-		return;
-	}
-
-	srcdbg_provider_base & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
-	srcdbg_provider.complete_local_relative_initialization();
-
-	// Global fixed symbols
-	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = srcdbg_provider.global_fixed_symbols();
-	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(m_device.machine(), symbol_table::SRCDBG_GLOBALS, m_symtable_device.get(), &m_device);
-	for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
-	{
-		m_symtable_srcdbg_globals->add(sym.name(), sym.value());
-	}
-
-	// Local symbols require a PC getter function so they can test if they're
-	// currently in scope
-	auto pc_getter_binding = std::bind(&device_state_entry::value, m_state->state_find_entry(STATE_GENPC));
-
-	// Local fixed symbols
-	const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = srcdbg_provider.local_fixed_symbols();
-	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(m_device.machine(), symbol_table::SRCDBG_LOCALS, m_symtable_srcdbg_globals.get(), &m_device);
-	for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
-	{
-		m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
-	}
-
-	// Local "relative" symbols (values are offsets to a register)
-	const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = srcdbg_provider.local_relative_symbols();
-	for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
-	{
-		m_symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
-	}
+	m_symtable_srcdbg_globals.reset();
+	m_symtable_srcdbg_locals.reset();
 
 	// Establish the following symbol table parent chain:
 	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
+	symbol_table * new_symtable_srcdbg_globals = nullptr;
+	symbol_table * new_symtable_srcdbg_locals = nullptr;
+	srcdbg_provider.get_srcdbg_symbols(&new_symtable_srcdbg_globals, &new_symtable_srcdbg_locals, m_symtable_device.get(), &m_device, m_state);
+	m_symtable_srcdbg_globals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_globals);
+	m_symtable_srcdbg_locals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_locals);
 	m_symtable = m_symtable_srcdbg_locals.get();
 }
 
