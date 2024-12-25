@@ -1125,7 +1125,7 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 		// automatically skip returns (for nested matching calls & returns),
 		// so we need to skip counting the calls as well unless we're doing
 		// step-into (m_flags & DEBUG_FLAG_STEPPING)
-		if ((m_flags & DEBUG_FLAG_STEPPING) != 0 && 
+		if ((m_flags & DEBUG_FLAG_STEPPING) != 0 &&
 			(dasmresult & util::disasm_interface::STEP_OVER) != 0)
 		{
 			m_step_source_call_nesting++;

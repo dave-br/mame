@@ -373,11 +373,11 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	const s32 LINE_NUMBER_WIDTH = sizeof(LINE_NUMBER_PADDING)-1;
 
 	// Left side shows line number (or space padding)
-	std::string line_str = 	(line_number.has_value()) ? std::to_string(line_number.value()) : LINE_NUMBER_PADDING;
+	std::string line_str =  (line_number.has_value()) ? std::to_string(line_number.value()) : LINE_NUMBER_PADDING;
 	for(s32 visible_col=m_topleft.x; visible_col < m_topleft.x + std::min(LINE_NUMBER_WIDTH, m_visible.x); visible_col++)
 	{
 		s32 viewdata_col = visible_col - m_topleft.x;
-		m_viewdata[row * m_visible.x + viewdata_col] = 
+		m_viewdata[row * m_visible.x + viewdata_col] =
 		{
 			(viewdata_col < line_str.size()) ? u8(line_str[viewdata_col]) : u8(' '),
 			DCA_DISABLED
@@ -410,7 +410,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
 	if (m_srcdbg_provider == nullptr ||
-		m_cur_src_index == new_src_index || 
+		m_cur_src_index == new_src_index ||
 		new_src_index >= m_srcdbg_provider->num_files())
 	{
 		return;

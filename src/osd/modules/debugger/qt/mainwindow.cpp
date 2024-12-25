@@ -422,7 +422,7 @@ void MainWindow::executeCommand(bool withClear)
 
 bool MainWindow::sourceFrameActive()
 {
-	 return m_dasmDock->widget() == m_srcdbgFrame; 
+	 return m_dasmDock->widget() == m_srcdbgFrame;
 }
 
 

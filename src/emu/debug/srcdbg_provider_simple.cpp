@@ -5,7 +5,7 @@
     srcdbg_provider_simple.cpp
 
     Implementation of interface to source-debugging info for the
-	"simple" format
+    "simple" format
 
 ***************************************************************************/
 
@@ -62,7 +62,7 @@ static bool suffix_match(const char * full_string, const char * suffix, bool cas
 // Constructor receives the srcdbg_provider_simple instance this is reponsible for
 // importing data into
 srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
-	: m_srcdbg_simple(srcdbg_simple) 
+	: m_srcdbg_simple(srcdbg_simple)
 	, m_symbol_names()
 	, m_normalized_debug_source_path_map(srcdbg_simple.m_machine.options().srcdbg_prefix_map())
 {
@@ -91,7 +91,7 @@ bool srcdbg_import::end_read_source_paths()
 	// an entry ready for its source file index.
 	m_srcdbg_simple.m_linemaps_by_line.reserve(m_srcdbg_simple.m_source_file_paths.size());
 	m_srcdbg_simple.m_linemaps_by_line.resize(m_srcdbg_simple.m_source_file_paths.size());
-	return true; 
+	return true;
 }
 
 
@@ -111,27 +111,27 @@ bool srcdbg_import::end_read_line_mappings()
 	{
 		std::sort(
 			m_srcdbg_simple.m_linemaps_by_line[file_idx].begin(),
-			m_srcdbg_simple.m_linemaps_by_line[file_idx].end(), 
+			m_srcdbg_simple.m_linemaps_by_line[file_idx].end(),
 			[] (const srcdbg_provider_simple::address_line& adrline1, const srcdbg_provider_simple::address_line &adrline2)
 			{
 				if (adrline1.line_number == adrline2.line_number)
 				{
 					return adrline1.address_first < adrline2.address_first;
 				}
-				return adrline1.line_number < adrline2.line_number; 
+				return adrline1.line_number < adrline2.line_number;
 			});
 	}
 
 	// Sort the linemaps_by_address by the first address of each range
 	std::sort(
 		m_srcdbg_simple.m_linemaps_by_address.begin(),
-		m_srcdbg_simple.m_linemaps_by_address.end(), 
+		m_srcdbg_simple.m_linemaps_by_address.end(),
 		[] (const srcdbg_line_mapping &linemap1, const srcdbg_line_mapping &linemap2)
 		{
 			return linemap1.range.address_first < linemap2.range.address_first;
 		});
-	
-	return true; 
+
+	return true;
 }
 
 
@@ -304,7 +304,7 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 }
 
 
-// Called during expression evaluation to convert a user-specified path to 
+// Called during expression evaluation to convert a user-specified path to
 // the corresponding source-file-path index.  Uses heuristics to allow
 // either path separator on all platforms, and to allow incomplete paths
 // when there is an unambiguous match
@@ -386,8 +386,8 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 	}
 
 	auto answer = std::lower_bound(
-		list.cbegin(), 
-		list.cend(), 
+		list.cbegin(),
+		list.cend(),
 		line_number,
 		[] (auto const &adrline, u32 line) { return adrline.line_number < line; });
 
@@ -412,7 +412,7 @@ std::optional<file_line> srcdbg_provider_simple::address_to_file_line (offs_t ad
 	address -= m_offset;
 
 	auto guess = std::lower_bound(
-		m_linemaps_by_address.cbegin(), 
+		m_linemaps_by_address.cbegin(),
 		m_linemaps_by_address.cend(),
 		address,
 		[] (auto const &linemap, u16 addr) { return linemap.range.address_first < addr; });

@@ -83,8 +83,8 @@ bool sourcewin_info::show_src_window()
 
 void sourcewin_info::hide_src_window()
 {
-	m_views[VIEW_IDX_SOURCE]->hide(); 
-	smart_show_window(m_filecombownd, false);  
+	m_views[VIEW_IDX_SOURCE]->hide();
+	smart_show_window(m_filecombownd, false);
 }
 
 

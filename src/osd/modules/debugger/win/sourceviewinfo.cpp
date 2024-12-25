@@ -26,7 +26,7 @@ namespace osd::debugger::win {
 sourceview_info::sourceview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent) :
 	disasmview_info(debugger, owner, parent, true /* source_code_debugging */)
 {
-	
+
 }
 
 

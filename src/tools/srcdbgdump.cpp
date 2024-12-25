@@ -22,7 +22,7 @@
 class srcdbg_dump : public srcdbg_format_reader_callback
 {
 public:
-	srcdbg_dump() 
+	srcdbg_dump()
 		: m_printed_source_file_paths_title(false)
 		, m_printed_line_mapping_title(false)
 		, m_printed_symbol_names_title(false)
@@ -115,7 +115,7 @@ bool srcdbg_dump::on_read_global_fixed_symbol_value(const global_fixed_symbol_va
 	}
 	printf("Symbol name index: %u, symbol value: $%04X\n", value.symbol_name_index, value.symbol_value);
 	return true;
-} 	
+}
 
 bool srcdbg_dump::on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value)
 {
@@ -143,10 +143,10 @@ bool srcdbg_dump::on_read_local_relative_symbol_value(const local_relative_symbo
 	for (u32 i = 0; i < value.num_local_relative_eval_rules; i++)
 	{
 		printf(
-			"\tvalue: (reg idx %d) + %d\taddress range: $%04X-$%04X\n", 
+			"\tvalue: (reg idx %d) + %d\taddress range: $%04X-$%04X\n",
 			value.local_relative_eval_rules[i].reg,
 			value.local_relative_eval_rules[i].reg_offset,
-			value.local_relative_eval_rules[i].range.address_first, 
+			value.local_relative_eval_rules[i].range.address_first,
 			value.local_relative_eval_rules[i].range.address_last);
 	}
 	return true;

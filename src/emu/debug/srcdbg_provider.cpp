@@ -5,7 +5,7 @@
     srcdbg_provider.cpp
 
     Factory to create format-specific implementation of
-	format-agnostic interface to source-debugging info
+    format-agnostic interface to source-debugging info
 
 ***************************************************************************/
 
@@ -73,7 +73,7 @@ void srcdbg_provider_base::get_srcdbg_symbols(
 	symbol_table ** symtable_srcdbg_locals,        // [out] local variables from source-level debugging info
 	symbol_table * parent,                         // [in] symbol_table to establish as parent of globals
 	device_t * device,                             // [in] device to use when initializing symbol_tables
-	const device_state_interface * state) const    // [in] device_state_entry for accessing PC for scoped locals 
+	const device_state_interface * state) const    // [in] device_state_entry for accessing PC for scoped locals
 {
 	// Global fixed symbols
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = global_fixed_symbols();

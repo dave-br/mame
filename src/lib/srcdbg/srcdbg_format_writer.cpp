@@ -5,12 +5,12 @@
     srcdbg_format_writer.h
 
     Library of helper functions to generate MAME source-level
-	debugging info files.
+    debugging info files.
 
-	This library makes only minimal use of C++ (e.g., no STL or even
-	new / delete) to avoid the need for consumers to link to the
-	standard C++ library.  This allows C-only tools to easily link
-	to this library.
+    This library makes only minimal use of C++ (e.g., no STL or even
+    new / delete) to avoid the need for consumers to link to the
+    standard C++ library.  This allows C-only tools to easily link
+    to this library.
 
 ***************************************************************************/
 
@@ -60,7 +60,7 @@ public:
 		m_data = nullptr;
 		m_size = 0;
 		m_capacity = 0;
-	}	
+	}
 
 	void destruct()
 	{
@@ -78,7 +78,7 @@ public:
 	int push_back(const void * data_bytes, int data_size)
 	{
 		RET_IF_FAIL(ensure_capacity(m_size + data_size));
-		memcpy(m_data + m_size, data_bytes, data_size); 
+		memcpy(m_data + m_size, data_bytes, data_size);
 		m_size += data_size;
 		return MAME_SRCDBG_E_SUCCESS;
 	}
@@ -142,7 +142,7 @@ protected:
 
 // ------------------------------------------------------------------
 // int_resizeable_array - a cheap STL::vector<unsigned int>
-// replacement 
+// replacement
 // ------------------------------------------------------------------
 
 class int_resizeable_array : public resizeable_array
@@ -161,7 +161,7 @@ public:
 	unsigned int size()
 	{
 		return m_size / sizeof(unsigned int);
-	}	
+	}
 };
 
 
@@ -202,7 +202,7 @@ public:
 		char null_terminator = '\0';
 		RET_IF_FAIL(push_back(&null_terminator, 1));
 		size += length + 1;
-		offset = m_offsets.size() - 1;		// Index into m_offsets representing newly-added string
+		offset = m_offsets.size() - 1;      // Index into m_offsets representing newly-added string
 		return MAME_SRCDBG_E_SUCCESS;
 	}
 
@@ -312,7 +312,7 @@ public:
 		m_header.num_line_mappings = little_endianize_int32(little_endianize_int32(m_header.num_line_mappings) + 1);
 		srcdbg_line_mapping line_mapping =
 		{
-			{ 
+			{
 				little_endianize_int16(address_first),
 				little_endianize_int16(address_last)
 			},

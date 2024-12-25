@@ -297,7 +297,7 @@ local_fixed_symbol_entry::local_fixed_symbol_entry(symbol_table &table, const ch
 	, m_get_pc(get_pc)
 	, m_scope_ranges(scope_ranges)
 	, m_value_integer(value)
-{	
+{
 }
 
 
@@ -368,7 +368,7 @@ local_relative_symbol_entry::local_relative_symbol_entry(symbol_table &table, co
 
 
 //-------------------------------------------------
-//	value - Calculates value by evaluating
+//  value - Calculates value by evaluating
 //  expression in the form of a register offset
 //-------------------------------------------------
 

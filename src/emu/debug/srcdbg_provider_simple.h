@@ -5,7 +5,7 @@
     srcdbg_provider_simple.h
 
     Implementation of interface to source-debugging info for the
-	"simple" format
+    "simple" format
 
 ***************************************************************************/
 
@@ -77,7 +77,7 @@ private:
 	std::vector<source_file_path>               m_source_file_paths;      // Starting points for source file path strings
 	std::vector<srcdbg_line_mapping>            m_linemaps_by_address;    // a list of srcdbg_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>      m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
-	                                                                      // sorted by line, from file #i
+																		  // sorted by line, from file #i
 	std::vector<global_fixed_symbol>            m_global_fixed_symbols;
 	std::vector<local_fixed_symbol>             m_local_fixed_symbols;
 	std::vector<local_relative_symbol_internal> m_local_relative_symbols_internal;

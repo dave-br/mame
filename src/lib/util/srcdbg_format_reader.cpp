@@ -68,7 +68,7 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 		error = util::string_format("Error while reading header from file\n%s\n\nOnly type 'simp' is currently supported", srcdbg_path);
 		return false;
 	};
-	
+
 	if (header.version != 1)
 	{
 		error = util::string_format("Error while reading header from file\n%s\n\nOnly version 1 is currently supported", srcdbg_path);
@@ -88,7 +88,7 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 // determined to be in the "simple" format
 // [in] srcdbg_path - Path to source-level debugging information file
 // [in] callback - An implementation of a subclass of srcdbg_format_reader_callback
-//		to receive callbacks while reading the file
+//      to receive callbacks while reading the file
 // [out] error - On failure, explanatory error text
 // Returns true on success, false on failure or if a caller-supplied callback returns false
 bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
@@ -151,7 +151,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		}
 	}
 
-	u32 after_global_fixed_symbol_values = 
+	u32 after_global_fixed_symbol_values =
 		after_symbol_names + header->num_global_fixed_symbol_values * sizeof(global_fixed_symbol_value);
 	if (data.size() < after_global_fixed_symbol_values)
 	{
@@ -219,7 +219,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 
- 		if (!callback.on_read_line_mapping(*line_map))
+		if (!callback.on_read_line_mapping(*line_map))
 		{
 			return false;
 		}
