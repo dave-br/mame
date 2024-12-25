@@ -139,13 +139,29 @@ public:
 
 	typedef std::pair<offs_t,offs_t> address_range;
 
+	// ------------------------------------------------------------------------
+	// Base implementation
+	// ------------------------------------------------------------------------
+
 	// Called on startup to load the source-debugging information file and return
 	// an instance of a subclass of this abstract base class
 	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine);
 
 	virtual ~srcdbg_provider_base() {};
 
-	virtual void get_srcdbg_symbols(symbol_table ** symtable_srcdbg_globals, symbol_table ** symtable_srcdbg_locals, symbol_table * parent, device_t * device, const device_state_interface * state) const;
+	// Return symbol_table objects for globals and locals present in the source-level
+	// debugging information file.
+	virtual void get_srcdbg_symbols(
+		symbol_table ** symtable_srcdbg_globals,
+		symbol_table ** symtable_srcdbg_locals,
+		symbol_table * parent,
+		device_t * device,
+		const device_state_interface * state) const;
+
+
+	// ------------------------------------------------------------------------
+	// Interface implemented by derived classes
+	// ------------------------------------------------------------------------
 
 	// Called later during startup, after device_state_interfaces are available.
 	// Generates expressions required to implement local relative symbol evaluation rules.
@@ -173,11 +189,11 @@ public:
 	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
 
 	// Called to process command-line option or user-invoked command to change the
-	// address offsets for line numbers and symbols
+	// address offset for line numbers and symbols
 	virtual void set_offset(s32 offset) = 0;
 
 private:
-	// Used internally when populating symbol tables
+	// Returns address offset currently in use.  Used internally when populating symbol tables
 	virtual s32 get_offset() const = 0;
 };
 

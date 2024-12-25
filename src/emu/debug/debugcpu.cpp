@@ -637,7 +637,7 @@ device_debug::~device_debug()
 //-------------------------------------------------
 //  update_symbols_from_srcdbg - called to intialize
 //  symbol table chain to include symbols from
-//	source-level debugging AND to update source-
+//  source-level debugging AND to update source-
 //  level debugging symbols when the offset changes
 //-------------------------------------------------
 

@@ -17,6 +17,9 @@
 #include "emuopts.h"
 
 
+// Create and initialize debug info provider of the correct type by reading
+// the debug info file
+//
 // static
 std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine)
 {
@@ -61,12 +64,16 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 	return nullptr;
 }
 
+
+// Return symbol_table objects for globals and locals present in the source-level
+// debugging information file.  Establish the following symbol table parent chain:
+// *symtable_srcdbg_locals -> *symtable_srcdbg_globals -> parent
 void srcdbg_provider_base::get_srcdbg_symbols(
-	symbol_table ** symtable_srcdbg_globals,
-	symbol_table ** symtable_srcdbg_locals,
-	symbol_table * parent,
-	device_t * device,
-	const device_state_interface * state) const
+	symbol_table ** symtable_srcdbg_globals,       // [out] global variables from source-level debugging info
+	symbol_table ** symtable_srcdbg_locals,        // [out] local variables from source-level debugging info
+	symbol_table * parent,                         // [in] symbol_table to establish as parent of globals
+	device_t * device,                             // [in] device to use when initializing symbol_tables
+	const device_state_interface * state) const    // [in] device_state_entry for accessing PC for scoped locals 
 {
 	// Global fixed symbols
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = global_fixed_symbols();
