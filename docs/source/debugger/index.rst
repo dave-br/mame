@@ -433,3 +433,193 @@ s32(<x>)
     Sign-extends the argument from 32 bits to 64 bits (overwrites bits
     32 through 63, inclusive, with the value of bit 31, counting from
     the least significant bit).
+
+
+.. _srcdbg:
+
+Source-level debugging
+----------------------
+
+Source-level debugging allows you to step through and reference symbols
+from the original source of a program, rather than the disassembly.
+This feature is intended for use
+when emulating a vintage microcomputer and running software on that
+emulated machine for which you have access to the original source code.
+For example, if you are developing new software for a vintage machine,
+source-level debugging allows you to view your own source code while
+debugging.
+
+
+.. _srcdbg_enable:
+
+Enabling source-level debugging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You will need to generate a **MAME Debugging Information** file.  This is
+generally written by your assembler or compiler, which uses MAME's ``srcdbg`` 
+TODO: LINK library to write out the information in the proper format.
+You can then enable source-level debugging by launching MAME with
+the ``-src_debug_info`` command-line option TODO: LINK.  You may also want
+to specify ``-src_debug_search_path`` and / or ``-src_debug_prefix_map``.
+
+Once source-level debugging is enabled, you will then be able to
+access the Debug menu, View Source command from
+the main debugger window.  You may switch back and forth between source
+and disassmbly view, and also open separate disassembly windows
+while the main window shows source.
+
+The source view has a drop-list at the top for selecting which source
+file to view.  The list is populated with source file names from the
+**MAME Debugging Information** file.  When the debugger is paused,
+you can change the selection to view the file you wish.  When stepping,
+the selection is automatically chosen to show the file associated
+with the current PC address.
+
+
+.. _srcdbg_bp:
+
+Source-level breakpoints
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The expression evaluator includes syntax for specifying a source
+file and line number.  This can be used in conjunction with the
+``bpset`` command to set a breakpoint on a particular line number,
+rather than specifying the address manually.  Source-level symbols
+evaluate to addresses, and so may also be used in ``bpset`` commands.
+
+When specifying a
+source file, you may specify either the full path to the source file
+as it existed on the machine that built the binary, the full path
+to the source file as it exists on the host running MAME, or any
+non-ambiguous substring at the end of the full path (such as
+just the filename).
+
+Examples:
+
+``bpset \`c:\\full\\path\\to\\file.c\`3``
+    Set a breakpoint on the first instruction associated with file.c, line 3
+``bpset \`file.c\`3``
+    Set a breakpoint on the first instruction associated with file.c, line 3.
+    Note the use of just the filename instead of a full path.  This is fine
+    so long as it is unambiguous relative to the other paths present in the
+    MAME Debugging Information File.
+``print \`to\\file.c\`3``
+    Print the address of the first instruction associated with file.c, line 3.
+    Note the use of the path *ending* rather than the full path.  This is fine
+    so long as it is unambiguous.
+``bpset Main``
+    Set a breakpoint on the label named ``Main``
+
+When the main window is showing source, you may also click on any source line
+and hit F9 to set a breakpoint on that line.
+
+
+.. _srcdbg_stepping:
+
+Source-level stepping
+~~~~~~~~~~~~~~~~~~~~~
+
+The stepping commands ``step`` and ``over`` have source-level debugging
+versions ``steps`` and ``overs``, respectively TODO LINK, which operate
+at the source level rather than at the disassembly level.
+To take ``step`` as an example, if
+the PC points to an address associated with line 4, ``step`` (with
+no parameters) will advance
+to the next instruction, whereas ``steps`` will advance to the next instruction
+that is associated with a source line other than 4.  When the original
+source is assembly language, ``step`` and ``steps`` generally behave the same.
+But when the original source is in a higher level language like C or BASIC, ``steps`` results
+in executing the remainder of a block of instructions associated with
+the current source line.
+
+When executing Step Into or Step Over from the menu or keyboard shortcuts, the behavior
+depends on the what the main window is showing.  If the main window shows disassembly,
+then ``step`` or ``over`` would be invoked.  If the main window shows source, 
+``steps`` or ``overs``  would be invoked.
+
+
+.. _srcdbg_symbols:
+
+Source-level symbol evaluation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MAME defines its own built-in symbols based on the current
+CPU (e.g., register names) and from its global symbol table
+(e.g., ``beamx``, ``frame``, names of built-in functions TODO LINK, etc.).  
+When source-level debugging is enabled, symbols from the source code will
+be present in the MAME Debugging Information File, and will be added
+to the list of symbols recognized by MAME's expression evaluator.
+
+* **Symbol collisions and priority**: It is possible that source-level symbols
+  present in the MAME Debugging Information File will conflict with built-in symbols.
+  When source-level debugging is enabled, source-level symbols take precedence.  You
+  may always force a reference to the built-in symbol by prefixing the symbol with ``ns\``
+  ("not source").  For example, suppose the MAME Debugging Information File includes the
+  source-level symbol ``y`` which conflicts with the symbol for the register ``y``.
+  References to ``y`` will be interpreted as the source-level symbol ``y``.
+  References to ``ns\y``, such as:
+    ``print ns\y``
+    ``print b@ns\y``
+    ``wpset ns\y``
+   will be interpeted as the register ``y``.   
+* **Case sensitivity**: When the debugger evaluates expressions, symbols
+  are generally interpreted case-insensitively when source-level debugging
+  is not active.  Many programming languages treat symbols
+  case-sensitively.  This can lead to source-level symbols like ``Foo`` and ``foo``
+  being present in the MAME Debugging Information File simultaneously.
+  When source-level debugging is active and MAME's expression evaluator
+  encounters a symbol, it will give precendence to
+  a case-sensitive match.  If no such match is found, it will look for a
+  case-insensitive match.
+
+
+.. _srcdbg_offsets:
+
+Address offsets
+~~~~~~~~~~~~~~~
+
+In some cases, the assembler or compiler does not know where the generated
+code will be loaded at run-time.  For example, the program might be written
+in position-independent code to allow an operating system to decide
+where to load the code at run-time.  In such cases, the assembler or compiler
+will be unable to provide the correct addresses in the MAME Debugging Information
+File.  You can have MAME apply an *offset* to the addresses from the debugging
+info so that the resulting addresses match where the code is loaded at
+run-time.  You can do this in two ways:
+* On the command-line, specify ``-src_debug_offset`` with the offset to apply.
+  This approach makes sense if the code to be debugged is reliably loaded
+  at an offset you can predict.
+* At any time during the debugging of the program, use the command ``sdoffset``
+  with the offset to apply.  This approach can be used by users or LUA scripts
+  that need to inspect memory to determine where the program was loaded.  Any
+  breakpoints set before ``sdoffset`` was executed will need to be removed
+  and re-added so the new offset can be applied.  Any source-level symbols loaded
+  from the MAME Debugging Information File will automatically evaluate to 
+  values with the new offset the next time a command references them.
+
+
+.. _srcdbg_mdi:
+
+Generating MAME Debugging Information Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MAME Debugging Information Files (or ``.mdi`` files) are generated by
+assemblers or compilers that target machines emulated by MAME.  Currently
+``.mdi`` files adhere to a single binary format called "Simple".  In the
+future, new formats may be created as the need arises.  The Simple format includes:
+* Full paths to the source files input to the build tool
+* Mappings from file and line numbers to blocks of 16-bit addresses where the
+  resulting instructions reside
+* Mappings from symbol names to 16-bit addresses
+    * These symbols can either be global or scoped
+    * Scoped symbols can either have fixed values or values
+      dependent on register values (e.g., stack local variables)
+
+The recommended way for build tools to generate ``.mdi`` files is to use
+the small C library ``srcdbg``.  The header file ``srcdbg_format_writer.h`` includes
+declarations and documentation for the simple C functions present in the library.
+
+If consuming the ``srcdbg`` is not feasible, tools may
+also manually generate the binary format directly.  The format is defined in
+``srcdbg_format.h``.  Because this is error-prone, it is not recommended
+that tools generate the binary format directly.
