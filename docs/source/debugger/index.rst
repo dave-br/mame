@@ -463,16 +463,16 @@ to specify :ref:`-src_debug_search_path <mame-commandline-srcdbgsearchpath>`
 and / or :ref:`-src_debug_prefix_map <mame-commandline-srcdbgprefixmap>`.
 
 Once source-level debugging is enabled, you will then be able to
-access the Debug menu, View Source command from
+access the Option menu, Show Source command from
 the main debugger window.  You may switch back and forth between source
-and disassmbly view, and also open separate disassembly windows
+and disassembly view, and open separate disassembly windows even
 while the main window shows source.
 
 The source view has a drop-list at the top for selecting which source
-file to view.  The list is populated with source file names from the
+file to view.  The list is populated with source file paths from the
 :ref:`MAME Debugging Information File <srcdbg_mdi>`.  When the debugger is paused,
 you can change the selection to view the file you wish.  When stepping,
-the selection is automatically chosen to show the file associated
+the selection is automatically updated to show the file associated
 with the current PC address.
 
 
@@ -493,7 +493,9 @@ source file, you may specify either the full path to the source file
 as it existed on the machine that built the binary, the full path
 to the source file as it exists on the host running MAME, or any
 non-ambiguous substring at the end of the full path (such as
-just the filename).
+just the filename).  The filename or path is surrounded by single
+backticks `````, with the line number immediately following
+the closing backtick.
 
 Examples:
 
@@ -530,8 +532,8 @@ no parameters) will advance
 to the next instruction, whereas ``steps`` will advance to the next instruction
 that is associated with a source line other than 4.  When the original
 source is assembly language, ``step`` and ``steps`` generally behave the same.
-But when the original source is in a higher level language like C or BASIC, ``steps`` results
-in executing the remainder of a block of instructions associated with
+But when the original source is in a higher level language like C or BASIC, ``steps``
+executes the remainder of a block of instructions associated with
 the current source line.
 
 When executing Step Into or Step Over from the menu or keyboard shortcuts, the behavior
@@ -549,7 +551,7 @@ MAME defines its own built-in symbols based on the current
 CPU (e.g., register names) and from its global symbol table
 (e.g., ``beamx``, ``frame``, names of built-in :ref:`functions <debugger-express-func>`, etc.).  
 When source-level debugging is enabled, symbols from the source code will
-be imported from the MAME Debugging Information File, and added
+be imported from the MAME Debugging Information File and added
 to the list of symbols recognized by MAME's expression evaluator.
 
 * **Symbol collisions and priority**: It is possible that source-level symbols
@@ -591,7 +593,7 @@ File.  You can have MAME apply an *offset* to the addresses from the debugging
 info so that the resulting addresses match where the code is loaded at
 run-time.  You can do this in two ways:
 
-* On the command-line, specify :ref:`-src_debug_offset <mame-commandline-srcdbginfo>`
+* On the command-line, specify :ref:`-src_debug_offset <mame-commandline-srcdbgoffset>`
   with the offset to apply.
   This approach makes sense if the code to be debugged is reliably loaded
   at an offset you can predict.
@@ -618,15 +620,16 @@ future, new formats may be created as the need arises.  The Simple format includ
 * Mappings from file and line numbers to blocks of 16-bit addresses where the
   resulting instructions reside
 * Mappings from symbol names to 16-bit addresses
+
     * These symbols can either be global or scoped
     * Scoped symbols can either have fixed values or values
       dependent on register values (e.g., stack local variables)
 
 The recommended way for build tools to generate ``.mdi`` files is to use
 the small C library ``srcdbg``.  The header file ``srcdbg_format_writer.h`` includes
-declarations and documentation for the simple C functions present in the library.
+declarations and documentation for the C functions present in the library.
 
-If consuming the ``srcdbg`` is not feasible, tools may
+If consuming the ``srcdbg`` library is not feasible, tools may
 also manually generate the binary format directly.  The format is defined in
 ``srcdbg_format.h``.  Because this is error-prone, it is not recommended
 that tools generate the binary format directly.

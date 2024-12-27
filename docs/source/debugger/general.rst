@@ -582,7 +582,7 @@ Examples:
 
 ``sdoffset E000``
     Apply an offset of $E000 to all addresses present
-	in the :ref:`MAME Debugging Information File <srcdbg_mdi>`.
+    in the :ref:`MAME Debugging Information File <srcdbg_mdi>`.
 
 Back to :ref:`debugger-general-list`
 
