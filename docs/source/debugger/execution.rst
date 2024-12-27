@@ -88,6 +88,15 @@ If neither the called function nor any of its callees have source associated
 with them, ``steps`` will continue execution until the call is complete, and
 the first instruction with source associated with it is encountered.
 
+If the current line returns from a recursive function, ``steps`` will stop
+at the same line, but in the prior call frame.  It will appear as if
+no stepping occurred, but the stack register will indicate a return
+has occurred.  Note that this logic can be fooled when stepping into a function
+without associated source, which makes further calls without proper
+matching returns (using direct manipulation of the stack pointer instead).
+
+
+
 Examples:
 
 ``steps``
