@@ -463,7 +463,7 @@ to specify :ref:`-src_debug_search_path <mame-commandline-srcdbgsearchpath>`
 and / or :ref:`-src_debug_prefix_map <mame-commandline-srcdbgprefixmap>`.
 
 Once source-level debugging is enabled, you will then be able to
-access the Option menu, Show Source command from
+access the Options menu, Show Source command from
 the main debugger window.  You may switch back and forth between source
 and disassembly view, and open separate disassembly windows even
 while the main window shows source.

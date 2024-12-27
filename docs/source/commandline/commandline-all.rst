@@ -3918,7 +3918,7 @@ Core Communication Options
 
     *<prefix-map>* is a semicolon-separated list of semicolon-separated pairs of
     paths, where each pair consists of a build environment's path prefix followed
-    by the MAME host system's path prefix, of the form:
+    by the MAME host system's path prefix it should be replaced with, of the form:
 
         *build-path-prefix1*\ ;\ *runtime-path-prefix1*\ ;\ *build-path-prefix2*\ ;\ *runtime-path-prefix2*\ ;\ *etc.*
 
