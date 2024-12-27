@@ -483,7 +483,8 @@ Source-level breakpoints
 
 The expression evaluator includes syntax for specifying a source
 file and line number.  This can be used in conjunction with the
-``bpset`` command to set a breakpoint on a particular line number,
+:ref:`bpset <debugger-command-bpset>` command to set
+a breakpoint on a particular line number,
 rather than specifying the address manually.  Source-level symbols
 evaluate to addresses, and so may also be used in ``bpset`` commands.
 
@@ -520,7 +521,8 @@ Source-level stepping
 ~~~~~~~~~~~~~~~~~~~~~
 
 The stepping commands ``step`` and ``over`` have source-level debugging
-versions ``steps`` and ``overs``, respectively TODO LINK, which operate
+versions :ref:`steps <debugger-command-steps>` and
+:ref:`overs <debugger-command-overs>`, respectively, which operate
 at the source level rather than at the disassembly level.
 To take ``step`` as an example, if
 the PC points to an address associated with line 4, ``step`` (with
@@ -545,9 +547,9 @@ Source-level symbol evaluation
 
 MAME defines its own built-in symbols based on the current
 CPU (e.g., register names) and from its global symbol table
-(e.g., ``beamx``, ``frame``, names of built-in functions TODO LINK, etc.).  
+(e.g., ``beamx``, ``frame``, names of built-in :ref:`functions <debugger-express-func>`, etc.).  
 When source-level debugging is enabled, symbols from the source code will
-be present in the MAME Debugging Information File, and will be added
+be imported from the MAME Debugging Information File, and added
 to the list of symbols recognized by MAME's expression evaluator.
 
 * **Symbol collisions and priority**: It is possible that source-level symbols
@@ -589,10 +591,11 @@ File.  You can have MAME apply an *offset* to the addresses from the debugging
 info so that the resulting addresses match where the code is loaded at
 run-time.  You can do this in two ways:
 
-* On the command-line, specify ``-src_debug_offset`` with the offset to apply.
+* On the command-line, specify :ref:`-src_debug_offset <mame-commandline-srcdbginfo>`
+  with the offset to apply.
   This approach makes sense if the code to be debugged is reliably loaded
   at an offset you can predict.
-* At any time during the debugging of the program, use the command ``sdoffset``
+* At any time during the debugging of the program, use the command :ref:`debugger-command-sdoffset`
   with the offset to apply.  This approach can be used by users or LUA scripts
   that need to inspect memory to determine where the program was loaded.  Any
   breakpoints set before ``sdoffset`` was executed will need to be removed

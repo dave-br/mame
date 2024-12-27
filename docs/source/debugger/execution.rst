@@ -4,9 +4,13 @@ Execution Debugger Commands
 ===========================
 
 :ref:`debugger-command-step`
-    single step for <count> instructions (F11)
+    single step for <count> instructions (F11, when disassembly view is active)
+:ref:`debugger-command-steps`
+    single step one source line (F11, when source view is active)
 :ref:`debugger-command-over`
-    single step over <count> instructions (F10)
+    single step over <count> instructions (F10, when disassembly view is active)
+:ref:`debugger-command-overs`
+    single step over one source line (F10, when source view is active)
 :ref:`debugger-command-out`
     single step until the current subroutine/exception handler returns
     (Shift-F11)
@@ -63,6 +67,37 @@ Examples:
 Back to :ref:`debugger-execution-list`
 
 
+.. _debugger-command-steps:
+
+steps
+-----
+
+**steps**
+
+When :ref:`source-level debugging <srcdbg>` is enabled, this single-steps
+one *source* line on the currently executing CPU.  When the original
+source is assembly language, ``step`` and ``steps`` generally behave the same.
+But when the original source is in a higher level language like C or BASIC,
+``steps`` results in executing the remainder of a block of instructions
+associated with the current source line.
+
+If the current source line is a
+call instruction, ``steps`` stops at the first source line in the called
+function, but only if the called function has source associated with it.
+If neither the called function nor any of its callees have source associated
+with them, ``steps`` will continue execution until the call is complete, and
+the first instruction with source associated with it is encountered.
+
+Examples:
+
+``steps``
+    Steps forward to the next source line on the current CPU.
+``sts``
+    Steps forward to the next source line on the current CPU.
+
+Back to :ref:`debugger-execution-list`
+
+
 .. _debugger-command-over:
 
 over
@@ -89,6 +124,30 @@ Examples:
     Steps forward over one instruction on the current CPU.
 ``over 4``
     Steps forward over four instructions on the current CPU.
+
+Back to :ref:`debugger-execution-list`
+
+
+.. _debugger-command-overs:
+
+overs
+-----
+
+**overs**
+
+When :ref:`source-level debugging <srcdbg>` is enabled, this steps forward
+over one *source* line on the currently executing CPU.  When the original
+source is assembly language, ``over`` and ``overs`` generally behave the same.
+But when the original source is in a higher level language like C or BASIC,
+``overs`` results in executing the remainder of a block of instructions
+associated with the current source line.
+
+Examples:
+
+``overs``
+    Steps forward over the next source line on the current CPU.
+``os``
+    Steps forward over the next source line on the current CPU.
 
 Back to :ref:`debugger-execution-list`
 

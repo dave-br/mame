@@ -3913,8 +3913,8 @@ Core Communication Options
     built source files to the source files currently present on the MAME
     host system.  This is useful in cases where the debugged program was
     built on a machine different from the MAME host system, or if the
-    build environment is different from the MAME run-time environment (such
-    as the use of cygwin during build).
+    build *environment* is different from the MAME run-time environment (such
+    as the use of cygwin while running the build tool).
 
     *<prefix-map>* is a semicolon-separated list of semicolon-separated pairs of
     paths, where each pair consists of a build environment's path prefix followed
@@ -3929,6 +3929,22 @@ Core Communication Options
         .. code-block:: bash
 
             mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_prefix_map /cygdrive/c/;c:\;/cygdrive/d/;d:\
+
+.. _mame-commandline-srcdbgoffset:
+
+**-src_debug_offset** *<offset>*
+
+    If :ref:`source-level debugging <srcdbg>` is enabled, this causes *<offset>*
+    to be applied to all addresses encountered in the
+    :ref:`MAME Debugging Information File <srcdbg_mdi>`.  For more information,
+    see :ref:`srcdbg_offsets`.
+
+    The default is 0.
+
+    Example:
+        .. code-block:: bash
+
+            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_offset 57344
 
 .. _mame-commandline-miscoptions:
 
