@@ -29,6 +29,13 @@
 #include "osdepend.h"
 #include "xmlfile.h"
 
+#define LOG_SRCDBG 	 (1U << 1)
+// need to set LOG_OUTPUT_FUNC or LOG_OUTPUT_STREAM because there's no logerror outside devices
+#define LOG_OUTPUT_FUNC osd_printf_verbose
+#define VERBOSE      (LOG_SRCDBG)
+#include "logmacro.h"
+
+
 
 const size_t debugger_cpu::NUM_TEMP_VARIABLES = 10;
 
@@ -1085,6 +1092,7 @@ void device_debug::wait_hook()
 		!m_step_source_start.has_value() &&
 		machine.debugger().srcdbg_provider() != nullptr)
 	{
+		LOGMASKED(LOG_SRCDBG, "Initializing for source stepping\n");
 		m_step_source_start = machine.debugger().srcdbg_provider()->address_to_file_line(curpc);
 		m_step_source_call_nesting = 0;
 	}
@@ -1130,16 +1138,19 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 			(dasmresult & util::disasm_interface::STEP_OVER) != 0)
 		{
 			m_step_source_call_nesting++;
+			LOGMASKED(LOG_SRCDBG, "is_source_stepping_complete: CALL %X, %d\n", pc, m_step_source_call_nesting);
 		}
 		// Track returns (util::disasm_interface::STEP_OUT)
 		if ((dasmresult & util::disasm_interface::STEP_OUT) != 0)
 		{
 			m_step_source_call_nesting--;
+			LOGMASKED(LOG_SRCDBG, "is_source_stepping_complete: RETN %X, %d\n", pc, m_step_source_call_nesting);
 		}
 	}
 	if (ret)
 	{
 		// We're stopping, so reset the source stepping state.
+		LOGMASKED(LOG_SRCDBG, "Completed source_stepping: %d\n", m_step_source_call_nesting);
 		m_step_source_start.reset();
 		m_step_source_call_nesting = 0;
 	}
