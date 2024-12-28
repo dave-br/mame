@@ -503,7 +503,6 @@ device_debug::device_debug(device_t &device)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
 	, m_step_source_start()
-	, m_step_source_call_nesting(0)
 	, m_step_source_returning_from_start_line(false)
 	, m_stopaddr(0)
 	, m_stoptime(attotime::zero)
@@ -1093,9 +1092,7 @@ void device_debug::wait_hook()
 		!m_step_source_start.has_value() &&
 		machine.debugger().srcdbg_provider() != nullptr)
 	{
-		LOGMASKED(LOG_SRCDBG, "Initializing for source stepping\n");
 		m_step_source_start = machine.debugger().srcdbg_provider()->address_to_file_line(curpc);
-		m_step_source_call_nesting = 0;
 		m_step_source_returning_from_start_line = false;
 	}
 
@@ -1119,16 +1116,15 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 	// When source-stepping, stop if we're currently on a user source line AND either
 	// i) we started outside a user source line, or
 	// ii) current source line is different from where we started, or
-	// iii) there has been an unmatched return since we started (e.g., recursive return to same pc)
+	// iii) we just returned from source line where we started (e.g., recursive return to same line)
 	std::optional<file_line> file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc);
 	bool ret = (file_line_cur.has_value() &&
 		(!m_step_source_start.has_value() ||                         // i)
 		!(file_line_cur.value() == m_step_source_start.value()) ||   // ii)
-		// m_step_source_call_nesting < 0));                            // iii)
-		m_step_source_returning_from_start_line));
+		m_step_source_returning_from_start_line));                   // iii)
 
-	// Look at instruction we're about to execute to track calls and returns (iii)
-	// for use next time
+	// Look at instruction we're about to execute to properly
+	// set m_step_source_returning_from_start_line (iii) for use next time
 	debug_disasm_buffer buffer(device());
 	u32 dasmresult = buffer.disassemble_info(pc);
 	m_step_source_returning_from_start_line =
@@ -1136,32 +1132,11 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 		((dasmresult & util::disasm_interface::STEP_OUT) != 0) &&
 		file_line_cur.has_value() &&
 		file_line_cur.value() == m_step_source_start.value();
-	// {
-	// 	 = true;
-	// 	// Track calls (util::disasm_interface::STEP_OVER).  Note: Step-over will
-	// 	// automatically skip returns (for nested matching calls & returns),
-	// 	// so we need to skip counting the calls as well unless we're doing
-	// 	// step-into (m_flags & DEBUG_FLAG_STEPPING)
-	// 	if ((m_flags & DEBUG_FLAG_STEPPING) != 0 &&
-	// 		(dasmresult & util::disasm_interface::STEP_OVER) != 0)
-	// 	{
-	// 		m_step_source_call_nesting++;
-	// 		LOGMASKED(LOG_SRCDBG, "is_source_stepping_complete: CALL %X, %d\n", pc, m_step_source_call_nesting);
-	// 	}
-	// 	// Track returns (util::disasm_interface::STEP_OUT)
-	// 	if ((dasmresult & util::disasm_interface::STEP_OUT) != 0)
-	// 	{
-	// 		m_step_source_call_nesting--;
-	// 		LOGMASKED(LOG_SRCDBG, "is_source_stepping_complete: RETN %X, %d\n", pc, m_step_source_call_nesting);
-	// 	}
-	// }
 	if (ret)
 	{
 		// We're stopping, so reset the source stepping state.
-		LOGMASKED(LOG_SRCDBG, "Completed source_stepping: %d\n", m_step_source_call_nesting);
 		m_step_source_start.reset();
 		m_step_source_returning_from_start_line = false;
-		m_step_source_call_nesting = 0;
 	}
 
 	return ret;
