@@ -1086,6 +1086,7 @@ void device_debug::wait_hook()
 		machine.debugger().srcdbg_provider() != nullptr)
 	{
 		m_step_source_start = machine.debugger().srcdbg_provider()->address_to_file_line(curpc);
+		m_step_source_call_nesting = 0;
 	}
 
 	// no longer in debugger code
