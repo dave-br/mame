@@ -204,6 +204,7 @@ private:
 	int                      m_delay_steps;              // number of steps until target address check
 	std::optional<file_line> m_step_source_start;        // When source-level stepping, where did the step start?
 	int                      m_step_source_call_nesting; // When source-level stepping, how many calls minus returns have we encountered?
+	bool                     m_step_source_returning_from_start_line;
 
 	// execution information
 	offs_t                  m_stopaddr;                 // stop address for DEBUG_FLAG_STOP_PC
