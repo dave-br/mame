@@ -135,6 +135,8 @@ int __cdecl mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, co
 */
 int __cdecl mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 
+int __cdecl mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset);
+
 /*
     mame_srcdbg_simp_close - Ends the source-debugging information file writing process.  Writes
         accumulated information to the source-debugging information file, and closes it.
