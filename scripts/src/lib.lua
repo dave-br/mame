@@ -153,9 +153,15 @@ end
 
 project "srcdbg"
 	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
-	kind (LIBTYPE)
+	kind ("SharedLib")
 
 	addprojectflags()
+
+	links {
+		"utils",
+		"ocore_" .. _OPTIONS["osd"],
+		ext_lib("utf8proc"),
+	}
 
 	includedirs {
 		MAME_DIR .. "src/lib/util",
