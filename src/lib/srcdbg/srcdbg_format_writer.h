@@ -69,7 +69,7 @@ extern "C" {
     [out] srcdbg_simp_state - pointer to memory location to receive srcdbg_simp_state, which
         is passed to subsequent API calls
 */
-int __cdecl mame_srcdbg_simp_open_new(const char * file_path, void ** srcdbg_simp_state);
+extern __attribute__ ((visibility ("default"))) int __cdecl mame_srcdbg_simp_open_new(const char * file_path, void ** srcdbg_simp_state);
 
 /*
     mame_srcdbg_simp_add_source_file_path - Adds a new source file path to the generated

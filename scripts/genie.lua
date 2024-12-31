@@ -1092,6 +1092,7 @@ end
 				"-Wno-error=attributes", -- GCC fails to recognize some uses of [[maybe_unused]]
 				"-Wno-error=stringop-truncation", -- ImGui again
 				"-Wno-stringop-overflow", -- generates false positives when assigning an int rvalue to a u8 variable without an explicit cast
+				"-fvisibility=hidden", -- TODO: COMMENT
 			}
 			buildoptions_cpp {
 				"-Wno-error=class-memaccess", -- many instances in ImGui and BGFX

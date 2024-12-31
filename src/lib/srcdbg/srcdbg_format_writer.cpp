@@ -610,7 +610,7 @@ int srcdbg_simple_generator::add_string(resizeable_array & ra, unsigned int & si
 // srcdbg_simple_generator
 // ------------------------------------------------------------------
 
-int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
 {
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) malloc(sizeof(srcdbg_simple_generator));
 	if (generator == nullptr)
