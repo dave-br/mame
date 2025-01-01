@@ -90,7 +90,7 @@ typedef struct
 	address_range range;
 
 	/* 0-based index of source file (from source_file_paths) containing this line */
-	unsigned short source_file_index;
+	unsigned int source_file_index;
 
 	/* 1-based line number in source file */
 	unsigned int line_number;
@@ -172,7 +172,7 @@ typedef struct
 
     Description:
     - Each source_file_paths[i] is a null-terminated string path to a source file.  The
-      first dimension index fits into an unsigned short.
+      first dimension index fits into an unsigned int.
     - line_mappings need not be in any order
     - There may be 0, 1, or more line_mappings entries per source file / line number pair,
       and only for line numbers corresponding to the first byte of a range of machine-language instructions.

@@ -236,8 +236,8 @@ public:
 	void construct();
 	int destruct();
 	int open(const char * file_path);
-	int add_source_file_path(const char * source_file_path, unsigned short & index);
-	int add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
+	int add_source_file_path(const char * source_file_path, unsigned int & index);
+	int add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number);
 	int add_global_fixed_symbol(const char * symbol_name, int symbol_value);
 	int add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
 	int add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
@@ -403,19 +403,14 @@ int srcdbg_simple_generator::open(const char * file_path)
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-int srcdbg_simple_generator::add_source_file_path(const char * source_file_path, unsigned short & index)
+int srcdbg_simple_generator::add_source_file_path(const char * source_file_path, unsigned int & index)
 {
-	unsigned int index_int;
-	RET_IF_FAIL(m_source_file_paths.find_or_push_back(source_file_path, m_header.source_file_paths_size, index_int));
-	if (index_int > USHRT_MAX)
-	{
-		return MAME_SRCDBG_E_INDEX_OVERFLOW;
-	}
-	index = (unsigned short) index_int;
+	unsigned int index;
+	RET_IF_FAIL(m_source_file_paths.find_or_push_back(source_file_path, m_header.source_file_paths_size, index));
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
+int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number)
 {
 	if (source_file_index >= m_source_file_paths.num_strings())
 	{
@@ -623,12 +618,12 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_open_new(co
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned short * index_ptr)
+int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned int * index_ptr)
 {
 	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_source_file_path(source_file_path, *index_ptr);
 }
 
-int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number)
+int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number)
 {
 	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
 }

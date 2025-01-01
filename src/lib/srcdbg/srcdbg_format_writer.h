@@ -79,7 +79,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_open_new(co
     [in] source_file_path - source file path to add
     [out] index_ptr - pointer to memory location to receive the 0-based index assigned to source_file_path
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned short * index_ptr);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned int * index_ptr);
 
 /*
     mame_srcdbg_simp_add_line_mapping - Adds a new mapping between a range of addresses and
@@ -94,7 +94,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_source_
     [in] source_file_index - Index of source file path associated with the range
     [in] line_number - Line number associated with the range.
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number);
 
 /*
     mame_srcdbg_simp_add_global_fixed_symbol - Adds a new global fixed symbol.  Such symbols
