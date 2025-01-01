@@ -178,6 +178,10 @@ project "srcdbg"
 		MAME_DIR .. "src/osd",
 	}
 
+	defines {
+		"BUILDING_LIB",
+	}
+
 	files {
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",

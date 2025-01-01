@@ -21,10 +21,41 @@
 #ifndef MAME_SRCDBG_FORMAT_WRITER_H
 #define MAME_SRCDBG_FORMAT_WRITER_H
 
+// Define LIB_PUBLIC to identify client-facing API to be exported
+// from the so / dll, depending on platform and whether the library
+// is being built or consumed.
+//
+// Assumes -fvisibility=hidden is used when compiling any files that
+// contribute to the implementation of the library, so that symbols
+// not adorned with LIB_PUBLIC default to not being exported.
+//
+// Note: It appears that mingw GCC currently ignores
+// -fvisibility=hidden and just exports everything, whereas
+// Linux GCC obeys.
+//
+// Adapted from https://gcc.gnu.org/wiki/Visibility
+#if defined _WIN32
+	#ifdef BUILDING_LIB
+		#ifdef __GNUC__
+			#define LIB_PUBLIC __attribute__ ((dllexport))
+		#else
+			#define LIB_PUBLIC __declspec(dllexport)
+		#endif
+	#else    // Consuming lib from Windows
+		#ifdef __GNUC__
+			#define LIB_PUBLIC __attribute__ ((dllimport))
+		#else
+			#define LIB_PUBLIC __declspec(dllimport)
+		#endif
+	#endif
+#else	    // NOT Windows, either building or consuming
+	#define LIB_PUBLIC __attribute__ ((visibility ("default")))
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /* For tools targeting 6809, these values are for the reg parameter to
    mame_srcdbg_simp_add_local_relative_symbol() */
@@ -69,7 +100,7 @@ extern "C" {
     [out] srcdbg_simp_state - pointer to memory location to receive srcdbg_simp_state, which
         is passed to subsequent API calls
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_open_new(const char * file_path, void ** srcdbg_simp_state);
+LIB_PUBLIC int mame_srcdbg_simp_open_new(const char * file_path, void ** srcdbg_simp_state);
 
 /*
     mame_srcdbg_simp_add_source_file_path - Adds a new source file path to the generated
@@ -79,7 +110,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_open_new(co
     [in] source_file_path - source file path to add
     [out] index_ptr - pointer to memory location to receive the 0-based index assigned to source_file_path
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned int * index_ptr);
+LIB_PUBLIC int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned int * index_ptr);
 
 /*
     mame_srcdbg_simp_add_line_mapping - Adds a new mapping between a range of addresses and
@@ -94,7 +125,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_source_
     [in] source_file_index - Index of source file path associated with the range
     [in] line_number - Line number associated with the range.
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number);
+LIB_PUBLIC int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number);
 
 /*
     mame_srcdbg_simp_add_global_fixed_symbol - Adds a new global fixed symbol.  Such symbols
@@ -103,7 +134,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_line_ma
     [in] symbol_name - Name of symbol
     [in] symbol_value - Value of symbol (such as an address)
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value);
+LIB_PUBLIC int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value);
 
 /*
     mame_srcdbg_simp_add_local_fixed_symbol - Adds a new local fixed symbol.  Such symbols
@@ -117,7 +148,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_global_
         of last instruction
     [in] symbol_value - Value of symbol (such as an address)
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
+LIB_PUBLIC int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
 
 /*
     mame_srcdbg_simp_add_local_relative_symbol - Adds a new local relative symbol.  Such symbols
@@ -133,16 +164,16 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_f
     [in] reg - Register identifier this symbol is offset from.  See list of MAME_DBGSRC_REGISTER_* values
     [in] reg_offset - Offset to be applied to register's value to produce the value of this symbol
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
+LIB_PUBLIC int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
+LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
 
 /*
     mame_srcdbg_simp_close - Ends the source-debugging information file writing process.  Writes
         accumulated information to the source-debugging information file, and closes it.
     [in] srcdbg_simp_state - Handle to source-debugging information file generation, as returned by mame_srcdbg_simp_open_new
 */
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_close(void * srcdbg_simp_state);
+LIB_PUBLIC int mame_srcdbg_simp_close(void * srcdbg_simp_state);
 
 #ifdef __cplusplus
 }
