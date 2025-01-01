@@ -49,7 +49,7 @@ extern "C" {
 
 #define MAME_SRCDBG_E_SUCCESS           0
 #define MAME_SRCDBG_E_OUTOFMEMORY       1
-#define MAME_SRCDBG_E_INDEX_OVERFLOW    2
+#define MAME_SRCDBG_E_IMPORT_FAILED     2
 #define MAME_SRCDBG_E_FOPEN_ERROR       3
 #define MAME_SRCDBG_E_FWRITE_ERROR      4
 #define MAME_SRCDBG_E_FCLOSE_ERROR      5
@@ -135,7 +135,7 @@ extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_f
 */
 extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 
-extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
 
 /*
     mame_srcdbg_simp_close - Ends the source-debugging information file writing process.  Writes

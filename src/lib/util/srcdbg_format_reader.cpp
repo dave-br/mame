@@ -89,7 +89,9 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format,
 // [in] srcdbg_path - Path to source-level debugging information file
 // [in] callback - An implementation of a subclass of srcdbg_format_reader_callback
 //      to receive callbacks while reading the file
-// [out] error - On failure, explanatory error text
+// [in/out] error - On success, untouched
+//                  If a caller-supplied callback returns false, untouched
+//                  On failure, explanatory error text
 // Returns true on success, false on failure or if a caller-supplied callback returns false
 bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
 {

@@ -20,11 +20,15 @@
 #include "osdcomm.h"
 #include "srcdbg_format_reader.h"
 
+#include "strformat.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include <assert.h>
+
+#include <vector>
 
 #define RET_IF_FAIL(expr)                              \
 	{                                                  \
@@ -241,7 +245,7 @@ public:
 	int add_global_fixed_symbol(const char * symbol_name, int symbol_value);
 	int add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
 	int add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
-	int import(const char * srcdbg_file_path_to_import, short offset);
+	int import(const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
 	int close();
 
 private:
@@ -265,6 +269,8 @@ public:
 	writer_importer(srcdbg_simple_generator & gen, short offset)
 		: m_gen(gen)
 		, m_offset(offset)
+		, m_old_to_new_source_path_indices()
+		, m_symbol_names()
 	{
 	}
 
@@ -279,44 +285,55 @@ public:
 
 private:
 	srcdbg_simple_generator & m_gen;
-	short m_offset;
-
+	short                     m_offset;
+	std::vector<u32>          m_old_to_new_source_path_indices;
+	std::vector<std::string>  m_symbol_names;
 };
 
 bool writer_importer::on_read_source_path(u32 source_path_index, std::string && source_path)
 {
-	u16 new_index;
+	// srcdbg_format_simp_read is required to notify in (contiguous) index order
+	assert (m_old_to_new_source_path_indices.size() == source_path_index);
+
+	u32 new_index;
 	m_gen.add_source_file_path(source_path.c_str(), new_index);
-	// TODO MAP OLD TO NEW INDEX
+	
+	m_old_to_new_source_path_indices.push_back(new_index);
 	return true;
 }
 
 bool writer_importer::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 {
+	assert (line_map.source_file_index < m_old_to_new_source_path_indices.size());
+
 	m_gen.add_line_mapping(
 		line_map.range.address_first + m_offset,
 		line_map.range.address_last + m_offset,
-		line_map.source_file_index,
+		m_old_to_new_source_path_indices[line_map.source_file_index],
 		line_map.line_number);
 	return true;
 }
 
 bool writer_importer::on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name)
 {
-	// TODO: MAP INDEX / NAME
+	// srcdbg_format_simp_read is required to notify in (contiguous) index order
+	assert (m_symbol_names.size() == symbol_name_index);
+	m_symbol_names.push_back(std::move(symbol_name));
 	return true;
 }
 
 bool writer_importer::on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value)
 {
-	const char * sym_name = "fd";		// TODO
+	assert (value.symbol_name_index < m_symbol_names.size());
+	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
 	m_gen.add_global_fixed_symbol(sym_name, value.symbol_value + m_offset);
 	return true;
 }
 
 bool writer_importer::on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value)
 {
-	const char * sym_name = "fd";		// TODO
+	assert (value.symbol_name_index < m_symbol_names.size());
+	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
 	for (u32 i = 0; i < value.num_address_ranges; i++)
 	{
 		m_gen.add_local_fixed_symbol(
@@ -330,7 +347,8 @@ bool writer_importer::on_read_local_fixed_symbol_value(const local_fixed_symbol_
 
 bool writer_importer::on_read_local_relative_symbol_value(const local_relative_symbol_value & value)
 {
-	const char * sym_name = "fd";		// TODO
+	assert (value.symbol_name_index < m_symbol_names.size());
+	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
 	for (u32 i = 0; i < value.num_local_relative_eval_rules; i++)
 	{
 		m_gen.add_local_relative_symbol(
@@ -405,7 +423,6 @@ int srcdbg_simple_generator::open(const char * file_path)
 
 int srcdbg_simple_generator::add_source_file_path(const char * source_file_path, unsigned int & index)
 {
-	unsigned int index;
 	RET_IF_FAIL(m_source_file_paths.find_or_push_back(source_file_path, m_header.source_file_paths_size, index));
 	return MAME_SRCDBG_E_SUCCESS;
 }
@@ -423,7 +440,7 @@ int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsi
 			little_endianize_int16(address_first),
 			little_endianize_int16(address_last)
 		},
-		little_endianize_int16(source_file_index),
+		little_endianize_int32(source_file_index),
 		little_endianize_int32(line_number)
 	};
 	return m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
@@ -505,15 +522,19 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, short offset)
+int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details)
 {
 	std::string error;
 	srcdbg_format format;
 	if (!srcdbg_format_header_read(srcdbg_file_path_to_import, format, error))
 	{
-		// TODO
-		// fprintf(stderr, "Error reading source-level debugging information file\n%s\n\n%s", argv[1], error.c_str());
-		return 1;
+		util::string_format(
+			error_details,
+			num_bytes_error_details,
+			"Error reading source-level debugging information file\n%s\n\n%s",
+			srcdbg_file_path_to_import,
+			error.c_str());
+		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
 
 	switch (format)
@@ -523,14 +544,19 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 		writer_importer importer(*this, offset);
 		if (!srcdbg_format_simp_read(srcdbg_file_path_to_import, importer, error))
 		{
-			// TODO
-			// if (!error.empty())
-			// {
-			// 	fprintf(stderr, "Error reading source-level debugging information file\n%s\n\n%s", argv[1], error.c_str());
-			// }
-			return 1;
+			// writer_importer always returns true from callbacks, so if we're here,
+			// the reader provided an error
+			assert (!error.empty());
+			
+			util::string_format(
+				error_details,
+				num_bytes_error_details,
+				"Error reading source-level debugging information file\n%s\n\n%s",
+				srcdbg_file_path_to_import,
+				error.c_str());
+				return 1;
 		}
-		return MAME_SRCDBG_E_SUCCESS;
+		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
 
 	// FUTURE: If more file formats are invented, add cases for them here to read them
@@ -643,9 +669,9 @@ int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const c
 	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_relative_symbol(symbol_name, address_first, address_last, reg, reg_offset);
 }
 
-int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * srcdbg_file_path_to_import, short offset)
+int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details)
 {
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->import(srcdbg_file_path_to_import, offset);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->import(srcdbg_file_path_to_import, offset, error_details, num_bytes_error_details);
 }
 
 int mame_srcdbg_simp_close(void * srcdbg_simp_state)
