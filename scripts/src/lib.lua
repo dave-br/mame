@@ -15,6 +15,11 @@ project "utils"
 
 	addprojectflags()
 
+	buildoptions {
+		"-fvisibility=hidden", -- TODO: COMMENT
+		"-fPIC",
+	}
+
 	includedirs {
 		MAME_DIR .. "src/osd",
 		MAME_DIR .. "src/lib/util",
@@ -156,6 +161,11 @@ project "srcdbg"
 	kind ("SharedLib")
 
 	addprojectflags()
+
+	buildoptions {
+		"-fvisibility=hidden", -- TODO: COMMENT
+		"-fPIC",
+	}
 
 	links {
 		"utils",

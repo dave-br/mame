@@ -402,6 +402,11 @@ project ("ocore_" .. _OPTIONS["osd"])
 
 	dofile("sdl_cfg.lua")
 
+	buildoptions {
+		"-fvisibility=hidden", -- TODO: COMMENT
+		"-fPIC",
+	}
+
 	includedirs {
 		MAME_DIR .. "src/emu",
 		MAME_DIR .. "src/osd",

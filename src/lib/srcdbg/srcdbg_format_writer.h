@@ -69,7 +69,7 @@ extern "C" {
     [out] srcdbg_simp_state - pointer to memory location to receive srcdbg_simp_state, which
         is passed to subsequent API calls
 */
-extern __attribute__ ((visibility ("default"))) int __cdecl mame_srcdbg_simp_open_new(const char * file_path, void ** srcdbg_simp_state);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_open_new(const char * file_path, void ** srcdbg_simp_state);
 
 /*
     mame_srcdbg_simp_add_source_file_path - Adds a new source file path to the generated
@@ -79,7 +79,7 @@ extern __attribute__ ((visibility ("default"))) int __cdecl mame_srcdbg_simp_ope
     [in] source_file_path - source file path to add
     [out] index_ptr - pointer to memory location to receive the 0-based index assigned to source_file_path
 */
-int __cdecl mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned short * index_ptr);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned short * index_ptr);
 
 /*
     mame_srcdbg_simp_add_line_mapping - Adds a new mapping between a range of addresses and
@@ -94,7 +94,7 @@ int __cdecl mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, cons
     [in] source_file_index - Index of source file path associated with the range
     [in] line_number - Line number associated with the range.
 */
-int __cdecl mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned short source_file_index, unsigned int line_number);
 
 /*
     mame_srcdbg_simp_add_global_fixed_symbol - Adds a new global fixed symbol.  Such symbols
@@ -103,7 +103,7 @@ int __cdecl mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned
     [in] symbol_name - Name of symbol
     [in] symbol_value - Value of symbol (such as an address)
 */
-int __cdecl mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value);
 
 /*
     mame_srcdbg_simp_add_local_fixed_symbol - Adds a new local fixed symbol.  Such symbols
@@ -117,7 +117,7 @@ int __cdecl mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, c
         of last instruction
     [in] symbol_value - Value of symbol (such as an address)
 */
-int __cdecl mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
 
 /*
     mame_srcdbg_simp_add_local_relative_symbol - Adds a new local relative symbol.  Such symbols
@@ -133,16 +133,16 @@ int __cdecl mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, co
     [in] reg - Register identifier this symbol is offset from.  See list of MAME_DBGSRC_REGISTER_* values
     [in] reg_offset - Offset to be applied to register's value to produce the value of this symbol
 */
-int __cdecl mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 
-int __cdecl mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset);
 
 /*
     mame_srcdbg_simp_close - Ends the source-debugging information file writing process.  Writes
         accumulated information to the source-debugging information file, and closes it.
     [in] srcdbg_simp_state - Handle to source-debugging information file generation, as returned by mame_srcdbg_simp_open_new
 */
-int __cdecl mame_srcdbg_simp_close(void * srcdbg_simp_state);
+extern __attribute__ ((visibility ("default"))) int mame_srcdbg_simp_close(void * srcdbg_simp_state);
 
 #ifdef __cplusplus
 }
