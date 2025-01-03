@@ -15,8 +15,12 @@ project "utils"
 
 	addprojectflags()
 
+	-- Since utils is linked into srcdbg_shared, it needs build options
+	-- to make it "shared library"-friendly
 	buildoptions {
-		"-fvisibility=hidden", -- TODO: COMMENT
+		-- By default, symbols are not exported unless annotated as such
+		"-fvisibility=hidden",
+		-- Code participating in shared libraries must be position independent
 		"-fPIC",
 	}
 
@@ -154,23 +158,22 @@ end
 		MAME_DIR .. "src/lib/util/zippath.h",
 	}
 
-
-
-project "srcdbg"
-	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
-	kind ("SharedLib")
+-- Static library to help tools generate MAME source-level debugging
+-- information files.  This is also linked into the shared library
+-- equivalent for tools that prefer using a shared library
+project "srcdbg_static"
+	uuid "985b8e16-bb6a-4db0-809b-87074f94dfcb"
+	kind ("StaticLib")
 
 	addprojectflags()
 
+	-- Since srcdbg_static is linked into srcdbg_shared, it needs build options
+	-- to make it "shared library"-friendly
 	buildoptions {
-		"-fvisibility=hidden", -- TODO: COMMENT
+		-- By default, symbols are not exported unless annotated as such
+		"-fvisibility=hidden",
+		-- Code participating in shared libraries must be position independent
 		"-fPIC",
-	}
-
-	links {
-		"utils",
-		"ocore_" .. _OPTIONS["osd"],
-		ext_lib("utf8proc"),
 	}
 
 	includedirs {
@@ -185,4 +188,20 @@ project "srcdbg"
 	files {
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
+	}
+	
+
+-- Shared library to help tools generate MAME source-level debugging
+-- information files.  Tools may use either the static or shared version
+project "srcdbg_shared"
+	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
+	kind ("SharedLib")
+
+	addprojectflags()
+
+	links {
+		"utils",
+		"ocore_" .. _OPTIONS["osd"],
+		"srcdbg_static"
+		ext_lib("utf8proc"),
 	}
