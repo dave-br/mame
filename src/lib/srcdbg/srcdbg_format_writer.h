@@ -34,7 +34,7 @@
 // Linux GCC obeys.
 //
 // Adapted from https://gcc.gnu.org/wiki/Visibility
-#if defined _WIN32
+#if defined _WIN32 || defined __CYGWIN__
 	#ifdef BUILDING_LIB
 		#ifdef __GNUC__
 			#define LIB_PUBLIC __attribute__ ((dllexport))
