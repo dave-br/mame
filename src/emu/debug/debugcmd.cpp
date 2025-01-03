@@ -200,6 +200,7 @@ debugger_commands::debugger_commands(running_machine& machine, debugger_cpu& cpu
 	m_console.register_command("overs",     CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_over_source, this, _1));
 	m_console.register_command("os",        CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_over_source, this, _1));
 	m_console.register_command("out" ,      CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_out, this, _1));
+	m_console.register_command("outs" ,     CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_out_source, this, _1));
 	m_console.register_command("go",        CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_go, this, _1));
 	m_console.register_command("g",         CMDFLAG_NONE, 0, 1, std::bind(&debugger_commands::execute_go, this, _1));
 	m_console.register_command("gvblank",   CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_go_vblank, this, _1));
@@ -845,6 +846,16 @@ void debugger_commands::execute_over_source(const std::vector<std::string_view> 
 void debugger_commands::execute_out(const std::vector<std::string_view> &params)
 {
 	m_console.get_visible_cpu()->debug()->single_step_out();
+}
+
+
+/*-------------------------------------------------
+    execute_out - execute the out src command
+-------------------------------------------------*/
+
+void debugger_commands::execute_out_source(const std::vector<std::string_view> &params)
+{
+	m_console.get_visible_cpu()->debug()->single_step_out(true /* source-level stepping */);
 }
 
 
