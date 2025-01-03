@@ -186,6 +186,33 @@ Example:
 Back to :ref:`debugger-execution-list`
 
 
+.. _debugger-command-outs:
+
+outs
+----
+
+**outs**
+
+When :ref:`source-level debugging <srcdbg>` is enabled, this single-steps
+until the next return from subroutine or return from exception instruction
+lands the currently executing CPU to a *source* line.  When the original
+source is assembly language and source-level debugging information is provided
+for the current and calling subroutine, ``out`` and ``outs`` generally
+behave the same.  But when layers of functions or subroutines *without*
+source-level information exist between the current instruction and the
+most recent calling instruction *with* source-level information, ``outs``
+will skip over those "non source-level information" layers until it lands on
+calling code with source-level information.
+
+Examples:
+
+``outs``
+    Steps until a subroutine or exception handler returns to code with
+    source-level information.
+
+Back to :ref:`debugger-execution-list`
+
+
 .. _debugger-command-go:
 
 go

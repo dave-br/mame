@@ -522,9 +522,10 @@ and hit F9 to set a breakpoint on that line.
 Source-level stepping
 ~~~~~~~~~~~~~~~~~~~~~
 
-The stepping commands ``step`` and ``over`` have source-level debugging
-versions :ref:`steps <debugger-command-steps>` and
-:ref:`overs <debugger-command-overs>`, respectively, which operate
+The stepping commands ``step``, ``over``, and ``out`` have source-level debugging
+versions :ref:`steps <debugger-command-steps>`,
+:ref:`overs <debugger-command-overs>`, and
+:ref:`outs <debugger-command-outs>`, respectively, which operate
 at the source level rather than at the disassembly level.
 To take ``step`` as an example, if
 the PC points to an address associated with line 4, ``step`` (with
@@ -536,10 +537,11 @@ But when the original source is in a higher level language like C or BASIC, ``st
 executes the remainder of a block of instructions associated with
 the current source line.
 
-When executing Step Into or Step Over from the menu or keyboard shortcuts, the behavior
-depends on the what the main window is showing.  If the main window shows disassembly,
-then ``step`` or ``over`` would be invoked.  If the main window shows source, 
-``steps`` or ``overs``  would be invoked.
+When executing Step Into, Step Over, and Step Out from the menu or keyboard
+shortcuts, the behavior depends on what the main window is showing.
+If the main window shows disassembly, then ``step``, ``over``, or ``out``
+would be invoked.  If the main window shows source, 
+``steps``, ``overs``, or ``outs``  would be invoked.
 
 
 .. _srcdbg_symbols:
@@ -616,7 +618,7 @@ assemblers or compilers that target machines emulated by MAME.  Currently
 ``.mdi`` files adhere to a single binary format called "Simple".  In the
 future, new formats may be created as the need arises.  The Simple format includes:
 
-* Full paths to the source files input to the build tool
+* Full or relative paths to the source files input to the build tool
 * Mappings from file and line numbers to blocks of 16-bit addresses where the
   resulting instructions reside
 * Mappings from symbol names to 16-bit addresses
