@@ -554,18 +554,18 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 				"Error reading source-level debugging information file\n%s\n\n%s",
 				srcdbg_file_path_to_import,
 				error.c_str());
-				return 1;
+				return MAME_SRCDBG_E_IMPORT_FAILED;
 		}
-		return MAME_SRCDBG_E_IMPORT_FAILED;
+		return MAME_SRCDBG_E_SUCCESS;
 	}
 
 	// FUTURE: If more file formats are invented, add cases for them here to read them
 
 	default:
 		assert(!"Unexpected source-level debugging information file format");
-		return 1;
+		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
-	return MAME_SRCDBG_E_SUCCESS;
+	// return MAME_SRCDBG_E_SUCCESS;
 }
 
 int srcdbg_simple_generator::close()
