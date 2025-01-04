@@ -7,11 +7,12 @@
     Library of helper functions to generate MAME source-level
     debugging info files
 
+	TODO: CHANGE
     This header intentionally written in pure C to allow C-only tools
     (assemblers, compilers) to #include it.
 
     Tools should prefer using this header and linking with
-    -lsrcdbg to generate debugging info files where possible, instead
+    -lmame_srcdbg_writer to generate debugging info files where possible, instead
     of directly including srcdbg_format.h to manually generate debugging
     info files.
 
@@ -166,6 +167,7 @@ LIB_PUBLIC int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state,
 */
 LIB_PUBLIC int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 
+// TODO
 LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
 
 /*
