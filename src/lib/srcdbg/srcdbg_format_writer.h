@@ -60,6 +60,8 @@ extern "C" {
 
 /* For tools targeting 6809, these values are for the reg parameter to
    mame_srcdbg_simp_add_local_relative_symbol() */
+
+// TODO: RENAME TO SRCDBG
 #define MAME_DBGSRC_REGISTER_6809_PC    -1
 #define MAME_DBGSRC_REGISTER_6809_SP    0
 #define MAME_DBGSRC_REGISTER_6809_CC    1
