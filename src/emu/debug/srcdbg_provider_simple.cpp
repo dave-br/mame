@@ -275,6 +275,7 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 {
 }
 
+
 // Called later during startup, after device_state_interfaces are available.
 // Generates expressions required to implement local relative symbol evaluation rules.
 void srcdbg_provider_simple::complete_local_relative_initialization()
@@ -288,10 +289,19 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 		std::vector<symbol_table::local_range_expression> values;
 		for (local_relative_eval_rule_internal & eval_rule_internal : sym_internal.m_eval_rules)
 		{
+			// Create expression string that adds the register to the offset.
+			// - 'ns\' forces interpretation of register name to use the built-in
+			//   symbol, and not any conflicting source-level debugging symbols
+			//   of the same name.
+			// - Expression evaluator does not support negative numbers, so take
+			//   cases on whether we need to subtract abs(reg offset) or just
+			//   add it.
+			// - Expression evaluator defaults to hex, so explicitly use # for decimal
 			std::string expr = util::string_format(
-				"(%s + %d)",
+				"(ns\\%s %s #%d)",
 				state->state_find_entry(eval_rule_internal.m_reg)->symbol(),
-				eval_rule_internal.m_reg_offset);
+				(eval_rule_internal.m_reg_offset < 0 ? "-" : "+"),
+				abs(eval_rule_internal.m_reg_offset));
 			symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
 			values.push_back(std::move(value));
 		}
