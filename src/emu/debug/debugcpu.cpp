@@ -1138,6 +1138,13 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 		m_step_source_start.reset();
 		m_step_source_returning_from_start_line = false;
 	}
+	else if ((m_flags & DEBUG_FLAG_STEPPING_OUT) != 0)
+	{
+		// We've done a step-out and are still slipping until we hit
+		// an appropriate source line.  Slip via step-overs so we
+		// don't think we're done after subsequent, deeper call-nesting 
+		m_flags |= DEBUG_FLAG_STEPPING_OVER;
+	}
 
 	return ret;
 }
@@ -2043,10 +2050,21 @@ void device_debug::prepare_for_step_overout(offs_t pc)
 	{
 		// make sure to also reset the number of steps for conditionals that may be single-instruction loops
 		if (test_cond || !step_out)
+		{
 			m_stepsleft = 100;
+		}
+		else if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0)
+		{
+			// Stepping out completed at the disassembly level, but we're
+			// doing source-level stepping.  Call it done here, but retain
+			// m_flags so is_source_stepping_complete can perform
+			// source-level slipping.
+			m_stepsleft = 1;
+		}
 		else
 		{
-			// add extra instructions for delay slots
+			// Stepping out completed at the disassembly level, and we're
+			// doing disassembly-level stepping.  Add extra instructions for delay slots
 			int extraskip = (dasmresult & util::disasm_interface::OVERINSTMASK) >> util::disasm_interface::OVERINSTSHIFT;
 			m_stepsleft = extraskip + 1;
 
