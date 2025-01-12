@@ -47,14 +47,10 @@ const std::error_condition & debug_view_sourcecode::line_indexed_file::open(cons
 	for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
 	{
 		// Check for line endings
-		bool crlf = false;
-		if (m_data[i] == '\r' && m_data[i+1] == '\n')
+		bool crlf = (m_data[i] == '\r' && m_data[i+1] == '\n');
+		bool line_end = crlf || (m_data[i] == '\n');
+		if (!line_end)
 		{
-			crlf = true;
-		}
-		else if (m_data[i] != '\n')
-		{
-			// Neither crlf nor lf, so not a line ending
 			continue;
 		}
 
@@ -62,11 +58,13 @@ const std::error_condition & debug_view_sourcecode::line_indexed_file::open(cons
 		m_line_starts.push_back(cur_line_start);                // Record line's starting index
 		if (crlf)
 		{
-			i++;    // Skip \n in \r\n
+			i++;                                                // Skip \n in \r\n
 		}
 		cur_line_start = i+1;                                   // Prepare for next line
 	}
-	m_data[m_data.size()-1] = '\0';
+
+	m_line_starts.push_back(cur_line_start);
+	m_data.push_back('\0');
 	return m_err;
 }
 
