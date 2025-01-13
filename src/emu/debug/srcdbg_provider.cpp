@@ -31,7 +31,7 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 
 	std::string error;
 	srcdbg_format format;
-	if (!srcdbg_format_header_read(di_path, format, error))
+	if (!srcdbg_format_header_read(di_path, format)) //, error))
 	{
 		throw emu_fatalerror("Error reading source-level debugging information file\n%s\n\n%s", di_path, error.c_str());
 	}
@@ -42,7 +42,7 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 	{
 		std::unique_ptr<srcdbg_provider_simple> ret = std::make_unique<srcdbg_provider_simple>(machine);
 		srcdbg_import importer(*ret);
-		if (!srcdbg_format_simp_read(di_path, importer, error))
+		if (!srcdbg_format_simp_read(di_path, importer)) //, error))
 		{
 			if (!error.empty())
 			{

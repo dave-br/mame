@@ -70,16 +70,17 @@ srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 }
 
 
-bool srcdbg_import::on_read_source_path(u32 source_path_index, std::string && source_path)
+bool srcdbg_import::on_read_source_path(u32 source_path_index) //, std::string && source_path)
 {
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_srcdbg_simple.m_source_file_paths.size() == source_path_index);
 
-	normalize_path_separators(source_path);
+	std::string todo;
+	normalize_path_separators(todo /* source_path */);
 
 	std::string local;
-	generate_local_path(source_path, local);
-	srcdbg_provider_base::source_file_path sfp(std::move(source_path), std::move(local));
+	generate_local_path("todo" /*source_path*/, local);
+	srcdbg_provider_base::source_file_path sfp("todo" /* std::move(source_path) */, std::move(local));
 	m_srcdbg_simple.m_source_file_paths.push_back(std::move(sfp));
 	return true;
 }
@@ -135,11 +136,12 @@ bool srcdbg_import::end_read_line_mappings()
 }
 
 
-bool srcdbg_import::on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name)
+bool srcdbg_import::on_read_symbol_name(u32 symbol_name_index) //, std::string && symbol_name)
 {
+	std::string todo;
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
 	assert (m_symbol_names.size() == symbol_name_index);
-	m_symbol_names.push_back(std::move(symbol_name));
+	m_symbol_names.push_back(std::move(todo /*symbol_name*/));
 	return true;
 }
 

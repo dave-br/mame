@@ -158,6 +158,28 @@ end
 		MAME_DIR .. "src/lib/util/zippath.h",
 	}
 
+-- Static library to help tools generate MAME source-level debugging
+-- information files.  This is also linked into the shared library
+-- equivalent for tools that prefer using a shared library
+project "mame_srcdbg_static"
+	uuid "985b8e16-bb6a-4db0-809b-87074f94dfcb"
+	kind ("StaticLib")
+
+	includedirs {
+		MAME_DIR .. "src/lib/util",
+	}
+	
+	defines {
+		"BUILDING_LIB",
+	}
+
+	files {
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
+		MAME_DIR .. "src/lib/util/srcdbg_format_reader.cpp",
+		MAME_DIR .. "src/lib/util/srcdbg_format_reader.h",
+	}
+
 
 -- Shared library to help external tools (i.e., assemblers or compilers that
 -- target emulated machines) generate MAME source-level debugging
