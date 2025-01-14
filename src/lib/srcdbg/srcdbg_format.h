@@ -6,21 +6,24 @@
 
     File-format definition for MAME source-level debugging info files
 
-    This header intentionally written in pure C to allow C-only tools
-    (assemblers, compilers) to #include.
+	Only functionality declared in this file and srcdbg_api.h are
+	safe for use by tools outside of MAME.
+	TODO: URL
 
-    Tools should prefer using srcdbg_format_writer.h to generate
+    Tools should prefer using srcdbg_api.h and linking with
+    -lmame_srcdbg_static or -lmame_srcdbg_shared to generate
     debugging info files where possible, instead of directly including
     this file to manually generate debugging info files.
+
+    This header intentionally written in C to allow C-only tools
+    (assemblers, compilers) to #include.
 
 
 ***************************************************************************/
 
 
-#ifndef MAME_UTIL_SRCDBG_FORMAT_H
-#define MAME_UTIL_SRCDBG_FORMAT_H
-
-#pragma once
+#ifndef MAME_SRCDBG_FORMAT_H
+#define MAME_SRCDBG_FORMAT_H
 
 #pragma pack(push, 1)
 
@@ -186,4 +189,4 @@ typedef struct
 
 #pragma pack(pop)
 
-#endif // MAME_UTIL_SRCDBG_FORMAT_H
+#endif // MAME_SRCDBG_FORMAT_H

@@ -4,17 +4,15 @@
 
     srcdbg_format_writer.h
 
-    Library of helper functions to generate MAME source-level
-    debugging info files.
-
-    This library makes only minimal use of C++ (e.g., no STL or even
-    new / delete) to avoid the need for consumers to link to the
-    standard C++ library.  This allows C-only tools to easily link
-    to this library.
+    Internal implementation of portions of srcdbg_api.h.
+	
+	WARNING: Tools external to MAME should only use functionality
+	declared in srcdg_format.h and srcdbg_api.h.
 
 ***************************************************************************/
 
 
+#include "srcdbg_api.h"
 #include "srcdbg_format_writer.h"
 #include "srcdbg_format.h"
 // #include "osdcomm.h"
@@ -35,26 +33,6 @@
 void srcdbg_sprintf(std::string & out, const char * format, ...);
 unsigned int little_endianize_int32(unsigned int n) { return n; }
 unsigned short little_endianize_int16(unsigned short n) { return n; }
-
-#define RET_IF_FAIL(expr)                              \
-	{                                                  \
-		int _err = (expr);                             \
-		if (_err != MAME_SRCDBG_E_SUCCESS)             \
-			return _err;                               \
-	}
-
-#define FWRITE_OR_RETURN(BUF, SIZE, COUNT, STREAM)     \
-	{                                                  \
-		int _ret = fwrite(BUF, SIZE, COUNT, STREAM);   \
-		if (_ret < COUNT)                              \
-			return MAME_SRCDBG_E_FWRITE_ERROR;         \
-	}
-
-#define FCLOSE_OR_RETURN(STREAM)                       \
-{                                                      \
-	if (fclose(STREAM) != 0)                           \
-		return MAME_SRCDBG_E_FCLOSE_ERROR;             \
-}
 
 
 
@@ -238,33 +216,6 @@ struct local_fixed : local_fixed_symbol_value
 struct local_relative : local_relative_symbol_value
 {
 	resizeable_array values;
-};
-
-class srcdbg_simple_generator
-{
-public:
-	void construct();
-	int destruct();
-	int open(const char * file_path);
-	int add_source_file_path(const char * source_file_path, unsigned int & index);
-	int add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number);
-	int add_global_fixed_symbol(const char * symbol_name, int symbol_value);
-	int add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value);
-	int add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
-	int import(const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
-	int close();
-
-private:
-	int add_string(resizeable_array & ra, unsigned int & size, const char * s);
-
-	FILE * m_output;
-	mame_debug_info_simple_header m_header;
-	string_resizeable_array m_source_file_paths;
-	resizeable_array m_line_mappings;
-	string_resizeable_array m_symbol_names;
-	resizeable_array m_global_fixed_symbol_values;
-	resizeable_array m_local_fixed_symbol_values;
-	resizeable_array m_local_relative_symbol_values;
 };
 
 
@@ -632,62 +583,5 @@ int srcdbg_simple_generator::add_string(resizeable_array & ra, unsigned int & si
 	}
 	RET_IF_FAIL(ra.push_back(&null_terminator, 1));
 	size++;
-	return MAME_SRCDBG_E_SUCCESS;
-}
-
-// ------------------------------------------------------------------
-// Public API - C Interface for assemblers / compilers.  These
-// are simple wrappers around public member functions from
-// srcdbg_simple_generator
-// ------------------------------------------------------------------
-
-LIB_PUBLIC int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
-{
-	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) malloc(sizeof(srcdbg_simple_generator));
-	if (generator == nullptr)
-	{
-		return MAME_SRCDBG_E_OUTOFMEMORY;
-	}
-	generator->construct();
-	RET_IF_FAIL(generator->open(file_path));
-	*handle_ptr = (void *) generator;
-	return MAME_SRCDBG_E_SUCCESS;
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_add_source_file_path(void * srcdbg_simp_state, const char * source_file_path, unsigned int * index_ptr)
-{
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_source_file_path(source_file_path, *index_ptr);
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number)
-{
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_line_mapping(address_first, address_last, source_file_index, line_number);
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
-{
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_fixed_symbol(symbol_name, symbol_value);
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
-{
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_fixed_symbol(symbol_name, address_first, address_last, symbol_value);
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
-{
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_local_relative_symbol(symbol_name, address_first, address_last, reg, reg_offset);
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details)
-{
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->import(srcdbg_file_path_to_import, offset, error_details, num_bytes_error_details);
-}
-
-LIB_PUBLIC int mame_srcdbg_simp_close(void * srcdbg_simp_state)
-{
-	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) srcdbg_simp_state;
-	RET_IF_FAIL(generator->close());
-	RET_IF_FAIL(generator->destruct());
 	return MAME_SRCDBG_E_SUCCESS;
 }
