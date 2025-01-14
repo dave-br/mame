@@ -28,9 +28,11 @@
 #include <limits.h>
 #include <assert.h>
 
-// #include <vector>
+#include <vector>
+#include <string>
 
 // TODO:
+void srcdbg_sprintf(std::string & out, const char * format, ...);
 unsigned int little_endianize_int32(unsigned int n) { return n; }
 unsigned short little_endianize_int16(unsigned short n) { return n; }
 
@@ -273,17 +275,17 @@ public:
 	writer_importer(srcdbg_simple_generator & gen, short offset)
 		: m_gen(gen)
 		, m_offset(offset)
-		// , m_old_to_new_source_path_indices()
-		// , m_symbol_names()
+		, m_old_to_new_source_path_indices()
+		, m_symbol_names()
 	{
 	}
 	~writer_importer() {}
 
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override	{ return true; }
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true; }
-	virtual bool on_read_source_path(u32 source_path_index /*, std::string && source_path */) override;
+	virtual bool on_read_source_path(u32 source_path_index, std::string && source_path) override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
-	virtual bool on_read_symbol_name(u32 symbol_name_index /*, std::string && symbol_name */) override;
+	virtual bool on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name) override;
 	virtual bool on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value) override;
 	virtual bool on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value) override;
 	virtual bool on_read_local_relative_symbol_value(const local_relative_symbol_value & value) override;
@@ -291,54 +293,54 @@ public:
 private:
 	srcdbg_simple_generator & m_gen;
 	short                     m_offset;
-	// std::vector<u32>          m_old_to_new_source_path_indices;
-	// std::vector<std::string>  m_symbol_names;
+	std::vector<u32>          m_old_to_new_source_path_indices;
+	std::vector<std::string>  m_symbol_names;
 };
 
-bool writer_importer::on_read_source_path(u32 source_path_index /*, std::string && source_path*/)
+bool writer_importer::on_read_source_path(u32 source_path_index, std::string && source_path)
 {
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
-	// assert (m_old_to_new_source_path_indices.size() == source_path_index);
+	assert (m_old_to_new_source_path_indices.size() == source_path_index);
 
 	u32 new_index;
-	m_gen.add_source_file_path("todo", /* source_path.c_str(), */ new_index);
+	m_gen.add_source_file_path(source_path.c_str(), new_index);
 	
-	// m_old_to_new_source_path_indices.push_back(new_index);
+	m_old_to_new_source_path_indices.push_back(new_index);
 	return true;
 }
 
 bool writer_importer::on_read_line_mapping(const srcdbg_line_mapping & line_map)
 {
-	// assert (line_map.source_file_index < m_old_to_new_source_path_indices.size());
+	assert (line_map.source_file_index < m_old_to_new_source_path_indices.size());
 
 	m_gen.add_line_mapping(
 		line_map.range.address_first + m_offset,
 		line_map.range.address_last + m_offset,
-		0, //m_old_to_new_source_path_indices[line_map.source_file_index],
+		m_old_to_new_source_path_indices[line_map.source_file_index],
 		line_map.line_number);
 	return true;
 }
 
-bool writer_importer::on_read_symbol_name(u32 symbol_name_index /*, std::string && symbol_name */)
+bool writer_importer::on_read_symbol_name(u32 symbol_name_index, std::string && symbol_name)
 {
 	// srcdbg_format_simp_read is required to notify in (contiguous) index order
-	// assert (m_symbol_names.size() == symbol_name_index);
-	// m_symbol_names.push_back(std::move(symbol_name));
+	assert (m_symbol_names.size() == symbol_name_index);
+	m_symbol_names.push_back(std::move(symbol_name));
 	return true;
 }
 
 bool writer_importer::on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value)
 {
-	// assert (value.symbol_name_index < m_symbol_names.size());
-	const char * sym_name = "todo"; // m_symbol_names[value.symbol_name_index].c_str();
+	assert (value.symbol_name_index < m_symbol_names.size());
+	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
 	m_gen.add_global_fixed_symbol(sym_name, value.symbol_value + m_offset);
 	return true;
 }
 
 bool writer_importer::on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value)
 {
-	// assert (value.symbol_name_index < m_symbol_names.size());
-	const char * sym_name = "todo"; // m_symbol_names[value.symbol_name_index].c_str();
+	assert (value.symbol_name_index < m_symbol_names.size());
+	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
 	for (u32 i = 0; i < value.num_address_ranges; i++)
 	{
 		m_gen.add_local_fixed_symbol(
@@ -352,12 +354,12 @@ bool writer_importer::on_read_local_fixed_symbol_value(const local_fixed_symbol_
 
 bool writer_importer::on_read_local_relative_symbol_value(const local_relative_symbol_value & value)
 {
-	// assert (value.symbol_name_index < m_symbol_names.size());
-	const char * sym_name = "todo"; // m_symbol_names[value.symbol_name_index].c_str();
+	assert (value.symbol_name_index < m_symbol_names.size());
+	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
 	for (u32 i = 0; i < value.num_local_relative_eval_rules; i++)
 	{
 		m_gen.add_local_relative_symbol(
-			sym_name, 
+			sym_name,
 			value.local_relative_eval_rules[i].range.address_first + m_offset,
 			value.local_relative_eval_rules[i].range.address_last + m_offset,
 			value.local_relative_eval_rules[i].reg,
@@ -529,16 +531,18 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 
 int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details)
 {
-	// std::string error;
+	std::string error;
 	srcdbg_format format;
-	if (!srcdbg_format_header_read(srcdbg_file_path_to_import, format)) //, error))
+	if (!srcdbg_format_header_read(srcdbg_file_path_to_import, format, error))
 	{
-		// util::string_format(
-		// 	error_details,
-		// 	num_bytes_error_details,
-		// 	"Error reading source-level debugging information file\n%s\n\n%s",
-		// 	srcdbg_file_path_to_import,
-		// 	error.c_str());
+		std::string full_error;
+		srcdbg_sprintf(
+			full_error,
+			"Error reading source-level debugging information file\n%s\n\n%s",
+			srcdbg_file_path_to_import,
+			error.c_str());
+		
+		strncpy(error_details, full_error.c_str(), num_bytes_error_details);
 		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
 
@@ -547,19 +551,20 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 	case SRCDBG_FORMAT_SIMPLE:
 	{
 		writer_importer importer(*this, offset);
-		if (!srcdbg_format_simp_read(srcdbg_file_path_to_import, importer)) //, error))
+		if (!srcdbg_format_simp_read(srcdbg_file_path_to_import, importer, error))
 		{
 			// writer_importer always returns true from callbacks, so if we're here,
 			// the reader provided an error
-			// assert (!error.empty());
-			
-			// util::string_format(
-			// 	error_details,
-			// 	num_bytes_error_details,
-			// 	"Error reading source-level debugging information file\n%s\n\n%s",
-			// 	srcdbg_file_path_to_import,
-			// 	error.c_str());
-				return MAME_SRCDBG_E_IMPORT_FAILED;
+			assert (!error.empty());
+
+			std::string full_error;
+			srcdbg_sprintf(
+				full_error,
+				"Error reading source-level debugging information file\n%s\n\n%s",
+				srcdbg_file_path_to_import,
+				error.c_str());
+			strncpy(error_details, full_error.c_str(), num_bytes_error_details);
+			return MAME_SRCDBG_E_IMPORT_FAILED;
 		}
 		return MAME_SRCDBG_E_SUCCESS;
 	}

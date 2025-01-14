@@ -11,6 +11,14 @@
 
 #include "srcdbg_format_reader.h"
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
+
+#include <vector>
+#include <system_error>
+
 // #include "corefile.h"
 
 // #include "osdcomm.h"
@@ -22,18 +30,28 @@ int little_endianize_int32(int n) { return n; }
 short little_endianize_int16(short n) { return n; }
 
 // #include <cstdio>
+ 
+void srcdbg_sprintf(std::string & out, const char * format, ...)
+{
+	char buf[1024];
+	va_list args;
+	va_start(args, format);
+	vsnprintf(buf, sizeof(buf), format, args);
+	va_end(args);
+
+	out = std::move(std::string(buf));
+}
 
 // Helper to read some bytes and advance the index
-template <typename T> static bool read_field(T * & var, /* const std::vector<uint8_t> & data */ void * data, u32 & i) //, std::string & error)
+template <typename T> static bool read_field(T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
 {
-	// if (data.size() < i + sizeof(T))
-	// {
-	// 	// error = util::string_format("File ended prematurely while reading next field of size %d", sizeof(T));
-	// 	return false;
-	// }
+	if (data.size() < i + sizeof(T))
+	{
+		srcdbg_format(error, "File ended prematurely while reading next field of size %d", sizeof(T));
+		return false;
+	}
 
-	// var = (T *)(&data[i]);
-	var = (T *) data;
+	var = (T *)(&data[i]);
 	i += sizeof(T);
 	return true;
 }
@@ -45,42 +63,44 @@ template <typename T> static bool read_field(T * & var, /* const std::vector<uin
 // [out] format - On success, the format reported by the header
 // [out] error - On failure, explanatory error text
 // Returns true on success, false on failure.
-bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format) //, std::string & error)
+bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error)
 {
+	std::string error;
+
 	// util::core_file::ptr file;
-	// std::error_condition err_code = util::core_file::open(srcdbg_path, OPEN_FLAG_READ, file);
-	// if (err_code)
-	// {
-	// 	error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
-	// 	return false;
-	// }
+	std::error_condition err_code; // = util::core_file::open(srcdbg_path, OPEN_FLAG_READ, file);
+	if (err_code)
+	{
+		srcdbg_sprintf(error, "Error opening file\n%s\n\nError code: %d", srcdbg_path, 4); // err_code.value());
+		return false;
+	}
 
-	// mame_debug_info_header_base header;
-	// std::size_t actual_size;
+	mame_debug_info_header_base header;
+	std::size_t actual_size;
 	// err_code = file->read_some(&header, sizeof(header), actual_size);
-	// if (err_code)
-	// {
-	// 	error = util::string_format("Error reading from file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
-	// 	return false;
-	// }
+	if (err_code)
+	{
+		srcdbg_sprintf(error, "Error reading from file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
+		return false;
+	}
 
-	// if (actual_size != sizeof(header))
-	// {
-	// 	error = util::string_format("Error reading from file\n%s\n\nFile too small to contain header", srcdbg_path);
-	// 	return false;
-	// }
+	if (actual_size != sizeof(header))
+	{
+		srcdbg_sprintf(error, "Error reading from file\n%s\n\nFile too small to contain header", srcdbg_path);
+		return false;
+	}
 
-	// if (strncmp(header.type, "simp", 4) != 0)
-	// {
-	// 	error = util::string_format("Error while reading header from file\n%s\n\nOnly type 'simp' is currently supported", srcdbg_path);
-	// 	return false;
-	// };
+	if (strncmp(header.type, "simp", 4) != 0)
+	{
+		srcdbg_sprintf(error, "Error while reading header from file\n%s\n\nOnly type 'simp' is currently supported", srcdbg_path);
+		return false;
+	};
 
-	// if (header.version != 1)
-	// {
-	// 	error = util::string_format("Error while reading header from file\n%s\n\nOnly version 1 is currently supported", srcdbg_path);
-	// 	return false;
-	// };
+	if (header.version != 1)
+	{
+		srcdbg_sprintf(error, "Error while reading header from file\n%s\n\nOnly version 1 is currently supported", srcdbg_path);
+		return false;
+	};
 
 	format = SRCDBG_FORMAT_SIMPLE;
 
@@ -100,24 +120,23 @@ bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format)
 //                  If a caller-supplied callback returns false, untouched
 //                  On failure, explanatory error text
 // Returns true on success, false on failure or if a caller-supplied callback returns false
-bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback) //, std::string & error)
+bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_callback & callback, std::string & error)
 {
 	// ** Load full binary contents into memory **
 
-	uint8_t * data = 0;
-	// std::vector<uint8_t> data;
-	// std::error_condition err_code = util::core_file::load(srcdbg_path, data);
-	// if (err_code)
-	// {
-	// 	error = util::string_format("Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
-	// 	return false;
-	// }
+	std::vector<uint8_t> data;
+	std::error_condition err_code; // = util::core_file::load(srcdbg_path, data);
+	if (err_code)
+	{
+		srcdbg_sprintf(error, "Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
+		return false;
+	}
 
 	// ** Simple format header **
 
 	u32 i = 0;
 	mame_debug_info_simple_header * header;
-	if (!read_field<mame_debug_info_simple_header>(header, data, i /*, error */) ||
+	if (!read_field<mame_debug_info_simple_header>(header, data, i, error) ||
 		!callback.on_read_simp_header(*header))
 	{
 		return false;
@@ -133,74 +152,73 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	// ** Validate some sizes and null terminators **
 
 	u32 first_line_mapping = i + header->source_file_paths_size;
-	// if (data.size() <= first_line_mapping - 1)
-	// {
-	// 	error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported source_file_paths_size=%d", srcdbg_path, header->source_file_paths_size);
-	// 	return false;
-	// }
-	// if (data[first_line_mapping - 1] != '\0')
-	// {
-	// 	error = util::string_format("Error reading file\n%s\n\nnull terminator missing at end of last source file", srcdbg_path);
-	// 	return false;
-	// }
+	if (data.size() <= first_line_mapping - 1)
+	{
+		srcdbg_sprintf(error, "Error reading file\n%s\n\nFile too small to contain reported source_file_paths_size=%d", srcdbg_path, header->source_file_paths_size);
+		return false;
+	}
+	if (data[first_line_mapping - 1] != '\0')
+	{
+		srcdbg_sprintf(error, "Error reading file\n%s\n\nnull terminator missing at end of last source file", srcdbg_path);
+		return false;
+	}
 
 	u32 first_symbol_name = first_line_mapping + (header->num_line_mappings * sizeof(srcdbg_line_mapping));
 	u32 after_symbol_names = first_symbol_name + header->symbol_names_size;
 	if (header->symbol_names_size > 0)
 	{
-		// if (data.size() <= after_symbol_names)
-		// {
-		// 	error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported symbol_names_size=%d", srcdbg_path, header->symbol_names_size);
-		// 	return false;
-		// }
+		if (data.size() <= after_symbol_names)
+		{
+			srcdbg_sprintf(error, "Error reading file\n%s\n\nFile too small to contain reported symbol_names_size=%d", srcdbg_path, header->symbol_names_size);
+			return false;
+		}
 
-		// if (data[after_symbol_names - 1] != '\0')
-		// {
-		// 	error = util::string_format("Error reading file\n%s\n\nnull terminator missing at end of last symbol name", srcdbg_path);
-		// 	return false;
-		// }
+		if (data[after_symbol_names - 1] != '\0')
+		{
+			srcdbg_sprintf(error, "Error reading file\n%s\n\nnull terminator missing at end of last symbol name", srcdbg_path);
+			return false;
+		}
 	}
 
 	u32 after_global_fixed_symbol_values =
 		after_symbol_names + header->num_global_fixed_symbol_values * sizeof(global_fixed_symbol_value);
-	// if (data.size() < after_global_fixed_symbol_values)
-	// {
-	// 	error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported num_global_fixed_symbol_values=%d", srcdbg_path, header->num_global_fixed_symbol_values);
-	// 	return false;
-	// }
+	if (data.size() < after_global_fixed_symbol_values)
+	{
+		srcdbg_sprintf(error, "Error reading file\n%s\n\nFile too small to contain reported num_global_fixed_symbol_values=%d", srcdbg_path, header->num_global_fixed_symbol_values);
+		return false;
+	}
 
 	u32 after_local_fixed_symbol_values = after_global_fixed_symbol_values + header->local_fixed_symbol_values_size;
-	// if (data.size() < after_local_fixed_symbol_values)
-	// {
-	// 	error = util::string_format("Error reading file\n%s\n\nFile too small to contain reported local_fixed_symbol_values_size=%d", srcdbg_path, header->local_fixed_symbol_values_size);
-	// 	return false;
-	// }
+	if (data.size() < after_local_fixed_symbol_values)
+	{
+		srcdbg_sprintf(error, "Error reading file\n%s\n\nFile too small to contain reported local_fixed_symbol_values_size=%d", srcdbg_path, header->local_fixed_symbol_values_size);
+		return false;
+	}
 
 	u32 after_local_relative_symbol_values = after_local_fixed_symbol_values + header->local_relative_symbol_values_size;
-	// if (data.size() != after_local_relative_symbol_values)
-	// {
-	// 	error = util::string_format("Error reading file\n%s\n\nFile size (%d) not an exact match to the sum of section sizes reported in header", srcdbg_path, data.size());
-	// 	return false;
-	// }
+	if (data.size() != after_local_relative_symbol_values)
+	{
+		srcdbg_sprintf(error, "Error reading file\n%s\n\nFile size (%d) not an exact match to the sum of section sizes reported in header", srcdbg_path, data.size());
+		return false;
+	}
 
 	// ** Source file paths **
 
-	// std::string str;
-	// void * data;
+	std::string str;
 	u32 source_index = 0;
 	for (; i < first_line_mapping; i++)
 	{
 		if (data[i] == '\0')
 		{
-			if (!callback.on_read_source_path(source_index++)) //, std::move(str)))
+			if (!callback.on_read_source_path(source_index++, std::move(str)))
 			{
 				return false;
 			}
-			// str.clear();
+			str.clear();
 		}
 		else
 		{
-			// str += char(data[i]);
+			str += char(data[i]);
 		}
 	}
 
@@ -214,7 +232,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	for (u32 line_map_idx = 0; line_map_idx < header->num_line_mappings; line_map_idx++)
 	{
 		srcdbg_line_mapping * line_map;
-		if (!read_field<srcdbg_line_mapping>(line_map, data, i)) //, error))
+		if (!read_field<srcdbg_line_mapping>(line_map, data, i, error))
 		{
 			return false;
 		}
@@ -226,7 +244,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 		if (line_map->source_file_index >= source_index)
 		{
-			// error = util::string_format("Error reading file\n%s\n\nInvalid source_file_index encountered in line map: %d", srcdbg_path, line_map->source_file_index);
+			srcdbg_sprintf(error, "Error reading file\n%s\n\nInvalid source_file_index encountered in line map: %d", srcdbg_path, line_map->source_file_index);
 			return false;
 		}
 
@@ -244,20 +262,20 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	// ** Symbol names **
 
 	u32 symbol_index = 0;
-	// str.clear();
+	str.clear();
 	for (; i < after_symbol_names; i++)
 	{
 		if (data[i] == '\0')
 		{
-			if (!callback.on_read_symbol_name(symbol_index++)) //, std::move(str)))
+			if (!callback.on_read_symbol_name(symbol_index++, std::move(str)))
 			{
 				return false;
 			}
-			// str.clear();
+			str.clear();
 		}
 		else
 		{
-			// str += char(data[i]);
+			str += char(data[i]);
 		}
 	}
 
@@ -271,7 +289,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	for (u32 global_fixed_idx = 0; global_fixed_idx < header->num_global_fixed_symbol_values; global_fixed_idx++)
 	{
 		global_fixed_symbol_value * value;
-		if (!read_field<global_fixed_symbol_value>(value, data, i)) //, error))
+		if (!read_field<global_fixed_symbol_value>(value, data, i, error))
 		{
 			return false;
 		}
@@ -281,7 +299,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 		if (value->symbol_name_index >= symbol_index)
 		{
-			// error = util::string_format("Error reading file\n%s\n\nInvalid symbol_name_index encountered in global_fixed_symbol_value: %d", srcdbg_path, value->symbol_name_index);
+			srcdbg_sprintf(error, "Error reading file\n%s\n\nInvalid symbol_name_index encountered in global_fixed_symbol_value: %d", srcdbg_path, value->symbol_name_index);
 			return false;
 		}
 
@@ -302,7 +320,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	{
 		local_fixed_symbol_value * value;
 		u32 value_start_idx = i;
-		if (!read_field<local_fixed_symbol_value>(value, data, i)) //, error))
+		if (!read_field<local_fixed_symbol_value>(value, data, i, error))
 		{
 			return false;
 		}
@@ -313,14 +331,14 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 		if (value->symbol_name_index >= symbol_index)
 		{
-			// error = util::string_format("Error reading file\n%s\n\nInvalid symbol_name_index encountered in local_fixed_symbol_value: %d", srcdbg_path, value->symbol_name_index);
+			srcdbg_sprintf(error, "Error reading file\n%s\n\nInvalid symbol_name_index encountered in local_fixed_symbol_value: %d", srcdbg_path, value->symbol_name_index);
 			return false;
 		}
 
 		for (u32 idx = 0; idx < value->num_address_ranges; idx++)
 		{
 			address_range * range;
-			if (!read_field<address_range>(range, data, i)) //, error))
+			if (!read_field<address_range>(range, data, i, error))
 			{
 				return false;
 			}
@@ -345,7 +363,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	{
 		local_relative_symbol_value * value;
 		u32 value_start_idx = i;
-		if (!read_field<local_relative_symbol_value>(value, data, i)) //, error))
+		if (!read_field<local_relative_symbol_value>(value, data, i, error))
 		{
 			return false;
 		}
@@ -355,14 +373,14 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 		if (value->symbol_name_index >= symbol_index)
 		{
-			// error = util::string_format("Error reading file\n%s\n\nInvalid symbol_name_index encountered in local_relative_symbol_value: %d", srcdbg_path, value->symbol_name_index);
+			srcdbg_sprintf(error, "Error reading file\n%s\n\nInvalid symbol_name_index encountered in local_relative_symbol_value: %d", srcdbg_path, value->symbol_name_index);
 			return false;
 		}
 
 		for (u32 idx = 0; idx < value->num_local_relative_eval_rules; idx++)
 		{
 			local_relative_eval_rule * rule;
-			if (!read_field<local_relative_eval_rule>(rule, data, i)) //, error))
+			if (!read_field<local_relative_eval_rule>(rule, data, i, error))
 			{
 				return false;
 			}
