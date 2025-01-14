@@ -47,7 +47,7 @@ template <typename T> static bool read_field(T * & var, const std::vector<uint8_
 {
 	if (data.size() < i + sizeof(T))
 	{
-		srcdbg_format(error, "File ended prematurely while reading next field of size %d", sizeof(T));
+		srcdbg_sprintf(error, "File ended prematurely while reading next field of size %d", sizeof(T));
 		return false;
 	}
 
@@ -65,8 +65,6 @@ template <typename T> static bool read_field(T * & var, const std::vector<uint8_
 // Returns true on success, false on failure.
 bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error)
 {
-	std::string error;
-
 	// util::core_file::ptr file;
 	std::error_condition err_code; // = util::core_file::open(srcdbg_path, OPEN_FLAG_READ, file);
 	if (err_code)
