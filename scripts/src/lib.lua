@@ -169,10 +169,6 @@ project "mame_srcdbg_static"
 		MAME_DIR .. "src/lib/util",
 	}
 	
-	defines {
-		"BUILDING_LIB",
-	}
-
 	files {
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
@@ -184,7 +180,7 @@ project "mame_srcdbg_static"
 -- Shared library to help external tools (i.e., assemblers or compilers that
 -- target emulated machines) generate MAME source-level debugging
 -- information files.
-project "mame_srcdbg_writer"
+project "mame_srcdbg_shared"
 	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
 	kind ("SharedLib")
 
@@ -204,6 +200,7 @@ project "mame_srcdbg_writer"
 
 	defines {
 		"BUILDING_LIB",
+		"MAME_SRCDBG_SHARED"
 	}
 
 	files {

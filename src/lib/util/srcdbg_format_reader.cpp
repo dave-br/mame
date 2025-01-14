@@ -21,7 +21,7 @@ using uint8_t = unsigned char;
 int little_endianize_int32(int n) { return n; }
 short little_endianize_int16(short n) { return n; }
 
-#include <cstdio>
+// #include <cstdio>
 
 // Helper to read some bytes and advance the index
 template <typename T> static bool read_field(T * & var, /* const std::vector<uint8_t> & data */ void * data, u32 & i) //, std::string & error)
@@ -104,7 +104,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 {
 	// ** Load full binary contents into memory **
 
-	uint8_t * data = NULL;
+	uint8_t * data = 0;
 	// std::vector<uint8_t> data;
 	// std::error_condition err_code = util::core_file::load(srcdbg_path, data);
 	// if (err_code)

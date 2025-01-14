@@ -35,6 +35,9 @@ enum srcdbg_format
 class srcdbg_format_reader_callback
 {
 public:
+	srcdbg_format_reader_callback() {}
+	~srcdbg_format_reader_callback() {}
+	
 	// Callbacks implemented by subclasses to react as portions of the file
 	// are read.  Return true to continue reading or false to abort.
 	// The "on_" functions pass an element as it is read

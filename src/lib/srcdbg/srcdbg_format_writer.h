@@ -35,7 +35,9 @@
 // Linux GCC obeys.
 //
 // Adapted from https://gcc.gnu.org/wiki/Visibility
-#if defined _WIN32 || defined __CYGWIN__
+#if !defined MAME_SRCDBG_SHARED
+	#define LIB_PUBLIC
+#elif defined _WIN32 || defined __CYGWIN__
 	#ifdef BUILDING_LIB
 		#ifdef __GNUC__
 			#define LIB_PUBLIC __attribute__ ((dllexport))
@@ -61,17 +63,16 @@ extern "C" {
 /* For tools targeting 6809, these values are for the reg parameter to
    mame_srcdbg_simp_add_local_relative_symbol() */
 
-// TODO: RENAME TO SRCDBG
-#define MAME_DBGSRC_REGISTER_6809_PC    -1
-#define MAME_DBGSRC_REGISTER_6809_SP    0
-#define MAME_DBGSRC_REGISTER_6809_CC    1
-#define MAME_DBGSRC_REGISTER_6809_A     2
-#define MAME_DBGSRC_REGISTER_6809_B     3
-#define MAME_DBGSRC_REGISTER_6809_D     4
-#define MAME_DBGSRC_REGISTER_6809_U     5
-#define MAME_DBGSRC_REGISTER_6809_X     6
-#define MAME_DBGSRC_REGISTER_6809_Y     7
-#define MAME_DBGSRC_REGISTER_6809_DP    8
+#define MAME_SRCDBG_REGISTER_6809_PC    -1
+#define MAME_SRCDBG_REGISTER_6809_SP    0
+#define MAME_SRCDBG_REGISTER_6809_CC    1
+#define MAME_SRCDBG_REGISTER_6809_A     2
+#define MAME_SRCDBG_REGISTER_6809_B     3
+#define MAME_SRCDBG_REGISTER_6809_D     4
+#define MAME_SRCDBG_REGISTER_6809_U     5
+#define MAME_SRCDBG_REGISTER_6809_X     6
+#define MAME_SRCDBG_REGISTER_6809_Y     7
+#define MAME_SRCDBG_REGISTER_6809_DP    8
 // TODO: MAME symbol evaluation assumes these values match those of each
 // enum under devices\cpu.  What is the best way to ensure this?  Should
 // those enums be lifted out into headers like this intended for 3rd-party tools?
@@ -164,7 +165,7 @@ LIB_PUBLIC int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state,
         of first instruction
     [in] address_last - High address of the scope (inclusive), representing address of first byte
         of last instruction
-    [in] reg - Register identifier this symbol is offset from.  See list of MAME_DBGSRC_REGISTER_* values
+    [in] reg - Register identifier this symbol is offset from.  See list of MAME_SRCDBG_REGISTER_* values
     [in] reg_offset - Offset to be applied to register's value to produce the value of this symbol
 */
 LIB_PUBLIC int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);

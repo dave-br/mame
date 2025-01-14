@@ -20,7 +20,7 @@
 // #include "osdcomm.h"
 #include "srcdbg_format_reader.h"
 
-#include "strformat.h"
+// #include "strformat.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -277,6 +277,7 @@ public:
 		// , m_symbol_names()
 	{
 	}
+	~writer_importer() {}
 
 	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override	{ return true; }
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true; }
@@ -528,16 +529,16 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 
 int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details)
 {
-	std::string error;
+	// std::string error;
 	srcdbg_format format;
 	if (!srcdbg_format_header_read(srcdbg_file_path_to_import, format)) //, error))
 	{
-		util::string_format(
-			error_details,
-			num_bytes_error_details,
-			"Error reading source-level debugging information file\n%s\n\n%s",
-			srcdbg_file_path_to_import,
-			error.c_str());
+		// util::string_format(
+		// 	error_details,
+		// 	num_bytes_error_details,
+		// 	"Error reading source-level debugging information file\n%s\n\n%s",
+		// 	srcdbg_file_path_to_import,
+		// 	error.c_str());
 		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
 
@@ -550,14 +551,14 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 		{
 			// writer_importer always returns true from callbacks, so if we're here,
 			// the reader provided an error
-			assert (!error.empty());
+			// assert (!error.empty());
 			
-			util::string_format(
-				error_details,
-				num_bytes_error_details,
-				"Error reading source-level debugging information file\n%s\n\n%s",
-				srcdbg_file_path_to_import,
-				error.c_str());
+			// util::string_format(
+			// 	error_details,
+			// 	num_bytes_error_details,
+			// 	"Error reading source-level debugging information file\n%s\n\n%s",
+			// 	srcdbg_file_path_to_import,
+			// 	error.c_str());
 				return MAME_SRCDBG_E_IMPORT_FAILED;
 		}
 		return MAME_SRCDBG_E_SUCCESS;
