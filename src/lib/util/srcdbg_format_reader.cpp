@@ -65,28 +65,29 @@ template <typename T> static bool read_field(T * & var, const std::vector<uint8_
 // Returns true on success, false on failure.
 bool srcdbg_format_header_read(const char * srcdbg_path, srcdbg_format & format, std::string & error)
 {
-	// util::core_file::ptr file;
-	std::error_condition err_code; // = util::core_file::open(srcdbg_path, OPEN_FLAG_READ, file);
-	if (err_code)
+	FILE * file = fopen(srcdbg_path, "rb");
+	if (file == nullptr)
 	{
-		srcdbg_sprintf(error, "Error opening file\n%s\n\nError code: %d", srcdbg_path, 4); // err_code.value());
+		srcdbg_sprintf(error, "Error opening file\n%s\n\nError code: %d", srcdbg_path, errno);
 		return false;
 	}
 
 	mame_debug_info_header_base header;
-	std::size_t actual_size;
-	// err_code = file->read_some(&header, sizeof(header), actual_size);
-	if (err_code)
+	if (fread(&header, sizeof(header), 1, file) != 1)
 	{
-		srcdbg_sprintf(error, "Error reading from file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
+		if (feof(file))
+		{
+			srcdbg_sprintf(error, "Error reading from file\n%s\n\nFile too small to contain header", srcdbg_path);
+			fclose(file);
+			return false;
+		}
+		srcdbg_sprintf(error, "Error reading from file\n%s\n\nError code: %d", srcdbg_path, errno);
+		fclose(file);
 		return false;
 	}
 
-	if (actual_size != sizeof(header))
-	{
-		srcdbg_sprintf(error, "Error reading from file\n%s\n\nFile too small to contain header", srcdbg_path);
-		return false;
-	}
+	fclose(file);
+	file = nullptr;
 
 	if (strncmp(header.type, "simp", 4) != 0)
 	{
@@ -123,12 +124,28 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 	// ** Load full binary contents into memory **
 
 	std::vector<uint8_t> data;
-	std::error_condition err_code; // = util::core_file::load(srcdbg_path, data);
-	if (err_code)
+	FILE * file = fopen(srcdbg_path, "rb");
+	if (file == nullptr)
 	{
-		srcdbg_sprintf(error, "Error opening file\n%s\n\nError code: %d", srcdbg_path, err_code.value());
+		srcdbg_sprintf(error, "Error opening file\n%s\n\nError code: %d", srcdbg_path, errno);
 		return false;
 	}
+
+	int fgetcRet;
+	while ((fgetcRet = fgetc(file)) != EOF)
+	{
+		data.push_back((uint8_t) fgetcRet);
+	}
+
+	if (ferror(file))
+	{
+		srcdbg_sprintf(error, "Error reading from file\n%s\n\nError code: %d", srcdbg_path, errno);
+		fclose(file);
+		return false;
+	}
+
+	fclose(file);
+	file = nullptr;
 
 	// ** Simple format header **
 
