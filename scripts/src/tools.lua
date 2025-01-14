@@ -857,11 +857,13 @@ end
 
 links {
 	"utils",
+	"mame_srcdbg_static",
 	"ocore_" .. _OPTIONS["osd"],
 	ext_lib("utf8proc"),
 }
 
 includedirs {
+	MAME_DIR .. "src/lib/srcdbg",
 	MAME_DIR .. "src/lib/util",
 	MAME_DIR .. "src/osd",
 }

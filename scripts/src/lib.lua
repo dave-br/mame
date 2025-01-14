@@ -165,15 +165,12 @@ project "mame_srcdbg_static"
 	uuid "985b8e16-bb6a-4db0-809b-87074f94dfcb"
 	kind ("StaticLib")
 
-	includedirs {
-		MAME_DIR .. "src/lib/util",
-	}
-	
 	files {
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
-		MAME_DIR .. "src/lib/util/srcdbg_format_reader.cpp",
-		MAME_DIR .. "src/lib/util/srcdbg_format_reader.h",
 	}
 
 
@@ -204,12 +201,15 @@ project "mame_srcdbg_shared"
 	}
 
 	files {
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
 	}
 
-	links {
-		"utils",
-		"ocore_" .. _OPTIONS["osd"],
-		ext_lib("utf8proc"),
-	}
+	-- links {
+	-- 	"utils",
+	-- 	"ocore_" .. _OPTIONS["osd"],
+	-- 	ext_lib("utf8proc"),
+	-- }
