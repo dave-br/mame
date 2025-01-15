@@ -13,7 +13,10 @@
 
 #pragma once
 
-#include "srcdbg_provider.h"
+// #include "srcdbg_provider.h"
+// TODO: MOVE TO EMUFWD
+class srcdbg_provider_base;
+class file_line;
 
 #include <set>
 #include <utility>
