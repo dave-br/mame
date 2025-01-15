@@ -202,11 +202,11 @@ private:
 	symbol_table *                m_symtable;                // Root of symbol table chain exposed by this class
 
 	// stepping information
-	offs_t                   m_stepaddr;                               // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH
-	int                      m_stepsleft;                              // number of steps left until done
-	int                      m_delay_steps;                            // number of steps until target address check
-	std::optional<file_line> m_step_source_start;                      // When source-level stepping, where did the step start?
-	bool                     m_step_source_returning_from_start_line;  // When source-level stepping, are we returning from a PC mapped to the start line?
+	offs_t                     m_stepaddr;                               // step target address for DEBUG_FLAG_STEPPING_OVER or DEBUG_FLAG_STEPPING_BRANCH
+	int                        m_stepsleft;                              // number of steps left until done
+	int                        m_delay_steps;                            // number of steps until target address check
+	std::unique_ptr<file_line> m_step_source_start;                      // When source-level stepping, where did the step start?
+	bool                       m_step_source_returning_from_start_line;  // When source-level stepping, are we returning from a PC mapped to the start line?
 
 	// execution information
 	offs_t                  m_stopaddr;                 // stop address for DEBUG_FLAG_STOP_PC

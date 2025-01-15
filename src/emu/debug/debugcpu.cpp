@@ -24,6 +24,7 @@
 #include "screen.h"
 #include "uiinput.h"
 #include "dvsourcecode.h"
+#include "srcdbg_provider.h"
 
 #include "corestr.h"
 #include "osdepend.h"
@@ -1089,10 +1090,14 @@ void device_debug::wait_hook()
 	// Once source-level stepping starts, keep track of the first encountered file/line
 	// of user source.
 	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
-		!m_step_source_start.has_value() &&
+		m_step_source_start == nullptr &&
 		machine.debugger().srcdbg_provider() != nullptr)
 	{
-		m_step_source_start = machine.debugger().srcdbg_provider()->address_to_file_line(curpc);
+		file_line curloc;
+		if (machine.debugger().srcdbg_provider()->address_to_file_line(curpc, curloc))
+		{
+			m_step_source_start = std::make_unique<file_line>(curloc);
+		}
 		m_step_source_returning_from_start_line = false;
 	}
 
@@ -1117,11 +1122,14 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 	// i) we started outside a user source line, or
 	// ii) current source line is different from where we started, or
 	// iii) we just returned from source line where we started (e.g., recursive return to same line)
-	std::optional<file_line> file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc);
-	bool ret = (file_line_cur.has_value() &&
-		(!m_step_source_start.has_value() ||                         // i)
-		!(file_line_cur.value() == m_step_source_start.value()) ||   // ii)
-		m_step_source_returning_from_start_line));                   // iii)
+	file_line file_line_cur;
+	bool has_file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);	
+	bool ret = has_file_line_cur &&
+		(
+			(m_step_source_start == nullptr) ||           // i)
+			(file_line_cur != *m_step_source_start) ||    // ii)
+			m_step_source_returning_from_start_line       // iii)
+		);                    
 
 	// Look at instruction we're about to execute to properly
 	// set m_step_source_returning_from_start_line (iii) for use next time
@@ -1130,12 +1138,12 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 	m_step_source_returning_from_start_line =
 		((dasmresult & util::disasm_interface::SUPPORTED) != 0) &&
 		((dasmresult & util::disasm_interface::STEP_OUT) != 0) &&
-		file_line_cur.has_value() &&
-		file_line_cur.value() == m_step_source_start.value();
+		has_file_line_cur &&
+		file_line_cur == *m_step_source_start;
 	if (ret)
 	{
 		// We're stopping, so reset the source stepping state.
-		m_step_source_start.reset();
+		m_step_source_start.reset(nullptr);
 		m_step_source_returning_from_start_line = false;
 	}
 	else if ((m_flags & DEBUG_FLAG_STEPPING_OUT) != 0)

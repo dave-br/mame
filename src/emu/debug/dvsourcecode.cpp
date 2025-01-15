@@ -195,11 +195,11 @@ void debug_view_sourcecode::view_update()
 	// If pc has changed, find its file & line number if possible
 	if (pc_changed)
 	{
-		std::optional<file_line> file_line = m_srcdbg_provider->address_to_file_line(pc);
-		if (file_line.has_value())
+		file_line loc;
+		if (m_srcdbg_provider->address_to_file_line(pc, loc))
 		{
-			m_cur_src_index = file_line.value().file_index();
-			m_line_for_cur_pc = file_line.value().line_number();
+			m_cur_src_index = loc.file_index();
+			m_line_for_cur_pc = loc.line_number();
 		}
 		else
 		{

@@ -414,7 +414,7 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 
 // Given an address, return the source file & line number attributable to the
 // range of addresses that includes the specified address
-std::optional<file_line> srcdbg_provider_simple::address_to_file_line (offs_t address) const
+bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & loc) const
 {
 	assert(m_linemaps_by_address.size() > 0);
 
@@ -437,14 +437,16 @@ std::optional<file_line> srcdbg_provider_simple::address_to_file_line (offs_t ad
 	// equal, guess is our answer.  Otherwise, check the preceding entry.
 	if (guess->range.address_first <= address && address <= guess->range.address_last)
 	{
-		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
+		loc.set(guess->source_file_index, guess->line_number);
+		return true;
 	}
 	guess--;
 	if (guess >= m_linemaps_by_address.cbegin() &&
 		guess->range.address_first <= address && address <= guess->range.address_last)
 	{
-		return std::optional<file_line>({ guess->source_file_index, guess->line_number });
+		loc.set(guess->source_file_index, guess->line_number);
+		return true;
 	}
 
-	return std::optional<file_line>();
+	return false;
 }

@@ -24,6 +24,21 @@ class file_line
 public:
 	file_line(u32 file_index, u32 line_number)
 	{
+		set(file_index, line_number);
+	}
+
+	file_line(const file_line & that)
+	{
+		set(that.m_file_index, that.m_line_number);
+	}
+
+	file_line()
+	{
+		set(0, 0);
+	}
+
+	void set(u32 file_index, u32 line_number)
+	{
 		m_file_index = file_index;
 		m_line_number = line_number;
 	}
@@ -34,6 +49,11 @@ public:
 	bool operator == (const file_line & that)
 	{
 		return (this->m_file_index == that.m_file_index) && (this->m_line_number == that.m_line_number);
+	}
+
+	bool operator != (const file_line & that)
+	{
+		return !(*this == that);
 	}
 
 private:
@@ -179,9 +199,9 @@ public:
 	// Returns all address ranges corresponding to the specified source file / line number pair
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const = 0;
 
-	// Returns the source file / line number pair corresponding to the specified address,
-	// or an empty std::optional if no such pair exists
-	virtual std::optional<file_line> address_to_file_line (offs_t address) const = 0;
+	// Returns true and populates loc with the source file / line number pair corresponding
+	// to the specified address, or returns false if no such pair exists
+	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
 	// Return lists of various types of symbols
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;

@@ -33,7 +33,7 @@ public:
 	virtual const source_file_path & file_index_to_path(u32 file_index) const override { return m_source_file_paths[file_index]; };
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
-	virtual std::optional<file_line> address_to_file_line (offs_t address) const override;
+	virtual bool address_to_file_line (offs_t address, file_line & loc) const override;
 	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const override { return m_global_fixed_symbols; };
 	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const override { return m_local_fixed_symbols; };
 	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const override { return m_local_relative_symbols; };
