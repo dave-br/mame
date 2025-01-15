@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "srcdbg_format_reader.h"
-
 #include "express.h"
 
 // Simple file index / line number pair

@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 // TODO:
 void srcdbg_sprintf(std::string & out, const char * format, ...);
@@ -41,168 +42,159 @@ unsigned short little_endianize_int16(unsigned short n) { return n; }
 // stores bytes
 // ------------------------------------------------------------------
 
-class resizeable_array
+// class resizeable_array
+// {
+// public:
+// 	void construct()
+// 	{
+// 		m_data = nullptr;
+// 		m_size = 0;
+// 		m_capacity = 0;
+// 	}
+
+// 	void destruct()
+// 	{
+// 		if (m_data != nullptr)
+// 		{
+// 			free(m_data);
+// 		}
+// 	}
+
+// 	char * get()
+// 	{
+// 		return m_data;
+// 	}
+
+// 	int push_back(const void * data_bytes, int data_size)
+// 	{
+// 		RET_IF_FAIL(ensure_capacity(m_size + data_size));
+// 		memcpy(m_data + m_size, data_bytes, data_size);
+// 		m_size += data_size;
+// 		return MAME_SRCDBG_E_SUCCESS;
+// 	}
+
+// 	unsigned int find(unsigned int search, unsigned int data_size)
+// 	{
+// 		const char * data = m_data;
+// 		const char * data_end = m_data + m_size;
+// 		int ret = 0;
+// 		while (data < data_end)
+// 		{
+// 			if (*(unsigned int *) data == search)
+// 			{
+// 				return ret;
+// 			}
+
+// 			data += data_size;
+// 			ret++;
+// 		}
+
+// 		return (unsigned int) - 1;
+// 	}
+
+// 	unsigned int size()
+// 	{
+// 		return m_size;
+// 	}
+
+// protected:
+// 	int ensure_capacity(unsigned int req_capacity)
+// 	{
+// 		if (req_capacity <= m_capacity)
+// 		{
+// 			return MAME_SRCDBG_E_SUCCESS;
+// 		}
+
+// 		unsigned int new_capacity = (m_capacity + 1) << 1;
+// 		while (new_capacity < req_capacity)
+// 		{
+// 			new_capacity <<= 1;
+// 		}
+
+// 		void * new_data = malloc(new_capacity);
+// 		if (new_data == nullptr)
+// 		{
+// 			return MAME_SRCDBG_E_OUTOFMEMORY;
+// 		}
+
+// 		memcpy(new_data, m_data, m_size);
+// 		free(m_data);
+// 		m_data = (char *) new_data;
+// 		m_capacity = new_capacity;
+// 		return MAME_SRCDBG_E_SUCCESS;
+// 	}
+
+// 	char * m_data;
+// 	unsigned int m_size;
+// 	unsigned int m_capacity;
+// };
+
+
+// // ------------------------------------------------------------------
+// // int_resizeable_array - a cheap STL::vector<unsigned int>
+// // replacement
+// // ------------------------------------------------------------------
+
+// class int_resizeable_array : public resizeable_array
+// {
+// public:
+// 	int push_back(unsigned int new_int)
+// 	{
+// 		return resizeable_array::push_back((char *) &new_int, sizeof(unsigned int));
+// 	}
+
+// 	unsigned int get(unsigned int i)
+// 	{
+// 		return * (((unsigned int *) m_data) + i);
+// 	}
+
+// 	unsigned int size()
+// 	{
+// 		return m_size / sizeof(unsigned int);
+// 	}
+// };
+
+
+
+// // ------------------------------------------------------------------
+// // string_resizeable_array - a cheap STL::unordered_set<const char *>
+// // replacement.  Stores characters packed together, keeps
+// // track of string starting-points with an int_resizeable_array
+// // field, and avoid dupes when storing new elements
+// // ------------------------------------------------------------------
+
+// class string_resizeable_array : public resizeable_array
+// {
+// public:
+// 	void construct()
+// 	{
+// 		resizeable_array::construct();
+// 		m_offsets.construct();
+// 	}
+
+
+
+// 	unsigned int num_strings()
+// 	{
+// 		return m_offsets.size();
+// 	}
+
+// private:
+// 	int_resizeable_array m_offsets;
+// };
+
+static std::size_t find_or_push_back(std::vector<std::string> & vec, const char * new_string)
 {
-public:
-	void construct()
+	std::string str(new_string);
+	auto iter = std::find(vec.cbegin(), vec.cend(), str);
+	if (iter != vec.cend())
 	{
-		m_data = nullptr;
-		m_size = 0;
-		m_capacity = 0;
+		return iter - vec.cbegin();;
 	}
 
-	void destruct()
-	{
-		if (m_data != nullptr)
-		{
-			free(m_data);
-		}
-	}
-
-	char * get()
-	{
-		return m_data;
-	}
-
-	int push_back(const void * data_bytes, int data_size)
-	{
-		RET_IF_FAIL(ensure_capacity(m_size + data_size));
-		memcpy(m_data + m_size, data_bytes, data_size);
-		m_size += data_size;
-		return MAME_SRCDBG_E_SUCCESS;
-	}
-
-	unsigned int find(unsigned int search, unsigned int data_size)
-	{
-		const char * data = m_data;
-		const char * data_end = m_data + m_size;
-		int ret = 0;
-		while (data < data_end)
-		{
-			if (*(unsigned int *) data == search)
-			{
-				return ret;
-			}
-
-			data += data_size;
-			ret++;
-		}
-
-		return (unsigned int) - 1;
-	}
-
-	unsigned int size()
-	{
-		return m_size;
-	}
-
-protected:
-	int ensure_capacity(unsigned int req_capacity)
-	{
-		if (req_capacity <= m_capacity)
-		{
-			return MAME_SRCDBG_E_SUCCESS;
-		}
-
-		unsigned int new_capacity = (m_capacity + 1) << 1;
-		while (new_capacity < req_capacity)
-		{
-			new_capacity <<= 1;
-		}
-
-		void * new_data = malloc(new_capacity);
-		if (new_data == nullptr)
-		{
-			return MAME_SRCDBG_E_OUTOFMEMORY;
-		}
-
-		memcpy(new_data, m_data, m_size);
-		free(m_data);
-		m_data = (char *) new_data;
-		m_capacity = new_capacity;
-		return MAME_SRCDBG_E_SUCCESS;
-	}
-
-	char * m_data;
-	unsigned int m_size;
-	unsigned int m_capacity;
-};
-
-
-// ------------------------------------------------------------------
-// int_resizeable_array - a cheap STL::vector<unsigned int>
-// replacement
-// ------------------------------------------------------------------
-
-class int_resizeable_array : public resizeable_array
-{
-public:
-	int push_back(unsigned int new_int)
-	{
-		return resizeable_array::push_back((char *) &new_int, sizeof(unsigned int));
-	}
-
-	unsigned int get(unsigned int i)
-	{
-		return * (((unsigned int *) m_data) + i);
-	}
-
-	unsigned int size()
-	{
-		return m_size / sizeof(unsigned int);
-	}
-};
-
-
-
-// ------------------------------------------------------------------
-// string_resizeable_array - a cheap STL::unordered_set<const char *>
-// replacement.  Stores characters packed together, keeps
-// track of string starting-points with an int_resizeable_array
-// field, and avoid dupes when storing new elements
-// ------------------------------------------------------------------
-
-class string_resizeable_array : public resizeable_array
-{
-public:
-	void construct()
-	{
-		resizeable_array::construct();
-		m_offsets.construct();
-	}
-
-	int find_or_push_back(const char * new_string, unsigned int & size, unsigned int & offset)
-	{
-		for (unsigned int i = 0; i < m_offsets.size(); i++)
-		{
-			const char * string = m_data + m_offsets.get(i);
-			if (strcmp(string, new_string) == 0)
-			{
-				offset = i;
-				return MAME_SRCDBG_E_SUCCESS;
-			}
-		}
-
-		// String not found, add it to the end.  Remember that
-		// offset in m_offsets array
-		RET_IF_FAIL(m_offsets.push_back(m_size));
-		size_t length = strlen(new_string);
-		RET_IF_FAIL(push_back(new_string, length));
-		char null_terminator = '\0';
-		RET_IF_FAIL(push_back(&null_terminator, 1));
-		size += length + 1;
-		offset = m_offsets.size() - 1;      // Index into m_offsets representing newly-added string
-		return MAME_SRCDBG_E_SUCCESS;
-	}
-
-	unsigned int num_strings()
-	{
-		return m_offsets.size();
-	}
-
-private:
-	int_resizeable_array m_offsets;
-};
+	vec.push_back(std::move(str));
+	return vec.size() - 1;
+}
 
 
 // Interim storage of local fixed variables
@@ -326,17 +318,16 @@ bool writer_importer::on_read_local_relative_symbol_value(const local_relative_s
 
 
 
-void srcdbg_simple_generator::construct()
-{
-	// Init members
-	m_output = nullptr;
-	m_source_file_paths.construct();
-	m_line_mappings.construct();
-	m_symbol_names.construct();
-	m_global_fixed_symbol_values.construct();
-	m_local_fixed_symbol_values.construct();
-	m_local_relative_symbol_values.construct();
+srcdbg_simple_generator::srcdbg_simple_generator()
+	: m_output(nullptr)
+	, m_source_file_paths()
+	, m_line_mappings()
+	, m_symbol_names()
+	, m_global_fixed_symbol_values()
+	, m_local_fixed_symbol_values()
+	, m_local_relative_symbol_values()
 
+{
 	// Init header_base
 	memcpy(&m_header.header_base.magic[0], "MDbI", 4);
 	memcpy(&m_header.header_base.type[0], "simp", 4);
@@ -355,18 +346,13 @@ void srcdbg_simple_generator::construct()
 	m_header.local_relative_symbol_values_size = 0;
 }
 
-int srcdbg_simple_generator::destruct()
+srcdbg_simple_generator::srcdbg_simple_generator()
 {
 	if (m_output != nullptr)
 	{
-		FCLOSE_OR_RETURN(m_output);
+		fclose(m_output);
 		m_output = nullptr;
 	}
-	m_source_file_paths.destruct();
-	m_line_mappings.destruct();
-	m_symbol_names.destruct();
-	m_global_fixed_symbol_values.destruct();
-	return MAME_SRCDBG_E_SUCCESS;
 }
 
 int srcdbg_simple_generator::open(const char * file_path)
@@ -381,13 +367,13 @@ int srcdbg_simple_generator::open(const char * file_path)
 
 int srcdbg_simple_generator::add_source_file_path(const char * source_file_path, unsigned int & index)
 {
-	RET_IF_FAIL(m_source_file_paths.find_or_push_back(source_file_path, m_header.source_file_paths_size, index));
+	index = find_or_push_back(m_source_file_paths, source_file_path);
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
 int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number)
 {
-	if (source_file_index >= m_source_file_paths.num_strings())
+	if (source_file_index >= m_source_file_paths.size())
 	{
 		return MAME_SRCDBG_E_INVALID_SRC_IDX;
 	}
@@ -401,15 +387,19 @@ int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsi
 		little_endianize_int32(source_file_index),
 		little_endianize_int32(line_number)
 	};
-	return m_line_mappings.push_back((const char *) &line_mapping, sizeof(line_mapping));
+	m_line_mappings.push_back(line_mapping);
+	return MAME_SRCDBG_E_SUCCESS;
 }
+
+
+// TODO: DO VECTOR FCNS THROW EXCPETIONS?  CAN I CATCH THEM?
 
 int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, int symbol_value)
 {
 	global_fixed_symbol_value global;
-	RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, global.symbol_name_index));
+	global.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
 	global.symbol_value = little_endianize_int32(symbol_value);
-	RET_IF_FAIL(m_global_fixed_symbol_values.push_back(&global, sizeof(global)));
+	m_global_fixed_symbol_values.push_back(global);
 	m_header.num_global_fixed_symbol_values = little_endianize_int32(little_endianize_int32(m_header.num_global_fixed_symbol_values) + 1);
 	return MAME_SRCDBG_E_SUCCESS;
 }
@@ -418,7 +408,7 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 {
 	local_fixed * entry_ptr;
 	local_fixed local;
-	RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, local.symbol_name_index));
+	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
 	unsigned int entry_idx = m_local_fixed_symbol_values.find(local.symbol_name_index, sizeof(local));
 	if (entry_idx == (unsigned int) -1)
 	{
@@ -451,7 +441,7 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 {
 	local_relative * entry_ptr;
 	local_relative local;
-	RET_IF_FAIL(m_symbol_names.find_or_push_back(symbol_name, m_header.symbol_names_size, local.symbol_name_index));
+	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
 	unsigned int entry_idx = m_local_relative_symbol_values.find(local.symbol_name_index, sizeof(local));
 	if (entry_idx == (unsigned int) -1)
 	{

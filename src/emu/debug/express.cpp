@@ -33,6 +33,7 @@
 #include "emuopts.h"
 #include "express.h"
 #include "debugger.h"
+#include "srcdbg_provider.h"
 
 #include "corestr.h"
 #include <cctype>

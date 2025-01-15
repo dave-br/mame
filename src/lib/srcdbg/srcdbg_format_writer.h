@@ -14,6 +14,12 @@
 #ifndef MAME_SRCDBG_FORMAT_WRITER_H
 #define MAME_SRCDBG_FORMAT_WRITER_H
 
+#include "srcdbg_format.h"
+
+#include <stdio.h>
+#include <string>
+#include <vector>
+
 
 #define RET_IF_FAIL(expr)                              \
 	{                                                  \
@@ -39,8 +45,8 @@
 class srcdbg_simple_generator
 {
 public:
-	void construct();
-	int destruct();
+	srcdbg_simple_generator();
+	~srcdbg_simple_generator();
 	int open(const char * file_path);
 	int add_source_file_path(const char * source_file_path, unsigned int & index);
 	int add_line_mapping(unsigned short address_first, unsigned short address_last, unsigned int source_file_index, unsigned int line_number);
@@ -55,12 +61,12 @@ private:
 
 	FILE * m_output;
 	mame_debug_info_simple_header m_header;
-	string_resizeable_array m_source_file_paths;
-	resizeable_array m_line_mappings;
-	string_resizeable_array m_symbol_names;
-	resizeable_array m_global_fixed_symbol_values;
-	resizeable_array m_local_fixed_symbol_values;
-	resizeable_array m_local_relative_symbol_values;
+	std::vector<std::string> m_source_file_paths;
+	std::vector<srcdbg_line_mapping> m_line_mappings;
+	std::vector<std::string> m_symbol_names;
+	std::vector<global_fixed_symbol_value> m_global_fixed_symbol_values;
+	std::vector<local_fixed_symbol_value> m_local_fixed_symbol_values;
+	std::vector<local_relative_symbol_value> m_local_relative_symbol_values;
 };
 
 

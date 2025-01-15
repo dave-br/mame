@@ -13,10 +13,8 @@
 
 #pragma once
 
-#include "emu.h"
 #include "dvdisasm.h"
-
-// #include "srcdbg_format.h"
+#include "srcdbg_provider.h"
 
 
 //**************************************************************************

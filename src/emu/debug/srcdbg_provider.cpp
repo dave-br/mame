@@ -13,6 +13,7 @@
 #include "emu.h"
 #include "srcdbg_provider_simple.h"
 #include "srcdbg_provider.h"
+#include "srcdbg_format_reader.h"
 
 #include "emuopts.h"
 

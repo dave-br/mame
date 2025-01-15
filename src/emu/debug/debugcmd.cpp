@@ -18,6 +18,7 @@
 #include "debugvw.h"
 #include "express.h"
 #include "points.h"
+#include "srcdbg_provider.h"
 
 #include "debugger.h"
 #include "emuopts.h"
