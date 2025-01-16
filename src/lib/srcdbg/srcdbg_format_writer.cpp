@@ -209,12 +209,6 @@ static std::size_t find_or_push_back(std::vector<std::string> & vec, const char 
 }
 
 
-// Interim storage of local relative variables
-// struct local_relative : local_relative_symbol_value
-// {
-// 	resizeable_array values;
-// };
-
 
 // TODO COMMENT
 class writer_importer : public srcdbg_format_reader_callback
@@ -409,7 +403,6 @@ int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, i
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-// TODO: JUST NOW: RE-VERIFY THIS CODE, COMMENT OUT NEXT FUNCTION, TRY TO COMPILE
 int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 {
 	local_fixed * entry_ptr;
@@ -420,7 +413,7 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 		m_local_fixed_symbol_values.begin(),
 		m_local_fixed_symbol_values.end(),
 		[&](const local_fixed_symbol_value & elem) { return elem.symbol_name_index == local.symbol_name_index;});
-	if (entry == m_local_fixed_symbol_values.cend())
+	if (entry == m_local_fixed_symbol_values.end())
 	{
 		// TODO: endianize at file-write time instead?
 		local.symbol_value = little_endianize_int32(symbol_value);
@@ -451,34 +444,40 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 
 int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset)
 {
-	// local_relative * entry_ptr;
-	// local_relative local;
-	// local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
-	// unsigned int entry_idx = m_local_relative_symbol_values.find(local.symbol_name_index, sizeof(local));
-	// if (entry_idx == (unsigned int) -1)
-	// {
-	// 	local.num_local_relative_eval_rules = 0;
-	// 	local.values.construct();
-	// 	RET_IF_FAIL(m_local_relative_symbol_values.push_back(&local, sizeof(local)));
-	// 	entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
-	// 	m_header.local_relative_symbol_values_size = little_endianize_int32(
-	// 		little_endianize_int32(m_header.local_relative_symbol_values_size) +
-	// 		sizeof(local_relative_symbol_value));
-	// }
-	// else
-	// {
-	// 	entry_ptr = ((local_relative *) m_local_relative_symbol_values.get()) + entry_idx;
-	// }
-	// local_relative_eval_rule value;
-	// value.range.address_first = little_endianize_int16(address_first);
-	// value.range.address_last = little_endianize_int16(address_last);
-	// value.reg = reg;
-	// value.reg_offset = little_endianize_int32(reg_offset);
-	// RET_IF_FAIL(entry_ptr->values.push_back(&value, sizeof(value)));
-	// m_header.local_relative_symbol_values_size = little_endianize_int32(
-	// 	little_endianize_int32(m_header.local_relative_symbol_values_size) +
-	// 	sizeof(value));
-	// entry_ptr->num_local_relative_eval_rules = little_endianize_int32(little_endianize_int32(entry_ptr->num_local_relative_eval_rules) + 1);
+	local_relative * entry_ptr;
+	local_relative local;
+	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
+	// unsigned int entry_idx = .find(local.symbol_name_index, sizeof(local));
+	auto entry = std::find_if(
+		m_local_relative_symbol_values.begin(),
+		m_local_relative_symbol_values.end(),
+		[&](const local_relative_symbol_value & elem) { return elem.symbol_name_index == local.symbol_name_index;});
+	if (entry == m_local_relative_symbol_values.end())
+	{
+		local.num_local_relative_eval_rules = 0;
+		// local.values.construct();
+		entry_ptr = &local;
+		m_local_relative_symbol_values.push_back(local);
+		// entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
+		m_header.local_relative_symbol_values_size = little_endianize_int32(
+			little_endianize_int32(m_header.local_relative_symbol_values_size) +
+			sizeof(local_relative_symbol_value));
+	}
+	else
+	{
+		entry_ptr = &(*entry);
+		// entry_ptr = ((local_relative *) m_local_relative_symbol_values.get()) + entry_idx;
+	}
+	local_relative_eval_rule value;
+	value.range.address_first = little_endianize_int16(address_first);
+	value.range.address_last = little_endianize_int16(address_last);
+	value.reg = reg;
+	value.reg_offset = little_endianize_int32(reg_offset);
+	entry_ptr->values.push_back(value);
+	m_header.local_relative_symbol_values_size = little_endianize_int32(
+		little_endianize_int32(m_header.local_relative_symbol_values_size) +
+		sizeof(value));
+	entry_ptr->num_local_relative_eval_rules = little_endianize_int32(little_endianize_int32(entry_ptr->num_local_relative_eval_rules) + 1);
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
@@ -533,45 +532,65 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 
 int srcdbg_simple_generator::close()
 {
+	// Write all buffered contents to file
+
+	// Header
 	FWRITE_OR_RETURN(&m_header, sizeof(m_header), 1, m_output);
-	// for (int i=0; i < m_source_file_paths.size(); i += sizeof(char))
-	// {
-	// 	FWRITE_OR_RETURN(m_source_file_paths.get() + i, sizeof(char), 1, m_output);
-	// }
-	// for (int i=0; i < m_line_mappings.size(); i += sizeof(srcdbg_line_mapping))
-	// {
-	// 	FWRITE_OR_RETURN(m_line_mappings.get() + i, sizeof(srcdbg_line_mapping), 1, m_output);
-	// }
-	// for (int i=0; i < m_symbol_names.size(); i += sizeof(char))
-	// {
-	// 	FWRITE_OR_RETURN(m_symbol_names.get() + i, sizeof(char), 1, m_output);
-	// }
-	// for (int i=0; i < m_global_fixed_symbol_values.size(); i += sizeof(global_fixed_symbol_value))
-	// {
-	// 	FWRITE_OR_RETURN(m_global_fixed_symbol_values.get() + i, sizeof(global_fixed_symbol_value), 1, m_output);
-	// }
-	// for (int i=0; i < m_local_fixed_symbol_values.size(); i += sizeof(local_fixed))
-	// {
-	// 	local_fixed * loc = (local_fixed *) (m_local_fixed_symbol_values.get() + i);
-	// 	if (loc->ranges.size() == 0)
-	// 	{
-	// 		continue;
-	// 	}
-	// 	FWRITE_OR_RETURN(loc, sizeof(local_fixed_symbol_value), 1, m_output);
-	// 	FWRITE_OR_RETURN(loc->ranges.get(), sizeof(address_range), loc->ranges.size() / sizeof(address_range), m_output);
-	// }
-	// for (int i=0; i < m_local_relative_symbol_values.size(); i += sizeof(local_relative))
-	// {
-	// 	local_relative * loc = (local_relative *) (m_local_relative_symbol_values.get() + i);
-	// 	if (loc->values.size() == 0)
-	// 	{
-	// 		continue;
-	// 	}
-	// 	FWRITE_OR_RETURN(loc, sizeof(local_relative_symbol_value), 1, m_output);
-	// 	FWRITE_OR_RETURN(loc->values.get(), sizeof(local_relative_eval_rule), loc->values.size() / sizeof(local_relative_eval_rule), m_output);
-	// }
-	// FCLOSE_OR_RETURN(m_output);
-	// m_output = nullptr;
+
+	// Source file paths
+	for (const std::string & path : m_source_file_paths)
+	{
+		FWRITE_OR_RETURN(path.c_str(), path.size() + 1, 1, m_output);
+	}
+
+	// Line mappings
+	FWRITE_OR_RETURN(m_line_mappings.data(), sizeof(srcdbg_line_mapping), m_line_mappings.size(), m_output);
+
+	// Symbol names
+	for (const std::string & symname : m_symbol_names)
+	{
+		FWRITE_OR_RETURN(symname.c_str(), symname.size() + 1, 1, m_output);
+	}
+
+	// global fixed symbols
+	FWRITE_OR_RETURN(
+		m_global_fixed_symbol_values.data(),
+		sizeof(global_fixed_symbol_value),
+		m_global_fixed_symbol_values.size(),
+		m_output);
+
+	// local fixed symbols
+	for (const local_fixed & sym : m_local_fixed_symbol_values)
+	{
+		if (sym.ranges.size() == 0)
+		{
+			continue;
+		}
+
+		// Write the fixed length portion first
+		FWRITE_OR_RETURN(&sym, sizeof(local_fixed_symbol_value), 1, m_output);
+
+		// Write the var length portion next (address ranges)
+		FWRITE_OR_RETURN(sym.ranges.data(), sizeof(address_range), sym.ranges.size() / sizeof(address_range), m_output);
+	}
+
+	// local relative symbols
+	for (const local_relative & sym : m_local_relative_symbol_values)
+	{
+		if (sym.values.size() == 0)
+		{
+			continue;
+		}
+		// Write the fixed length portion first
+		FWRITE_OR_RETURN(&sym, sizeof(local_relative_symbol_value), 1, m_output);
+
+		// Write the var length portion next (eval rules)
+		FWRITE_OR_RETURN(sym.values.data(), sizeof(local_relative_eval_rule), sym.values.size(), m_output);
+	}
+
+	// All done
+	FCLOSE_OR_RETURN(m_output);
+	m_output = nullptr;
 	return MAME_SRCDBG_E_SUCCESS;
 }
 

@@ -71,6 +71,5 @@ LIB_PUBLIC int mame_srcdbg_simp_close(void * srcdbg_simp_state)
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) srcdbg_simp_state;
 	RET_IF_FAIL(generator->close());
 	delete generator;
-	// RET_IF_FAIL(generator->destruct());
 	return MAME_SRCDBG_E_SUCCESS;
 }

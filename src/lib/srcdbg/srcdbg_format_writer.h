@@ -51,6 +51,15 @@ public:
 };
 
 
+// Interim storage of local relative variables
+struct local_relative : local_relative_symbol_value
+{
+	local_relative() : values() {}
+	std::vector<> values;
+};
+
+
+
 
 class srcdbg_simple_generator
 {
@@ -76,7 +85,7 @@ private:
 	std::vector<std::string> m_symbol_names;
 	std::vector<global_fixed_symbol_value> m_global_fixed_symbol_values;
 	std::vector<local_fixed> m_local_fixed_symbol_values;
-	std::vector<local_relative_symbol_value> m_local_relative_symbol_values;
+	std::vector<local_relative> m_local_relative_symbol_values;
 };
 
 
