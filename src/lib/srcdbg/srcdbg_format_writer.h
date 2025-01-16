@@ -55,7 +55,7 @@ public:
 struct local_relative : local_relative_symbol_value
 {
 	local_relative() : values() {}
-	std::vector<> values;
+	std::vector<local_relative_eval_rule> values;
 };
 
 

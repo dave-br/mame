@@ -154,6 +154,19 @@ project "mame_srcdbg_static"
 	uuid "985b8e16-bb6a-4db0-809b-87074f94dfcb"
 	kind ("StaticLib")
 
+	addprojectflags()
+
+	buildoptions {
+		-- By default, symbols are not exported unless annotated as such
+		"-fvisibility=hidden",
+		-- Code participating in shared libraries must be position independent
+		"-fPIC",
+	}
+
+	defines {
+		"BUILDING_LIB",
+	}
+
 	files {
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_api.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_api.h",
@@ -174,34 +187,36 @@ project "mame_srcdbg_shared"
 
 	addprojectflags()
 
-	buildoptions {
-		-- By default, symbols are not exported unless annotated as such
-		"-fvisibility=hidden",
-		-- Code participating in shared libraries must be position independent
-		"-fPIC",
-	}
+	-- buildoptions {
+	-- 	-- By default, symbols are not exported unless annotated as such
+	-- 	"-fvisibility=hidden",
+	-- 	-- Code participating in shared libraries must be position independent
+	-- 	"-fPIC",
+	-- }
 
 	includedirs {
-		MAME_DIR .. "src/lib/util",
-		MAME_DIR .. "src/osd",
+		MAME_DIR .. "src/lib/srcdbg",
+		-- MAME_DIR .. "src/lib/util",
+		-- MAME_DIR .. "src/osd",
 	}
 
-	defines {
-		"BUILDING_LIB",
-		"MAME_SRCDBG_SHARED"
-	}
-
-	files {
-		-- TODO: LINK TO STATIC AND ADD DUMMY.CPP THAT CALLS ALL APIS
-		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
-		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
-		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
-		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
-		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
-	}
-
-	-- links {
-	-- 	"utils",
-	-- 	"ocore_" .. _OPTIONS["osd"],
-	-- 	ext_lib("utf8proc"),
+	-- defines {
+	-- 	"BUILDING_LIB",
+	-- 	"MAME_SRCDBG_SHARED"
 	-- }
+
+	-- files {
+	-- 	-- TODO: LINK TO STATIC AND ADD DUMMY.CPP THAT CALLS ALL APIS
+	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
+	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
+	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
+	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
+	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
+	-- }
+
+	links {
+		"mame_srcdbg_static",
+		-- "utils",
+		-- "ocore_" .. _OPTIONS["osd"],
+		-- ext_lib("utf8proc"),
+	}

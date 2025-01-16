@@ -195,7 +195,7 @@ static std::size_t find(const std::vector<T> & vec, const T & elem)
 	return (size_t) -1;
 }
 
-static std::size_t find_or_push_back(std::vector<std::string> & vec, const char * new_string)
+static std::size_t find_or_push_back(std::vector<std::string> & vec, const char * new_string, u32 & size)
 {
 	std::string str(new_string);
 	size_t idx = find(vec, str);
@@ -203,7 +203,8 @@ static std::size_t find_or_push_back(std::vector<std::string> & vec, const char 
 	{
 		return idx;
 	}
-
+	
+	size += str.size() + 1;
 	vec.push_back(std::move(str));
 	return vec.size() - 1;
 }
@@ -366,7 +367,7 @@ int srcdbg_simple_generator::open(const char * file_path)
 
 int srcdbg_simple_generator::add_source_file_path(const char * source_file_path, unsigned int & index)
 {
-	index = find_or_push_back(m_source_file_paths, source_file_path);
+	index = find_or_push_back(m_source_file_paths, source_file_path, m_header.source_file_paths_size);
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
@@ -396,7 +397,7 @@ int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsi
 int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, int symbol_value)
 {
 	global_fixed_symbol_value global;
-	global.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
+	global.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
 	global.symbol_value = little_endianize_int32(symbol_value);
 	m_global_fixed_symbol_values.push_back(global);
 	m_header.num_global_fixed_symbol_values = little_endianize_int32(little_endianize_int32(m_header.num_global_fixed_symbol_values) + 1);
@@ -407,7 +408,7 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 {
 	local_fixed * entry_ptr;
 	local_fixed local;
-	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
+	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
 	// unsigned int entry_idx;
 	auto entry = std::find_if(
 		m_local_fixed_symbol_values.begin(),
@@ -446,7 +447,7 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 {
 	local_relative * entry_ptr;
 	local_relative local;
-	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
+	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
 	// unsigned int entry_idx = .find(local.symbol_name_index, sizeof(local));
 	auto entry = std::find_if(
 		m_local_relative_symbol_values.begin(),
@@ -571,7 +572,7 @@ int srcdbg_simple_generator::close()
 		FWRITE_OR_RETURN(&sym, sizeof(local_fixed_symbol_value), 1, m_output);
 
 		// Write the var length portion next (address ranges)
-		FWRITE_OR_RETURN(sym.ranges.data(), sizeof(address_range), sym.ranges.size() / sizeof(address_range), m_output);
+		FWRITE_OR_RETURN(sym.ranges.data(), sizeof(address_range), sym.ranges.size(), m_output);
 	}
 
 	// local relative symbols

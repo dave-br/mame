@@ -38,9 +38,13 @@
 // Linux GCC obeys.
 //
 // Adapted from https://gcc.gnu.org/wiki/Visibility
+// TODO: FOR LWTOOLS TO LINK TO STATIC LIB, LIB_PUBLIC MUST BE EMPTY.  DOES NOT MATTER
+// WHAT IT IS SET TO WHEN MAME COMPILES STATIC LIB APPARENTLY (PROB WILL MATTER
+// WHEN BUILDING SHARED LIB).
 #if !defined MAME_SRCDBG_SHARED
 	#define LIB_PUBLIC
 #elif defined _WIN32 || defined __CYGWIN__
+// #if defined _WIN32 || defined __CYGWIN__
 	#ifdef BUILDING_LIB
 		#ifdef __GNUC__
 			#define LIB_PUBLIC __attribute__ ((dllexport))
