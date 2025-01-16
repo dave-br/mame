@@ -183,25 +183,30 @@ unsigned short little_endianize_int16(unsigned short n) { return n; }
 // 	int_resizeable_array m_offsets;
 // };
 
-static std::size_t find_or_push_back(std::vector<std::string> & vec, const char * new_string)
+template<typename T>
+static std::size_t find(const std::vector<T> & vec, const T & elem)
 {
-	std::string str(new_string);
-	auto iter = std::find(vec.cbegin(), vec.cend(), str);
+	auto iter = std::find(vec.cbegin(), vec.cend(), elem);
 	if (iter != vec.cend())
 	{
 		return iter - vec.cbegin();;
 	}
 
+	return (size_t) -1;
+}
+
+static std::size_t find_or_push_back(std::vector<std::string> & vec, const char * new_string)
+{
+	std::string str(new_string);
+	size_t idx = find(vec, str);
+	if (idx != (size_t) -1)
+	{
+		return idx;
+	}
+
 	vec.push_back(std::move(str));
 	return vec.size() - 1;
 }
-
-
-// Interim storage of local fixed variables
-struct local_fixed : local_fixed_symbol_value
-{
-	resizeable_array ranges;
-};
 
 
 // Interim storage of local relative variables
@@ -404,32 +409,38 @@ int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, i
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
+// TODO: JUST NOW: RE-VERIFY THIS CODE, COMMENT OUT NEXT FUNCTION, TRY TO COMPILE
 int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, unsigned short address_first, unsigned short address_last, int symbol_value)
 {
 	local_fixed * entry_ptr;
 	local_fixed local;
 	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name);
-	unsigned int entry_idx = m_local_fixed_symbol_values.find(local.symbol_name_index, sizeof(local));
-	if (entry_idx == (unsigned int) -1)
+	unsigned int entry_idx;
+	auto entry = std::find_if(
+		m_local_fixed_symbol_values.begin(),
+		m_local_fixed_symbol_values.end(),
+		[&](const local_fixed_symbol_value & elem) { return elem.symbol_name_index == local.symbol_name_index;});
+	if (entry == m_local_fixed_symbol_values.cend())
 	{
 		local.symbol_value = little_endianize_int32(symbol_value);
 		local.num_address_ranges = 0;
-		local.ranges.construct();
+		// local.ranges
 		entry_ptr = &local;
-		RET_IF_FAIL(m_local_fixed_symbol_values.push_back(&local, sizeof(local)));
+		m_local_fixed_symbol_values.push_back(local);
 		m_header.local_fixed_symbol_values_size = little_endianize_int32(
 			little_endianize_int32(m_header.local_fixed_symbol_values_size) +
 			sizeof(local_fixed_symbol_value));
 	}
 	else
 	{
-		entry_ptr = ((local_fixed *) m_local_fixed_symbol_values.get()) + entry_idx;
+		entry_ptr = &(*entry);
+		//  ((local_fixed *) m_local_fixed_symbol_values.get()) + entry_idx;
 	}
 
 	address_range range;
 	range.address_first = little_endianize_int16(address_first);
 	range.address_last = little_endianize_int16(address_last);
-	RET_IF_FAIL(entry_ptr->ranges.push_back(&range, sizeof(range)));
+	entry_ptr->ranges.push_back(range);
 	m_header.local_fixed_symbol_values_size = little_endianize_int32(
 		little_endianize_int32(m_header.local_fixed_symbol_values_size) +
 		sizeof(range));

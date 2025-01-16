@@ -47,7 +47,8 @@ void srcdbg_sprintf(std::string & out, const char * format, ...)
 }
 
 // Helper to read some bytes and advance the index
-template <typename T> static bool read_field(T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
+template <typename T>
+static bool read_field(T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
 {
 	if (data.size() < i + sizeof(T))
 	{
