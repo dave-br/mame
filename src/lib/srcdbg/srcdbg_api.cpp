@@ -26,12 +26,11 @@
 
 LIB_PUBLIC int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
 {
-	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) malloc(sizeof(srcdbg_simple_generator));
+	srcdbg_simple_generator * generator = new srcdbg_simple_generator;
 	if (generator == nullptr)
 	{
 		return MAME_SRCDBG_E_OUTOFMEMORY;
 	}
-	generator->construct();
 	RET_IF_FAIL(generator->open(file_path));
 	*handle_ptr = (void *) generator;
 	return MAME_SRCDBG_E_SUCCESS;
@@ -71,6 +70,7 @@ LIB_PUBLIC int mame_srcdbg_simp_close(void * srcdbg_simp_state)
 {
 	srcdbg_simple_generator * generator = (srcdbg_simple_generator *) srcdbg_simp_state;
 	RET_IF_FAIL(generator->close());
-	RET_IF_FAIL(generator->destruct());
+	delete generator;
+	// RET_IF_FAIL(generator->destruct());
 	return MAME_SRCDBG_E_SUCCESS;
 }

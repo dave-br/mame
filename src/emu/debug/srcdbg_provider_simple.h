@@ -16,6 +16,8 @@
 #pragma once
 
 #include "srcdbg_provider.h"
+#include "srcdbg_format.h"
+#include "srcdbg_format_reader.h"
 
 class srcdbg_import;
 

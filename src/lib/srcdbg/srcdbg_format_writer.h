@@ -67,7 +67,7 @@ public:
 	int close();
 
 private:
-	int add_string(resizeable_array & ra, unsigned int & size, const char * s);
+	// int add_string(resizeable_array & ra, unsigned int & size, const char * s);
 
 	FILE * m_output;
 	mame_debug_info_simple_header m_header;

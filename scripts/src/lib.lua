@@ -155,6 +155,8 @@ project "mame_srcdbg_static"
 	kind ("StaticLib")
 
 	files {
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_api.cpp",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_api.h",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
@@ -190,11 +192,12 @@ project "mame_srcdbg_shared"
 	}
 
 	files {
-		MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
-		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
-		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
-		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
-		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
+		-- TODO: LINK TO STATIC AND ADD DUMMY.CPP THAT CALLS ALL APIS
+		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
+		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
+		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
+		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
+		-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
 	}
 
 	-- links {
