@@ -420,8 +420,8 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 		local.symbol_value = little_endianize_int32(symbol_value);
 		local.num_address_ranges = 0;
 		// local.ranges
-		entry_ptr = &local;
 		m_local_fixed_symbol_values.push_back(local);
+		entry_ptr = &m_local_fixed_symbol_values[m_local_fixed_symbol_values.size() - 1];
 		m_header.local_fixed_symbol_values_size = little_endianize_int32(
 			little_endianize_int32(m_header.local_fixed_symbol_values_size) +
 			sizeof(local_fixed_symbol_value));
@@ -457,8 +457,8 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 	{
 		local.num_local_relative_eval_rules = 0;
 		// local.values.construct();
-		entry_ptr = &local;
 		m_local_relative_symbol_values.push_back(local);
+		entry_ptr = &m_local_relative_symbol_values[m_local_relative_symbol_values.size() - 1];
 		// entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
 		m_header.local_relative_symbol_values_size = little_endianize_int32(
 			little_endianize_int32(m_header.local_relative_symbol_values_size) +
