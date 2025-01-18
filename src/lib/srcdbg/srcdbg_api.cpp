@@ -4,7 +4,7 @@
 
     srcdbg_format_writer.h
 
-    Internal implementation of portions of srcdbg_api.h.
+    Internal implementation of srcdbg_api.h.
 	
 	WARNING: Tools external to MAME should only use functionality
 	declared in srcdg_format.h and srcdbg_api.h.

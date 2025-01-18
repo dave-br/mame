@@ -14,6 +14,8 @@
 #ifndef MAME_SRCDBG_FORMAT_WRITER_H
 #define MAME_SRCDBG_FORMAT_WRITER_H
 
+#pragma once
+
 #include "srcdbg_format.h"
 
 #include <stdio.h>
@@ -58,9 +60,7 @@ struct local_relative : local_relative_symbol_value
 	std::vector<local_relative_eval_rule> values;
 };
 
-
-
-
+// Class providing implementation of source-level debugging information file writer API
 class srcdbg_simple_generator
 {
 public:
@@ -76,16 +76,14 @@ public:
 	int close();
 
 private:
-	// int add_string(resizeable_array & ra, unsigned int & size, const char * s);
-
-	FILE * m_output;
-	mame_debug_info_simple_header m_header;
-	std::vector<std::string> m_source_file_paths;
-	std::vector<srcdbg_line_mapping> m_line_mappings;
-	std::vector<std::string> m_symbol_names;
+	FILE *                                 m_output;
+	mame_debug_info_simple_header          m_header;
+	std::vector<std::string>               m_source_file_paths;
+	std::vector<srcdbg_line_mapping>       m_line_mappings;
+	std::vector<std::string>               m_symbol_names;
 	std::vector<global_fixed_symbol_value> m_global_fixed_symbol_values;
-	std::vector<local_fixed> m_local_fixed_symbol_values;
-	std::vector<local_relative> m_local_relative_symbol_values;
+	std::vector<local_fixed>               m_local_fixed_symbol_values;
+	std::vector<local_relative>            m_local_relative_symbol_values;
 };
 
 

@@ -7,25 +7,31 @@
 	Declarations of public API for manipulating MAME source-level
 	debugging information file.
 
+	See https://docs.mamedev.org/debugger/index.html#generating-mame-debugging-information-files
+
 	Only functionality declared in this file and srcdbg_format.h are
 	safe for use by tools outside of MAME.
-	TODO: URL
 
     Tools should prefer using this header and linking with
-    -lmame_srcdbg_static or -lmame_srcdbg_shared to generate debugging
-	info files where possible, instead of directly including
-	srcdbg_format.h to manually generate debugging info files.
+    -lmame_srcdbg_static or -lmame_srcdbg_shared, instead of
+	directly including srcdbg_format.h to manually generate debugging
+	info files.
 
 	This header intentionally written in C to allow C-only tools
     (assemblers, compilers) to #include it.
-
 
 ***************************************************************************/
 
 #ifndef MAME_SRCDBG_API_H
 #define MAME_SRCDBG_API_H
 
-// Define LIB_PUBLIC to identify client-facing API to be exported
+// Clients of this library should set MAME_SRCDBG_SHARED if using the
+// shared (.so / .dll) version.  The remaining #defines are defined
+// automatically as necessary
+
+// MAME-internal info:
+//
+// LIB_PUBLIC identifies client-facing API to be exported
 // from the so / dll, depending on platform and whether the library
 // is being built or consumed.
 //
@@ -33,37 +39,14 @@
 // contribute to the implementation of the library, so that symbols
 // not adorned with LIB_PUBLIC default to not being exported.
 //
-// Note: It appears that mingw GCC currently ignores
-// -fvisibility=hidden and just exports everything, whereas
-// Linux GCC obeys.
+// First, define intermediate values LIB_EXPORT / LIB_IMPORT based
+// on target & compiler.  Then, define LIB_PUBLIC to be one of those
+// values, based on whether we're consuming or creating the library.
+// For the static library, LIB_PUBLIC is blank when consuming, and
+// irrelevant when creating.
 //
 // Adapted from https://gcc.gnu.org/wiki/Visibility
-// TODO: FOR LWTOOLS TO LINK TO STATIC LIB, LIB_PUBLIC MUST BE EMPTY.  DOES NOT MATTER
-// WHAT IT IS SET TO WHEN MAME COMPILES STATIC LIB APPARENTLY (PROB WILL MATTER
-// WHEN BUILDING SHARED LIB).
-// #if !defined MAME_SRCDBG_SHARED
-// 	#define LIB_PUBLIC
-// #elif defined _WIN32 || defined __CYGWIN__
-// // #if defined _WIN32 || defined __CYGWIN__
-// 	#ifdef BUILDING_LIB
-// 		#ifdef __GNUC__
-// 			#define LIB_PUBLIC __attribute__ ((dllexport))
-// 		#else
-// 			#define LIB_PUBLIC __declspec(dllexport)
-// 		#endif
-// 	#else    // Consuming lib from Windows
-// 		#ifdef __GNUC__
-// 			#define LIB_PUBLIC __attribute__ ((dllimport))
-// 		#else
-// 			#define LIB_PUBLIC __declspec(dllimport)
-// 		#endif
-// 	#endif
-// #else	    // NOT Windows, either building or consuming
-// 	#define LIB_PUBLIC __attribute__ ((visibility ("default")))
-// #endif
 
-
-// Define LIB_EXPORT / LIB_IMPORT based on target & compiler
 #if defined _WIN32 || defined __CYGWIN__
 	#if defined __GNUC__
 		#define LIB_EXPORT __attribute__ ((dllexport))
@@ -77,10 +60,6 @@
 	#define LIB_IMPORT __attribute__ ((visibility ("default")))
 #endif
 
-
-// Define LIB_PUBLIC to be one of the above macros, based on whether we're
-// consuming or creating the library.  For the static library, nothing
-// special needed to consume, and irrelevant what's used when creating.
 #if defined BUILDING_LIB
 	#define LIB_PUBLIC LIB_EXPORT
 #elif defined MAME_SRCDBG_SHARED
@@ -88,7 +67,6 @@
 #else
 	#define LIB_PUBLIC
 #endif
-
 
 
 #ifdef __cplusplus
@@ -206,7 +184,16 @@ LIB_PUBLIC int mame_srcdbg_simp_add_local_fixed_symbol(void * srcdbg_simp_state,
 */
 LIB_PUBLIC int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_state, const char * symbol_name, unsigned short address_first, unsigned short address_last, unsigned char reg, int reg_offset);
 
-// TODO
+/*
+    mame_srcdbg_simp_import - Import contents of another .MDI file into the .MDI file currently
+	being written, with values adjusted by the specified offset.  Useful for linkers to combine
+	MDI files from object files being linked into a final MDI file
+    [in] srcdbg_simp_state - Handle to source-debugging information file generation, as returned by mame_srcdbg_simp_open_new
+    [in] mdi_file_path_to_import - Path to MDI file to import
+    [in] offset - Offset to apply to the values of symbols and instruction addresses
+    [out] error_details - Buffer to receive detailed error text (with null terminator) if importing fails
+	[in] num_bytes_error_details - Size in bytes of error_details buffer, including room for null terminator
+*/
 LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
 
 /*
