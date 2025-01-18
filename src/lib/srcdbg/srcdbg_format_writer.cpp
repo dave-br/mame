@@ -15,7 +15,7 @@
 #include "srcdbg_api.h"
 #include "srcdbg_format_writer.h"
 #include "srcdbg_format.h"
-// #include "osdcomm.h"
+#include "osdcomm.h"
 #include "srcdbg_format_reader.h"
 
 // #include "strformat.h"
@@ -32,8 +32,6 @@
 
 // TODO:
 void srcdbg_sprintf(std::string & out, const char * format, ...);
-unsigned int little_endianize_int32(unsigned int n) { return n; }
-unsigned short little_endianize_int16(unsigned short n) { return n; }
 
 
 
@@ -377,16 +375,8 @@ int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsi
 	{
 		return MAME_SRCDBG_E_INVALID_SRC_IDX;
 	}
-	m_header.num_line_mappings = little_endianize_int32(little_endianize_int32(m_header.num_line_mappings) + 1);
-	srcdbg_line_mapping line_mapping =
-	{
-		{
-			little_endianize_int16(address_first),
-			little_endianize_int16(address_last)
-		},
-		little_endianize_int32(source_file_index),
-		little_endianize_int32(line_number)
-	};
+	m_header.num_line_mappings++;
+	srcdbg_line_mapping line_mapping = { { address_first, address_last }, source_file_index, line_number };
 	m_line_mappings.push_back(line_mapping);
 	return MAME_SRCDBG_E_SUCCESS;
 }
@@ -398,9 +388,9 @@ int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, i
 {
 	global_fixed_symbol_value global;
 	global.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
-	global.symbol_value = little_endianize_int32(symbol_value);
+	global.symbol_value = symbol_value;
 	m_global_fixed_symbol_values.push_back(global);
-	m_header.num_global_fixed_symbol_values = little_endianize_int32(little_endianize_int32(m_header.num_global_fixed_symbol_values) + 1);
+	m_header.num_global_fixed_symbol_values++;
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
@@ -416,30 +406,23 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 		[&](const local_fixed_symbol_value & elem) { return elem.symbol_name_index == local.symbol_name_index;});
 	if (entry == m_local_fixed_symbol_values.end())
 	{
-		// TODO: endianize at file-write time instead?
-		local.symbol_value = little_endianize_int32(symbol_value);
+		local.symbol_value = symbol_value;
 		local.num_address_ranges = 0;
-		// local.ranges
 		m_local_fixed_symbol_values.push_back(local);
 		entry_ptr = &m_local_fixed_symbol_values[m_local_fixed_symbol_values.size() - 1];
-		m_header.local_fixed_symbol_values_size = little_endianize_int32(
-			little_endianize_int32(m_header.local_fixed_symbol_values_size) +
-			sizeof(local_fixed_symbol_value));
+		m_header.local_fixed_symbol_values_size += sizeof(local_fixed_symbol_value);
 	}
 	else
 	{
 		entry_ptr = &(*entry);
-		//  ((local_fixed *) m_local_fixed_symbol_values.get()) + entry_idx;
 	}
 
 	address_range range;
-	range.address_first = little_endianize_int16(address_first);
-	range.address_last = little_endianize_int16(address_last);
+	range.address_first = address_first;
+	range.address_last = address_last;
 	entry_ptr->ranges.push_back(range);
-	m_header.local_fixed_symbol_values_size = little_endianize_int32(
-		little_endianize_int32(m_header.local_fixed_symbol_values_size) +
-		sizeof(range));
-	entry_ptr->num_address_ranges = little_endianize_int32(little_endianize_int32(entry_ptr->num_address_ranges) + 1);
+	m_header.local_fixed_symbol_values_size += sizeof(range);
+	entry_ptr->num_address_ranges++;
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
@@ -448,7 +431,6 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 	local_relative * entry_ptr;
 	local_relative local;
 	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
-	// unsigned int entry_idx = .find(local.symbol_name_index, sizeof(local));
 	auto entry = std::find_if(
 		m_local_relative_symbol_values.begin(),
 		m_local_relative_symbol_values.end(),
@@ -456,29 +438,22 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 	if (entry == m_local_relative_symbol_values.end())
 	{
 		local.num_local_relative_eval_rules = 0;
-		// local.values.construct();
 		m_local_relative_symbol_values.push_back(local);
 		entry_ptr = &m_local_relative_symbol_values[m_local_relative_symbol_values.size() - 1];
-		// entry_ptr = (local_relative *) (m_local_relative_symbol_values.get() + m_local_relative_symbol_values.size() - sizeof(local));
-		m_header.local_relative_symbol_values_size = little_endianize_int32(
-			little_endianize_int32(m_header.local_relative_symbol_values_size) +
-			sizeof(local_relative_symbol_value));
+		m_header.local_relative_symbol_values_size += sizeof(local_relative_symbol_value);
 	}
 	else
 	{
 		entry_ptr = &(*entry);
-		// entry_ptr = ((local_relative *) m_local_relative_symbol_values.get()) + entry_idx;
 	}
 	local_relative_eval_rule value;
-	value.range.address_first = little_endianize_int16(address_first);
-	value.range.address_last = little_endianize_int16(address_last);
+	value.range.address_first = address_first;
+	value.range.address_last = address_last;
 	value.reg = reg;
-	value.reg_offset = little_endianize_int32(reg_offset);
+	value.reg_offset = reg_offset;
 	entry_ptr->values.push_back(value);
-	m_header.local_relative_symbol_values_size = little_endianize_int32(
-		little_endianize_int32(m_header.local_relative_symbol_values_size) +
-		sizeof(value));
-	entry_ptr->num_local_relative_eval_rules = little_endianize_int32(little_endianize_int32(entry_ptr->num_local_relative_eval_rules) + 1);
+	m_header.local_relative_symbol_values_size += sizeof(value);
+	entry_ptr->num_local_relative_eval_rules++;
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
@@ -536,6 +511,12 @@ int srcdbg_simple_generator::close()
 	// Write all buffered contents to file
 
 	// Header
+	m_header.source_file_paths_size = little_endianize_int32(m_header.source_file_paths_size);
+	m_header.num_line_mappings = little_endianize_int32(m_header.num_line_mappings);
+	m_header.symbol_names_size = little_endianize_int32(m_header.symbol_names_size);
+	m_header.num_global_fixed_symbol_values = little_endianize_int32(m_header.num_global_fixed_symbol_values);
+	m_header.local_fixed_symbol_values_size = little_endianize_int32(m_header.local_fixed_symbol_values_size);
+	m_header.local_relative_symbol_values_size = little_endianize_int32(m_header.local_relative_symbol_values_size);
 	FWRITE_OR_RETURN(&m_header, sizeof(m_header), 1, m_output);
 
 	// Source file paths
@@ -545,7 +526,14 @@ int srcdbg_simple_generator::close()
 	}
 
 	// Line mappings
-	FWRITE_OR_RETURN(m_line_mappings.data(), sizeof(srcdbg_line_mapping), m_line_mappings.size(), m_output);
+	for (srcdbg_line_mapping & map : m_line_mappings)
+	{
+		map.range.address_first = little_endianize_int16(map.range.address_first);
+		map.range.address_last = little_endianize_int16(map.range.address_last);
+		map.source_file_index = little_endianize_int32(map.source_file_index);
+		map.line_number = little_endianize_int32(map.line_number);
+		FWRITE_OR_RETURN(&map, sizeof(map), 1, m_output);
+	}
 
 	// Symbol names
 	for (const std::string & symname : m_symbol_names)
@@ -554,14 +542,15 @@ int srcdbg_simple_generator::close()
 	}
 
 	// global fixed symbols
-	FWRITE_OR_RETURN(
-		m_global_fixed_symbol_values.data(),
-		sizeof(global_fixed_symbol_value),
-		m_global_fixed_symbol_values.size(),
-		m_output);
+	for (global_fixed_symbol_value & sym : m_global_fixed_symbol_values)
+	{
+		sym.symbol_name_index = little_endianize_int32(sym.symbol_name_index);
+		sym.symbol_value = little_endianize_int32(sym.symbol_value);
+		FWRITE_OR_RETURN(&sym, sizeof(sym), 1, m_output);
+	}
 
 	// local fixed symbols
-	for (const local_fixed & sym : m_local_fixed_symbol_values)
+	for (local_fixed & sym : m_local_fixed_symbol_values)
 	{
 		if (sym.ranges.size() == 0)
 		{
@@ -569,24 +558,41 @@ int srcdbg_simple_generator::close()
 		}
 
 		// Write the fixed length portion first
+		sym.symbol_name_index = little_endianize_int32(sym.symbol_name_index);
+		sym.symbol_value = little_endianize_int32(sym.symbol_value);
+		sym.num_address_ranges = little_endianize_int32(sym.num_address_ranges);
 		FWRITE_OR_RETURN(&sym, sizeof(local_fixed_symbol_value), 1, m_output);
 
 		// Write the var length portion next (address ranges)
-		FWRITE_OR_RETURN(sym.ranges.data(), sizeof(address_range), sym.ranges.size(), m_output);
+		for (address_range & range : sym.ranges)
+		{
+			range.address_first = little_endianize_int16(range.address_first);
+			range.address_last = little_endianize_int16(range.address_last);
+			FWRITE_OR_RETURN(&range, sizeof(range), 1, m_output);
+		}
 	}
 
 	// local relative symbols
-	for (const local_relative & sym : m_local_relative_symbol_values)
+	for (local_relative & sym : m_local_relative_symbol_values)
 	{
 		if (sym.values.size() == 0)
 		{
 			continue;
 		}
+
 		// Write the fixed length portion first
+		sym.symbol_name_index = little_endianize_int32(sym.symbol_name_index);
+		sym.num_local_relative_eval_rules = little_endianize_int32(sym.num_local_relative_eval_rules);
 		FWRITE_OR_RETURN(&sym, sizeof(local_relative_symbol_value), 1, m_output);
 
 		// Write the var length portion next (eval rules)
-		FWRITE_OR_RETURN(sym.values.data(), sizeof(local_relative_eval_rule), sym.values.size(), m_output);
+		for (local_relative_eval_rule & rule : sym.values)
+		{
+			rule.range.address_first = little_endianize_int16(rule.range.address_first);
+			rule.range.address_last = little_endianize_int16(rule.range.address_last);
+			rule.reg_offset = little_endianize_int32(rule.reg_offset);
+			FWRITE_OR_RETURN(&rule, sizeof(rule), 1, m_output);
+		}
 	}
 
 	// All done

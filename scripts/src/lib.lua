@@ -163,6 +163,10 @@ project "mame_srcdbg_static"
 		"-fPIC",
 	}
 
+	includedirs {
+		MAME_DIR .. "src/osd",
+	}
+
 	defines {
 		"BUILDING_LIB",
 	}

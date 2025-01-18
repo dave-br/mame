@@ -15,6 +15,8 @@
 
 #include "srcdbg_format_reader.h"
 
+#include "osdcomm.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <time.h>
@@ -23,15 +25,12 @@
 #include <vector>
 #include <system_error>
 
-// #include "corefile.h"
-
-// #include "osdcomm.h"
 
 using uint8_t = unsigned char;
 
 // TODO:
-int little_endianize_int32(int n) { return n; }
-short little_endianize_int16(short n) { return n; }
+// int little_endianize_int32(int n) { return n; }
+// short little_endianize_int16(short n) { return n; }
 
 // #include <cstdio>
  
