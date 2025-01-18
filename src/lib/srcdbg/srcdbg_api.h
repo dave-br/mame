@@ -96,6 +96,7 @@ extern "C" {
 #define MAME_SRCDBG_E_FWRITE_ERROR      4
 #define MAME_SRCDBG_E_FCLOSE_ERROR      5
 #define MAME_SRCDBG_E_INVALID_SRC_IDX   6
+#define MAME_SRCDBG_E_EXCEPTION         7
 
 
 
