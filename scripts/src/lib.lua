@@ -218,9 +218,20 @@ project "mame_srcdbg_shared"
 	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
 	-- }
 
+		-- TODO: on mac, might need something like -Wl,-all_load -lmame_srcdbg_static -Wl,-noall_load
+	-- linkoptions {
+	-- 	"-Wl,--whole-archive",
+	-- }
+
 	links {
 		"mame_srcdbg_static",
 		-- "utils",
 		-- "ocore_" .. _OPTIONS["osd"],
 		-- ext_lib("utf8proc"),
 	}
+
+	wholearchive { "mame_srcdbg_static" }
+
+	-- linkoptions {
+	-- 	"-Wl,--no-whole-archive",
+	-- }

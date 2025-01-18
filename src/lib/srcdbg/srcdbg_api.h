@@ -41,26 +41,54 @@
 // TODO: FOR LWTOOLS TO LINK TO STATIC LIB, LIB_PUBLIC MUST BE EMPTY.  DOES NOT MATTER
 // WHAT IT IS SET TO WHEN MAME COMPILES STATIC LIB APPARENTLY (PROB WILL MATTER
 // WHEN BUILDING SHARED LIB).
-#if !defined MAME_SRCDBG_SHARED
-	#define LIB_PUBLIC
-#elif defined _WIN32 || defined __CYGWIN__
-// #if defined _WIN32 || defined __CYGWIN__
-	#ifdef BUILDING_LIB
-		#ifdef __GNUC__
-			#define LIB_PUBLIC __attribute__ ((dllexport))
-		#else
-			#define LIB_PUBLIC __declspec(dllexport)
-		#endif
-	#else    // Consuming lib from Windows
-		#ifdef __GNUC__
-			#define LIB_PUBLIC __attribute__ ((dllimport))
-		#else
-			#define LIB_PUBLIC __declspec(dllimport)
-		#endif
+// #if !defined MAME_SRCDBG_SHARED
+// 	#define LIB_PUBLIC
+// #elif defined _WIN32 || defined __CYGWIN__
+// // #if defined _WIN32 || defined __CYGWIN__
+// 	#ifdef BUILDING_LIB
+// 		#ifdef __GNUC__
+// 			#define LIB_PUBLIC __attribute__ ((dllexport))
+// 		#else
+// 			#define LIB_PUBLIC __declspec(dllexport)
+// 		#endif
+// 	#else    // Consuming lib from Windows
+// 		#ifdef __GNUC__
+// 			#define LIB_PUBLIC __attribute__ ((dllimport))
+// 		#else
+// 			#define LIB_PUBLIC __declspec(dllimport)
+// 		#endif
+// 	#endif
+// #else	    // NOT Windows, either building or consuming
+// 	#define LIB_PUBLIC __attribute__ ((visibility ("default")))
+// #endif
+
+
+// Define LIB_EXPORT / LIB_IMPORT based on target & compiler
+#if defined _WIN32 || defined __CYGWIN__
+	#if defined __GNUC__
+		#define LIB_EXPORT __attribute__ ((dllexport))
+		#define LIB_IMPORT __attribute__ ((dllimport))
+	#else                                                 // ! gnu
+		#define LIB_EXPORT __declspec(dllexport)
+		#define LIB_IMPORT __declspec(dllimport)
 	#endif
-#else	    // NOT Windows, either building or consuming
-	#define LIB_PUBLIC __attribute__ ((visibility ("default")))
+#else                                                     // not Windows
+	#define LIB_EXPORT __attribute__ ((visibility ("default")))
+	#define LIB_IMPORT __attribute__ ((visibility ("default")))
 #endif
+
+
+// Define LIB_PUBLIC to be one of the above macros, based on whether we're
+// consuming or creating the library.  For the static library, nothing
+// special needed to consume, and irrelevant what's used when creating.
+#if defined BUILDING_LIB
+	#define LIB_PUBLIC LIB_EXPORT
+#elif defined MAME_SRCDBG_SHARED
+	#define LIB_PUBLIC LIB_IMPORT
+#else
+	#define LIB_PUBLIC
+#endif
+
 
 
 #ifdef __cplusplus
