@@ -28,11 +28,17 @@
 
 using uint8_t = unsigned char;
 
-// TODO:
-// int little_endianize_int32(int n) { return n; }
-// short little_endianize_int16(short n) { return n; }
+// osdcomm.h macros are all about taking arch-friendly numbers and converting
+// them to big / little endian.  This file needs macros that convert a known
+// endian (little) to arch-friendly numbers.
+#ifdef LSB_FIRST
+constexpr uint16_t from_little_endian16(uint16_t x) { return x; }
+constexpr uint32_t from_little_endian32(uint32_t x) { return x; }
+#else
+constexpr uint16_t from_little_endian16(uint16_t x) { return swapendian_int16(x); }
+constexpr uint32_t from_little_endian32(uint32_t x) { return swapendian_int32(x); }
+#endif // LSB_FIRST
 
-// #include <cstdio>
  
 void srcdbg_sprintf(std::string & out, const char * format, ...)
 {
@@ -161,12 +167,12 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		return false;
 	}
 
-	header->source_file_paths_size = little_endianize_int32(header->source_file_paths_size);
-	header->num_line_mappings = little_endianize_int32(header->num_line_mappings);
-	header->symbol_names_size = little_endianize_int32(header->symbol_names_size);
-	header->num_global_fixed_symbol_values = little_endianize_int32(header->num_global_fixed_symbol_values);
-	header->local_fixed_symbol_values_size = little_endianize_int32(header->local_fixed_symbol_values_size);
-	header->local_relative_symbol_values_size = little_endianize_int32(header->local_relative_symbol_values_size);
+	header->source_file_paths_size = from_little_endian32(header->source_file_paths_size);
+	header->num_line_mappings = from_little_endian32(header->num_line_mappings);
+	header->symbol_names_size = from_little_endian32(header->symbol_names_size);
+	header->num_global_fixed_symbol_values = from_little_endian32(header->num_global_fixed_symbol_values);
+	header->local_fixed_symbol_values_size = from_little_endian32(header->local_fixed_symbol_values_size);
+	header->local_relative_symbol_values_size = from_little_endian32(header->local_relative_symbol_values_size);
 
 	// ** Validate some sizes and null terminators **
 
@@ -256,10 +262,10 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 
-		line_map->range.address_first = little_endianize_int16(line_map->range.address_first);
-		line_map->range.address_last = little_endianize_int16(line_map->range.address_last);
-		line_map->source_file_index = little_endianize_int16(line_map->source_file_index);
-		line_map->line_number = little_endianize_int32(line_map->line_number);
+		line_map->range.address_first = from_little_endian16(line_map->range.address_first);
+		line_map->range.address_last = from_little_endian16(line_map->range.address_last);
+		line_map->source_file_index = from_little_endian32(line_map->source_file_index);
+		line_map->line_number = from_little_endian32(line_map->line_number);
 
 		if (line_map->source_file_index >= source_index)
 		{
@@ -313,8 +319,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 
-		value->symbol_name_index = little_endianize_int32(value->symbol_name_index);
-		value->symbol_value = little_endianize_int32(value->symbol_value);
+		value->symbol_name_index = from_little_endian32(value->symbol_name_index);
+		value->symbol_value = from_little_endian32(value->symbol_value);
 
 		if (value->symbol_name_index >= symbol_index)
 		{
@@ -344,9 +350,9 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 
-		value->symbol_name_index = little_endianize_int32(value->symbol_name_index);
-		value->symbol_value = little_endianize_int32(value->symbol_value);
-		value->num_address_ranges = little_endianize_int32(value->num_address_ranges);
+		value->symbol_name_index = from_little_endian32(value->symbol_name_index);
+		value->symbol_value = from_little_endian32(value->symbol_value);
+		value->num_address_ranges = from_little_endian32(value->num_address_ranges);
 
 		if (value->symbol_name_index >= symbol_index)
 		{
@@ -361,8 +367,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			{
 				return false;
 			}
-			range->address_first = little_endianize_int16(range->address_first);
-			range->address_last = little_endianize_int16(range->address_last);
+			range->address_first = from_little_endian16(range->address_first);
+			range->address_last = from_little_endian16(range->address_last);
 		}
 
 		if (!callback.on_read_local_fixed_symbol_value(*(const local_fixed_symbol_value *) &data[value_start_idx]))
@@ -387,8 +393,8 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 			return false;
 		}
 
-		value->symbol_name_index = little_endianize_int32(value->symbol_name_index);
-		value->num_local_relative_eval_rules = little_endianize_int32(value->num_local_relative_eval_rules);
+		value->symbol_name_index = from_little_endian32(value->symbol_name_index);
+		value->num_local_relative_eval_rules = from_little_endian32(value->num_local_relative_eval_rules);
 
 		if (value->symbol_name_index >= symbol_index)
 		{
@@ -404,9 +410,9 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 				return false;
 			}
 
-			rule->range.address_first = little_endianize_int16(rule->range.address_first);
-			rule->range.address_last = little_endianize_int16(rule->range.address_last);
-			rule->reg_offset = little_endianize_int32(rule->reg_offset);
+			rule->range.address_first = from_little_endian16(rule->range.address_first);
+			rule->range.address_last = from_little_endian16(rule->range.address_last);
+			rule->reg_offset = from_little_endian32(rule->reg_offset);
 		}
 
 		if (!callback.on_read_local_relative_symbol_value(*(const local_relative_symbol_value *) &data[value_start_idx]))
