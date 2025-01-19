@@ -412,7 +412,7 @@ int srcdbg_simple_generator::close()
 		FWRITE_OR_RETURN(&sym, sizeof(local_fixed_symbol_value), 1, m_output);
 
 		// Write the var length portion next (address ranges)
-		for (address_range & range : sym.ranges)
+		for (address_range & range : sym.m_ranges)
 		{
 			range.address_first = little_endianize_int16(range.address_first);
 			range.address_last = little_endianize_int16(range.address_last);
