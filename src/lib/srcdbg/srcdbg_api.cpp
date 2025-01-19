@@ -41,12 +41,23 @@ static int exception_boundary(Func && f)
 #define BEGIN_EXCEPTION_BOUNDARY return exception_boundary([&]() -> int {
 #define END_EXCEPTION_BOUNDARY });
 
+extern const char build_version[]; 
 
 // ------------------------------------------------------------------
 // Public API - C Interface for assemblers / compilers.  These
 // are simple wrappers around public member functions from
 // srcdbg_simple_generator
 // ------------------------------------------------------------------
+
+LIB_PUBLIC int mame_srcdbg_get_version_info(int * srcdbg_lib_major, int * srcdbg_lib_minor, const char ** mame_build)
+{
+	BEGIN_EXCEPTION_BOUNDARY
+	*srcdbg_lib_major = SRCDBG_LIB_MAJOR;
+	*srcdbg_lib_minor = SRCDBG_LIB_MINOR;
+	*mame_build = build_version;
+	return MAME_SRCDBG_E_SUCCESS;
+	END_EXCEPTION_BOUNDARY
+}
 
 LIB_PUBLIC int mame_srcdbg_simp_open_new(const char * file_path, void ** handle_ptr)
 {

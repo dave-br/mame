@@ -870,6 +870,7 @@ includedirs {
 
 files {
 	MAME_DIR .. "src/tools/srcdbgdump.cpp",
+	GEN_DIR .. "version.cpp",
 }
 
 configuration { }

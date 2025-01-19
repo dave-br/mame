@@ -153,11 +153,23 @@ end
 -- equivalent for tools that prefer using a shared library.
 -- Note: This needs to be self-contained, with no reliance on other
 -- libraries (except C/C++ std libs) for easy consumption by external tools
+
+-- Bump this for breaking changes (avoid!)
+local srcdbg_lib_major = "1"
+
+-- Bump this for non-breaking changes
+local srcdbg_lib_minor = "0"
+
 project "mame_srcdbg_static"
 	uuid "985b8e16-bb6a-4db0-809b-87074f94dfcb"
 	kind ("StaticLib")
 
 	addprojectflags()
+
+	defines { 
+		"SRCDBG_LIB_MAJOR=" .. srcdbg_lib_major,
+		"SRCDBG_LIB_MINOR=" .. srcdbg_lib_minor,
+	}
 
 	buildoptions {
 		-- By default, symbols are not exported unless annotated as such
@@ -184,6 +196,7 @@ project "mame_srcdbg_static"
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_util.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_util.h",
+		GEN_DIR .. "version.cpp",
 	}
 
 

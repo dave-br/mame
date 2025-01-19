@@ -203,6 +203,15 @@ LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * md
 */
 LIB_PUBLIC int mame_srcdbg_simp_close(void * srcdbg_simp_state);
 
+/*
+	mame_srcdbg_get_version_info - Returns version information (useful for diagnostics,
+		most tools will not need to call this)
+	[out] srcdbg_lib_major - Receives major version number of the srcdbg library
+	[out] srcdbg_lib_minor - Receives minor version number of the srcdbg library
+	[out] mame_build - Receives pointer to MAME build version string.  Clients should not allocate or free.
+*/
+LIB_PUBLIC int mame_srcdbg_get_version_info(int * srcdbg_lib_major, int * srcdbg_lib_minor, const char ** mame_build);
+
 #ifdef __cplusplus
 }
 #endif
