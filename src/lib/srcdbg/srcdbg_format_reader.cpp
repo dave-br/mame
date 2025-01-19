@@ -14,10 +14,8 @@
 
 
 #include "srcdbg_format_reader.h"
+#include "srcdbg_util.h"
 
-#include "osdcomm.h"
-
-#include <stdarg.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -26,34 +24,14 @@
 #include <system_error>
 
 
-using uint8_t = unsigned char;
-
-// osdcomm.h macros are all about taking arch-friendly numbers and converting
-// them to big / little endian.  This file needs macros that convert a known
-// endian (little) to arch-friendly numbers.
-#ifdef LSB_FIRST
-constexpr uint16_t from_little_endian16(uint16_t x) { return x; }
-constexpr uint32_t from_little_endian32(uint32_t x) { return x; }
-#else
-constexpr uint16_t from_little_endian16(uint16_t x) { return swapendian_int16(x); }
-constexpr uint32_t from_little_endian32(uint32_t x) { return swapendian_int32(x); }
-#endif // LSB_FIRST
-
- 
-void srcdbg_sprintf(std::string & out, const char * format, ...)
-{
-	char buf[1024];
-	va_list args;
-	va_start(args, format);
-	vsnprintf(buf, sizeof(buf), format, args);
-	va_end(args);
-
-	out = std::move(std::string(buf));
-}
-
-// Helper to read some bytes and advance the index
+// Helper to read some bytes and advance the index.
+// Returns true iff read succeeds
 template <typename T>
-static bool read_field(T * & var, const std::vector<uint8_t> & data, u32 & i, std::string & error)
+static bool read_field(
+	T * & var,                      // [out] Next value to read
+	const std::vector<u8> & data,   // [in] Reference to beginning of data
+	u32 & i,                        // [in/out] Current index into data to read from
+	std::string & error)            // [out] Error text if there was a problem reading
 {
 	if (data.size() < i + sizeof(T))
 	{
@@ -133,7 +111,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 {
 	// ** Load full binary contents into memory **
 
-	std::vector<uint8_t> data;
+	std::vector<u8> data;
 	FILE * file = fopen(srcdbg_path, "rb");
 	if (file == nullptr)
 	{
@@ -141,10 +119,10 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 		return false;
 	}
 
-	int fgetcRet;
+	s32 fgetcRet;
 	while ((fgetcRet = fgetc(file)) != EOF)
 	{
-		data.push_back((uint8_t) fgetcRet);
+		data.push_back((u8) fgetcRet);
 	}
 
 	if (ferror(file))

@@ -2,7 +2,7 @@
 // copyright-holders:David Broman
 /*********************************************************************
 
-    srcdbg_format_writer.h
+    srcdbg_format_writer.cpp
 
     Internal implementation of portions of srcdbg_api.h.
 	
@@ -15,7 +15,7 @@
 #include "srcdbg_api.h"
 #include "srcdbg_format_writer.h"
 #include "srcdbg_format.h"
-#include "osdcomm.h"
+#include "srcdbg_util.h"
 #include "srcdbg_format_reader.h"
 
 #include <stdlib.h>
@@ -28,9 +28,8 @@
 #include <string>
 #include <algorithm>
 
-// TODO:
-void srcdbg_sprintf(std::string & out, const char * format, ...);
 
+// Simple wrapper around std::find
 template<typename T>
 static std::size_t find(const std::vector<T> & vec, const T & elem)
 {
@@ -43,6 +42,7 @@ static std::size_t find(const std::vector<T> & vec, const T & elem)
 	return (size_t) -1;
 }
 
+// Helper to add string to vector if no matching element exists
 static std::size_t find_or_push_back(std::vector<std::string> & vec, const char * new_string, u32 & size)
 {
 	std::string str(new_string);
@@ -60,7 +60,7 @@ static std::size_t find_or_push_back(std::vector<std::string> & vec, const char 
 
 
 // Implementation of srcdbg_format_reader_callback used when the writer needs
-// to import a previously-written MDI (mame_srcdbg_simp_import), e.g., to
+// to import a previously-written MDI (mame_srcdbg_simp_import API), e.g., to
 // facilitate linking
 class writer_importer : public srcdbg_format_reader_callback
 {
@@ -161,12 +161,11 @@ bool writer_importer::on_read_local_relative_symbol_value(const local_relative_s
 	return true;
 }
 
+
 // ------------------------------------------------------------------
 // srcdbg_simple_generator - Primary class for implementing
-// the public API.
+// the public writer API.
 // ------------------------------------------------------------------
-
-
 
 srcdbg_simple_generator::srcdbg_simple_generator()
 	: m_output(nullptr)
@@ -233,9 +232,6 @@ int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsi
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-
-// TODO: DO VECTOR FCNS THROW EXCPETIONS?  CAN I CATCH THEM?
-
 int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, int symbol_value)
 {
 	global_fixed_symbol_value global;
@@ -251,7 +247,6 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 	local_fixed * entry_ptr;
 	local_fixed local;
 	local.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
-	// unsigned int entry_idx;
 	auto entry = std::find_if(
 		m_local_fixed_symbol_values.begin(),
 		m_local_fixed_symbol_values.end(),
@@ -272,7 +267,7 @@ int srcdbg_simple_generator::add_local_fixed_symbol(const char * symbol_name, un
 	address_range range;
 	range.address_first = address_first;
 	range.address_last = address_last;
-	entry_ptr->ranges.push_back(range);
+	entry_ptr->m_ranges.push_back(range);
 	m_header.local_fixed_symbol_values_size += sizeof(range);
 	entry_ptr->num_address_ranges++;
 	return MAME_SRCDBG_E_SUCCESS;
@@ -303,7 +298,7 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 	value.range.address_last = address_last;
 	value.reg = reg;
 	value.reg_offset = reg_offset;
-	entry_ptr->values.push_back(value);
+	entry_ptr->m_values.push_back(value);
 	m_header.local_relative_symbol_values_size += sizeof(value);
 	entry_ptr->num_local_relative_eval_rules++;
 	return MAME_SRCDBG_E_SUCCESS;
@@ -355,7 +350,8 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 		assert(!"Unexpected source-level debugging information file format");
 		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
-	// return MAME_SRCDBG_E_SUCCESS;
+	
+	// Unreachable
 }
 
 int srcdbg_simple_generator::close()
@@ -404,7 +400,7 @@ int srcdbg_simple_generator::close()
 	// local fixed symbols
 	for (local_fixed & sym : m_local_fixed_symbol_values)
 	{
-		if (sym.ranges.size() == 0)
+		if (sym.m_ranges.size() == 0)
 		{
 			continue;
 		}
@@ -427,7 +423,7 @@ int srcdbg_simple_generator::close()
 	// local relative symbols
 	for (local_relative & sym : m_local_relative_symbol_values)
 	{
-		if (sym.values.size() == 0)
+		if (sym.m_values.size() == 0)
 		{
 			continue;
 		}
@@ -438,7 +434,7 @@ int srcdbg_simple_generator::close()
 		FWRITE_OR_RETURN(&sym, sizeof(local_relative_symbol_value), 1, m_output);
 
 		// Write the var length portion next (eval rules)
-		for (local_relative_eval_rule & rule : sym.values)
+		for (local_relative_eval_rule & rule : sym.m_values)
 		{
 			rule.range.address_first = little_endianize_int16(rule.range.address_first);
 			rule.range.address_last = little_endianize_int16(rule.range.address_last);

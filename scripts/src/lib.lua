@@ -147,9 +147,12 @@ end
 		MAME_DIR .. "src/lib/util/zippath.h",
 	}
 
+
 -- Static library to help tools generate MAME source-level debugging
 -- information files.  This is also linked into the shared library
--- equivalent for tools that prefer using a shared library
+-- equivalent for tools that prefer using a shared library.
+-- Note: This needs to be self-contained, with no reliance on other
+-- libraries (except C/C++ std libs) for easy consumption by external tools
 project "mame_srcdbg_static"
 	uuid "985b8e16-bb6a-4db0-809b-87074f94dfcb"
 	kind ("StaticLib")
@@ -179,59 +182,31 @@ project "mame_srcdbg_static"
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
 		MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_util.cpp",
+		MAME_DIR .. "src/lib/srcdbg/srcdbg_util.h",
 	}
 
 
 -- Shared library to help external tools (i.e., assemblers or compilers that
 -- target emulated machines) generate MAME source-level debugging
 -- information files.
+-- Note: This needs to be self-contained, with no reliance on other
+-- libraries (except C/C++ std libs) for easy consumption by external tools
+
 project "mame_srcdbg_shared"
 	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
 	kind ("SharedLib")
 
 	addprojectflags()
 
-	-- buildoptions {
-	-- 	-- By default, symbols are not exported unless annotated as such
-	-- 	"-fvisibility=hidden",
-	-- 	-- Code participating in shared libraries must be position independent
-	-- 	"-fPIC",
-	-- }
-
-	includedirs {
-		MAME_DIR .. "src/lib/srcdbg",
-		-- MAME_DIR .. "src/lib/util",
-		-- MAME_DIR .. "src/osd",
-	}
-
-	-- defines {
-	-- 	"BUILDING_LIB",
-	-- 	"MAME_SRCDBG_SHARED"
-	-- }
-
-	-- files {
-	-- 	-- TODO: LINK TO STATIC AND ADD DUMMY.CPP THAT CALLS ALL APIS
-	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format.h",
-	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.cpp",
-	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_reader.h",
-	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.cpp",
-	-- 	-- MAME_DIR .. "src/lib/srcdbg/srcdbg_format_writer.h",
-	-- }
-
-		-- TODO: on mac, might need something like -Wl,-all_load -lmame_srcdbg_static -Wl,-noall_load
-	-- linkoptions {
-	-- 	"-Wl,--whole-archive",
-	-- }
-
 	links {
 		"mame_srcdbg_static",
-		-- "utils",
-		-- "ocore_" .. _OPTIONS["osd"],
-		-- ext_lib("utf8proc"),
 	}
 
-	wholearchive { "mame_srcdbg_static" }
-
-	-- linkoptions {
-	-- 	"-Wl,--no-whole-archive",
-	-- }
+	-- Force all symbols from static lib to be present in linked shared library,
+	-- otherwise they'd be optimized out without other object files to reference
+	-- them.  Uses --whole-archive then --no-whole-archive to achieve this.
+	-- (I think -all_load then -noall_load on Mac?)
+	wholearchive {
+		"mame_srcdbg_static",
+	}

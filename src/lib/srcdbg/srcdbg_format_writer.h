@@ -48,17 +48,18 @@
 class local_fixed : public local_fixed_symbol_value
 {
 public:
-	local_fixed() : ranges() {}
-	std::vector<address_range> ranges;
+	local_fixed() : m_ranges() {}
+	std::vector<address_range> m_ranges;
 };
 
 
 // Interim storage of local relative variables
 struct local_relative : local_relative_symbol_value
 {
-	local_relative() : values() {}
-	std::vector<local_relative_eval_rule> values;
+	local_relative() : m_values() {}
+	std::vector<local_relative_eval_rule> m_values;
 };
+
 
 // Class providing implementation of source-level debugging information file writer API
 class srcdbg_simple_generator

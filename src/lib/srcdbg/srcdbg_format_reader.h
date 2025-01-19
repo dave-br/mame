@@ -20,12 +20,10 @@
 #pragma once
 
 #include "srcdbg_format.h"
+#include "srcdbg_util.h"
 
 #include <string>
 #include <cstdint>
-
-using u16 = uint16_t;
-using u32 = uint32_t;
 
 
 enum srcdbg_format
