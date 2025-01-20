@@ -223,3 +223,24 @@ project "mame_srcdbg_shared"
 	wholearchive {
 		"mame_srcdbg_static",
 	}
+
+	if _OPTIONS["targetos"]=="linux" then
+		targetextension(".so." .. srcdbg_lib_major .. "." .. srcdbg_lib_minor)
+		buildoptions {
+			"-Wl,-soname,\"" .. project().name .. ".so." .. srcdbg_lib_major .. "\""
+		}
+	end
+
+	-- configuration { "linux-*" }
+	-- 	postbuildcommands {
+	-- 		"$(SILENT) echo Stripping symbols.",
+	-- 		"$(SILENT) strip -s \"$(TARGET)\""
+	-- 	}
+
+	-- if _OPTIONS["targetos"]=="linux" then
+	-- 	postbuildcommands {
+	-- 		"cp %{cfg.buildtarget.abspath} %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION .. "." .. MINOR_VERSION .. "." .. PATCH_VERSION,
+	-- 		"ln -sf %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION .. "." .. MINOR_VERSION .. "." .. PATCH_VERSION .. " %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION,
+	-- 		"ln -sf %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION .. "." .. MINOR_VERSION .. "." .. PATCH_VERSION .. " %{cfg.targetdir}/libexample.so"
+	-- 	 }
+	-- end
