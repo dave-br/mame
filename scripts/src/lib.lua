@@ -226,8 +226,8 @@ project "mame_srcdbg_shared"
 
 	if _OPTIONS["targetos"]=="linux" then
 		targetextension(".so." .. srcdbg_lib_major .. "." .. srcdbg_lib_minor)
-		buildoptions {
-			"-Wl,-soname,\"" .. project().name .. ".so." .. srcdbg_lib_major .. "\""
+		linkoptions {
+			"-Wl,-soname,\"lib" .. project().name .. ".so." .. srcdbg_lib_major .. "\""
 		}
 	end
 
