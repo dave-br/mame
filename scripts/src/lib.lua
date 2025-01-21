@@ -148,10 +148,9 @@ end
 	}
 
 
--- Static library to help tools generate MAME source-level debugging
--- information files.  This is also linked into the shared library
--- equivalent for tools that prefer using a shared library.
--- Note: This needs to be self-contained, with no reliance on other
+-- Static & shared library to help assemblers / compilers generate
+-- MAME source-level debugging information files.
+-- Note: These needs to be self-contained, with no reliance on other
 -- libraries (except C/C++ std libs) for easy consumption by external tools
 
 -- Bump this for breaking changes (avoid!)
@@ -183,6 +182,8 @@ project "mame_srcdbg_static"
 	}
 
 	defines {
+		-- Ensures public API symbols are exported (they're imported
+		-- when this is unset)
 		"BUILDING_LIB",
 	}
 
@@ -200,13 +201,7 @@ project "mame_srcdbg_static"
 	}
 
 
--- Shared library to help external tools (i.e., assemblers or compilers that
--- target emulated machines) generate MAME source-level debugging
--- information files.
--- Note: This needs to be self-contained, with no reliance on other
--- libraries (except C/C++ std libs) for easy consumption by external tools
-
-project "mame_srcdbg_shared"
+	project "mame_srcdbg_shared"
 	uuid "68c1efad-6711-4c9c-b702-51a0000201e0"
 	kind ("SharedLib")
 
@@ -219,28 +214,17 @@ project "mame_srcdbg_shared"
 	-- Force all symbols from static lib to be present in linked shared library,
 	-- otherwise they'd be optimized out without other object files to reference
 	-- them.  Uses --whole-archive then --no-whole-archive to achieve this.
-	-- (I think -all_load then -noall_load on Mac?)
+	-- (TODO: I think -all_load then -noall_load on Mac?)
 	wholearchive {
 		"mame_srcdbg_static",
 	}
 
+	-- Follow Linux's recommended version naming with major/minor at end of "real name",
+	-- and just major at end of "soname".  Surprising there's no simpler way to
+	-- do this in genie
 	if _OPTIONS["targetos"]=="linux" then
 		targetextension(".so." .. srcdbg_lib_major .. "." .. srcdbg_lib_minor)
 		linkoptions {
 			"-Wl,-soname,\"lib" .. project().name .. ".so." .. srcdbg_lib_major .. "\""
 		}
 	end
-
-	-- configuration { "linux-*" }
-	-- 	postbuildcommands {
-	-- 		"$(SILENT) echo Stripping symbols.",
-	-- 		"$(SILENT) strip -s \"$(TARGET)\""
-	-- 	}
-
-	-- if _OPTIONS["targetos"]=="linux" then
-	-- 	postbuildcommands {
-	-- 		"cp %{cfg.buildtarget.abspath} %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION .. "." .. MINOR_VERSION .. "." .. PATCH_VERSION,
-	-- 		"ln -sf %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION .. "." .. MINOR_VERSION .. "." .. PATCH_VERSION .. " %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION,
-	-- 		"ln -sf %{cfg.targetdir}/libexample.so." .. MAJOR_VERSION .. "." .. MINOR_VERSION .. "." .. PATCH_VERSION .. " %{cfg.targetdir}/libexample.so"
-	-- 	 }
-	-- end
