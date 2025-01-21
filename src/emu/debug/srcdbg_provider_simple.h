@@ -48,6 +48,7 @@ private:
 		u16 address_last;
 		u32 line_number;
 	};
+	
 	class local_relative_eval_rule_internal
 	{
 	public:

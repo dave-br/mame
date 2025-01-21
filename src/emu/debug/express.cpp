@@ -12,7 +12,7 @@
     ===================
     0x0000       ( )
     0x0001       ++ (postfix), -- (postfix)
-    0x0002       ++ (prefix), -- (prefix), ~, !, - (unary), + (unary), b@, w@, d@, q@, <srcfile>@
+    0x0002       ++ (prefix), -- (prefix), ~, !, - (unary), + (unary), b@, w@, d@, q@
     0x0003       *, /, %
     0x0004       + -
     0x0005       << >>

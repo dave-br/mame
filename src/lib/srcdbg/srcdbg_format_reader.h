@@ -2,9 +2,9 @@
 // copyright-holders:David Broman
 /*********************************************************************
 
-    srcdbg_format_reader.h
+	srcdbg_format_reader.h
 
-    Internal implementation for reading MAME source-level debugging
+	Internal implementation for reading MAME source-level debugging
 	info files
 	
 	WARNING: Tools external to MAME should only use functionality
