@@ -619,8 +619,8 @@ assemblers or compilers that target machines emulated by MAME.  Currently
 future, new formats may be created as the need arises.  The Simple format includes:
 
 * Full or relative paths to the source files input to the build tool
-* Mappings from file and line numbers to blocks of 16-bit addresses where the
-  resulting instructions reside
+* Mappings from source file and line numbers to blocks of 16-bit addresses where the
+  corresponding instructions reside
 * Mappings from symbol names to 16-bit addresses
 
     * These symbols can either be global or scoped
@@ -628,8 +628,35 @@ future, new formats may be created as the need arises.  The Simple format includ
       dependent on register values (e.g., stack local variables)
 
 The recommended way for build tools to generate ``.mdi`` files is to use
-the small C library ``srcdbg``.  The header file ``srcdbg_format_writer.h`` includes
-declarations and documentation for the C functions present in the library.
+the small static library ``libmame_srcdbg_static.a``.  The source code resides
+in the MAME tree at ``src/lib/srcdbg``, and the library gets built to
+a configuration-specific subdirectory, such as
+``build/linux_gcc/bin/x64/Release/libmame_srcdbg_static.a``.  The header
+file ``srcdbg_api.h`` includes declarations and documentation for the C
+functions comprising the API, along with comments that describe how to use
+them.  The raw format is described in ``srcdbg_format.h``, but it is not
+necessary to use its contents directly.  **Tools must not rely on any functionality
+other than that declared in ``srcdbg_api.h`` and ``srcdbg_format.h``.
+Other files will change without warning.**
+
+Tools written in **C++** can include  ``srcdbg_api.h`` and link to
+``libmame_srcdbg_static.a`` without any further makefile changes.  Since
+the library's API is pure C, tools
+written in **C** can also include ``srcdbg_api.h`` and link to
+``libmame_srcdbg_static.a``, but will need to add the C++ standard library
+to the link line (as the library's implementation uses C++).  For example,
+``cc -m64 -o mytool mytool.c -L/path/to/lib/dir -lmame_srcdbg_static -lstdc++``.
+Note that -lstdc++ must appear at the *end*.
+
+Tools *not* written in C or C++ may be able to use the shared library
+``libmame_srcdbg_shared.so`` or ``mame_srcdbg_shared.dll``, assuming the tool
+is written in a language that supports interfacing with shared libraries.
+On Linux the shared library follow's the recommended versioning names, with
+the initial version of the library's real name being
+``libmame_srcdbg_shared.so.1.0`` and soname being ``libmame_srcdbg_shared.so.1``.
+Tools redistributing the library 
+
+Build tools not written 
 
 If consuming the ``srcdbg`` library is not feasible, tools may
 also manually generate the binary format directly.  The format is defined in
