@@ -209,7 +209,6 @@ end
 		MAME_DIR .. "src/devices",
 		MAME_DIR .. "src/" .. _target,
 		MAME_DIR .. "src/lib",
-		-- MAME_DIR .. "src/lib/srcdbg",
 		MAME_DIR .. "src/lib/util",
 		MAME_DIR .. "3rdparty",
 		GEN_DIR  .. _target .. "/layout",

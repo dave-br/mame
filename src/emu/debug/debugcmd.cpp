@@ -851,7 +851,7 @@ void debugger_commands::execute_out(const std::vector<std::string_view> &params)
 
 
 /*-------------------------------------------------
-    execute_out - execute the out src command
+    execute_out_source - execute the out src command
 -------------------------------------------------*/
 
 void debugger_commands::execute_out_source(const std::vector<std::string_view> &params)

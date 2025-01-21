@@ -33,10 +33,8 @@
 #define LOG_SRCDBG 	 (1U << 1)
 // need to set LOG_OUTPUT_FUNC or LOG_OUTPUT_STREAM because there's no logerror outside devices
 #define LOG_OUTPUT_FUNC osd_printf_verbose
-#define VERBOSE      (LOG_SRCDBG)
+#define VERBOSE      (0)
 #include "logmacro.h"
-
-
 
 const size_t debugger_cpu::NUM_TEMP_VARIABLES = 10;
 

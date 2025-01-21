@@ -329,7 +329,6 @@ precompiledheaders()
 includedirs {
 	MAME_DIR .. "src/osd",
 	MAME_DIR .. "src/emu",
-	-- MAME_DIR .. "src/lib/srcdbg",
 	MAME_DIR .. "src/lib/util",
 }
 files {
