@@ -175,13 +175,16 @@ public:
 		READ_WRITE
 	};
 
-	// Identifies the type of symbols stored in this table
+	// Identifies the type of symbols stored in this table.  These help symlist create
+	// useful output, and affect some functionality (e.g., enabling users to skip
+	// source-level symbols in case of collisions).
 	enum table_type
 	{
 		SRCDBG_LOCALS,     // Source-level debugging local variables
 		SRCDBG_GLOBALS,    // Source-level debugging global variables
 		CPU_STATE,         // CPU registers, etc.
 		BUILTIN_GLOBALS,   // Built-in MAME global symbols (e.g., beamx, beamy, frame, etc.)
+		                   // (also used for tables outside debugger: lua scripts, cheat engine)
 	};
 
 	class local_range_expression
