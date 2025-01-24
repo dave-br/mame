@@ -5,9 +5,9 @@
     srcdbg_format_writer.h
 
     Internal implementation of srcdbg_api.h.
-	
-	WARNING: Tools external to MAME should only use functionality
-	declared in srcdg_format.h and srcdbg_api.h.
+
+    WARNING: Tools external to MAME should only use functionality
+    declared in srcdg_format.h and srcdbg_api.h.
 
 ***************************************************************************/
 
@@ -22,18 +22,18 @@
 template<typename Func>
 static int exception_boundary(Func && f)
 {
-    try
-    {
-        return f();
-    }
+	try
+	{
+		return f();
+	}
 	catch(const std::bad_alloc &)
 	{
 		return MAME_SRCDBG_E_OUTOFMEMORY;
 	}
-    catch(const std::exception &)
-    {
-        return MAME_SRCDBG_E_EXCEPTION;
-    }
+	catch(const std::exception &)
+	{
+		return MAME_SRCDBG_E_EXCEPTION;
+	}
 
 	// unreachable
 }
@@ -41,7 +41,7 @@ static int exception_boundary(Func && f)
 #define BEGIN_EXCEPTION_BOUNDARY return exception_boundary([&]() -> int {
 #define END_EXCEPTION_BOUNDARY });
 
-extern const char build_version[]; 
+extern const char build_version[];
 
 // ------------------------------------------------------------------
 // Public API - C Interface for assemblers / compilers.  These

@@ -4,20 +4,20 @@
 
     srcdbg_api.h
 
-	Declarations of public API for manipulating MAME source-level
-	debugging information file.
+    Declarations of public API for manipulating MAME source-level
+    debugging information file.
 
-	See https://docs.mamedev.org/debugger/index.html#generating-mame-debugging-information-files
+    See https://docs.mamedev.org/debugger/index.html#generating-mame-debugging-information-files
 
-	Only functionality declared in this file and srcdbg_format.h are
-	safe for use by tools outside of MAME.
+    Only functionality declared in this file and srcdbg_format.h are
+    safe for use by tools outside of MAME.
 
     Tools should prefer using this header and linking with
     -lmame_srcdbg_static or -lmame_srcdbg_shared, instead of
-	directly including srcdbg_format.h to manually generate debugging
-	info files.
+    directly including srcdbg_format.h to manually generate debugging
+    info files.
 
-	This header intentionally written in C to allow C-only tools
+    This header intentionally written in C to allow C-only tools
     (assemblers, compilers) to #include it.
 
 ***************************************************************************/
@@ -186,13 +186,13 @@ LIB_PUBLIC int mame_srcdbg_simp_add_local_relative_symbol(void * srcdbg_simp_sta
 
 /*
     mame_srcdbg_simp_import - Import contents of another .MDI file into the .MDI file currently
-	being written, with values adjusted by the specified offset.  Useful for linkers to combine
-	MDI files from object files being linked into a final MDI file
+    being written, with values adjusted by the specified offset.  Useful for linkers to combine
+    MDI files from object files being linked into a final MDI file
     [in] srcdbg_simp_state - Handle to source-debugging information file generation, as returned by mame_srcdbg_simp_open_new
     [in] mdi_file_path_to_import - Path to MDI file to import
     [in] offset - Offset to apply to the values of symbols and instruction addresses
     [out] error_details - Buffer to receive detailed error text (with null terminator) if importing fails
-	[in] num_bytes_error_details - Size in bytes of error_details buffer, including room for null terminator
+    [in] num_bytes_error_details - Size in bytes of error_details buffer, including room for null terminator
 */
 LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * mdi_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details);
 
@@ -204,11 +204,11 @@ LIB_PUBLIC int mame_srcdbg_simp_import(void * srcdbg_simp_state, const char * md
 LIB_PUBLIC int mame_srcdbg_simp_close(void * srcdbg_simp_state);
 
 /*
-	mame_srcdbg_get_version_info - Returns version information (useful for diagnostics,
-		most tools will not need to call this)
-	[out] srcdbg_lib_major - Receives major version number of the srcdbg library
-	[out] srcdbg_lib_minor - Receives minor version number of the srcdbg library
-	[out] mame_build - Receives pointer to MAME build version string.  Clients should not allocate or free.
+    mame_srcdbg_get_version_info - Returns version information (useful for diagnostics,
+        most tools will not need to call this)
+    [out] srcdbg_lib_major - Receives major version number of the srcdbg library
+    [out] srcdbg_lib_minor - Receives minor version number of the srcdbg library
+    [out] mame_build - Receives pointer to MAME build version string.  Clients should not allocate or free.
 */
 LIB_PUBLIC int mame_srcdbg_get_version_info(int * srcdbg_lib_major, int * srcdbg_lib_minor, const char ** mame_build);
 

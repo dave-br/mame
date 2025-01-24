@@ -5,9 +5,9 @@
     srcdbg_format_writer.cpp
 
     Internal implementation of portions of srcdbg_api.h.
-	
-	WARNING: Tools external to MAME should only use functionality
-	declared in srcdg_format.h and srcdbg_api.h.
+
+    WARNING: Tools external to MAME should only use functionality
+    declared in srcdg_format.h and srcdbg_api.h.
 
 ***************************************************************************/
 
@@ -51,7 +51,7 @@ static std::size_t find_or_push_back(std::vector<std::string> & vec, const char 
 	{
 		return idx;
 	}
-	
+
 	size += str.size() + 1;
 	vec.push_back(std::move(str));
 	return vec.size() - 1;
@@ -74,7 +74,7 @@ public:
 	}
 	~writer_importer() {}
 
-	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override	{ return true; }
+	virtual bool on_read_header_base(const mame_debug_info_header_base & header_base) override  { return true; }
 	virtual bool on_read_simp_header(const mame_debug_info_simple_header & simp_header) override { return true; }
 	virtual bool on_read_source_path(u32 source_path_index, std::string && source_path) override;
 	virtual bool on_read_line_mapping(const srcdbg_line_mapping & line_map) override;
@@ -97,7 +97,7 @@ bool writer_importer::on_read_source_path(u32 source_path_index, std::string && 
 
 	u32 new_index;
 	m_gen.add_source_file_path(source_path.c_str(), new_index);
-	
+
 	m_old_to_new_source_path_indices.push_back(new_index);
 	return true;
 }
@@ -316,7 +316,7 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 			"Error reading source-level debugging information file\n%s\n\n%s",
 			srcdbg_file_path_to_import,
 			error.c_str());
-		
+
 		strncpy(error_details, full_error.c_str(), num_bytes_error_details);
 		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
@@ -350,7 +350,7 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 		assert(!"Unexpected source-level debugging information file format");
 		return MAME_SRCDBG_E_IMPORT_FAILED;
 	}
-	
+
 	// Unreachable
 }
 

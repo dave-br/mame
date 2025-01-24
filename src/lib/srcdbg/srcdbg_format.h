@@ -6,14 +6,14 @@
 
     File-format definition for MAME source-level debugging info files
 
-	See https://docs.mamedev.org/debugger/index.html#generating-mame-debugging-information-files
+    See https://docs.mamedev.org/debugger/index.html#generating-mame-debugging-information-files
 
-	Only functionality declared in this file and srcdbg_api.h are
-	safe for use by tools outside of MAME.
+    Only functionality declared in this file and srcdbg_api.h are
+    safe for use by tools outside of MAME.
 
     Tools should prefer using srcdbg_api.h and linking with
     -lmame_srcdbg_static or -lmame_srcdbg_shared instead of directly
-	including this file to manually generate debugging info files.
+    including this file to manually generate debugging info files.
 
     This header intentionally written in C to allow C-only tools
     (assemblers, compilers) to #include.

@@ -30,7 +30,7 @@
 #include "osdepend.h"
 #include "xmlfile.h"
 
-#define LOG_SRCDBG 	 (1U << 1)
+#define LOG_SRCDBG   (1U << 1)
 // need to set LOG_OUTPUT_FUNC or LOG_OUTPUT_STREAM because there's no logerror outside devices
 #define LOG_OUTPUT_FUNC osd_printf_verbose
 #define VERBOSE      (0)
@@ -1121,13 +1121,13 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 	// ii) current source line is different from where we started, or
 	// iii) we just returned from source line where we started (e.g., recursive return to same line)
 	file_line file_line_cur;
-	bool has_file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);	
+	bool has_file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);
 	bool ret = has_file_line_cur &&
 		(
 			(m_step_source_start == nullptr) ||           // i)
 			(file_line_cur != *m_step_source_start) ||    // ii)
 			m_step_source_returning_from_start_line       // iii)
-		);                    
+		);
 
 	// Look at instruction we're about to execute to properly
 	// set m_step_source_returning_from_start_line (iii) for use next time
@@ -1148,7 +1148,7 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 	{
 		// We've done a step-out and are still slipping until we hit
 		// an appropriate source line.  Slip via step-overs so we
-		// don't think we're done after subsequent, deeper call-nesting 
+		// don't think we're done after subsequent, deeper call-nesting
 		m_flags |= DEBUG_FLAG_STEPPING_OVER;
 	}
 
