@@ -112,7 +112,6 @@ private:
 
 	srcdbg_provider_simple & m_srcdbg_simple;
 	std::vector<std::string> m_symbol_names;
-	device_state_interface * m_state;
 	std::string              m_normalized_debug_source_path_map;
 };
 

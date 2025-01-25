@@ -158,8 +158,7 @@ bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_va
 	for (u32 i = 0; i < value.num_address_ranges; i++)
 	{
 		ranges.push_back(
-			std::move(
-				std::pair<offs_t,offs_t>(value.ranges[i].address_first, value.ranges[i].address_last)));
+			std::pair<offs_t,offs_t>(value.ranges[i].address_first, value.ranges[i].address_last));
 	}
 
 	srcdbg_provider_base::local_fixed_symbol sym(
@@ -180,7 +179,7 @@ bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_sym
 	{
 		const local_relative_eval_rule & eval_rule = value.local_relative_eval_rules[i];
 		srcdbg_provider_simple::local_relative_eval_rule_internal eval_rule_internal(
-			std::move(std::pair<offs_t,offs_t>(eval_rule.range.address_first, eval_rule.range.address_last)),
+			std::pair<offs_t,offs_t>(eval_rule.range.address_first, eval_rule.range.address_last),
 			eval_rule.reg,
 			eval_rule.reg_offset);
 

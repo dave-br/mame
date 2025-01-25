@@ -26,6 +26,6 @@ void srcdbg_sprintf(std::string & out, const char * format, ...)
 	vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
 
-	out = std::move(std::string(buf));
+	out = std::string(buf);
 }
 
