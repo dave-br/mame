@@ -194,7 +194,10 @@
 
 
 - (offs_t)selectedAddress {
-	return downcast<debug_view_disasm *>(view)->selected_address();
+	// TODO: Change this and callers to work properly with selected_address 
+	// returning optional<offs_t>
+	return 0;
+	//return downcast<debug_view_disasm *>(view)->selected_address();
 }
 
 
