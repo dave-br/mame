@@ -1035,6 +1035,20 @@ void device_debug::instruction_hook(offs_t curpc)
 	if ((m_flags & (DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH)) != 0 && (m_flags & (DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS)) == 0)
 		prepare_for_step_overout(m_state->pcbase());
 
+	// Once source-level stepping starts, keep track of the first encountered file/line
+	// of user source.
+	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
+		m_step_source_start == nullptr &&
+		machine.debugger().srcdbg_provider() != nullptr)
+	{
+		file_line curloc;
+		if (machine.debugger().srcdbg_provider()->address_to_file_line(curpc, curloc))
+		{
+			m_step_source_start = std::make_unique<file_line>(curloc);
+		}
+		m_step_source_returning_from_start_line = false;
+	}
+
 	// no longer in debugger code
 	debugcpu.set_within_instruction(false);
 }
@@ -1079,24 +1093,6 @@ void device_debug::wait_hook()
 			m_was_waiting = true;
 		}
 		debugcpu.wait_for_debugger(m_device);
-	}
-
-	// handle step out/over on the instruction we are about to execute
-	if ((m_flags & (DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH)) != 0 && (m_flags & (DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS)) == 0)
-		prepare_for_step_overout(m_state->pcbase());
-
-	// Once source-level stepping starts, keep track of the first encountered file/line
-	// of user source.
-	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
-		m_step_source_start == nullptr &&
-		machine.debugger().srcdbg_provider() != nullptr)
-	{
-		file_line curloc;
-		if (machine.debugger().srcdbg_provider()->address_to_file_line(curpc, curloc))
-		{
-			m_step_source_start = std::make_unique<file_line>(curloc);
-		}
-		m_step_source_returning_from_start_line = false;
 	}
 
 	// no longer in debugger code
