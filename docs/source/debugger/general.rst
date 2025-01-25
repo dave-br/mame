@@ -102,8 +102,10 @@ symlist
 
 Lists registered symbols and their values.  If **<cpu>** is not
 specified, symbols in the global symbol table are displayed; otherwise,
-symbols specific to the device **<cpu>** are displayed.  Symbols are
-listed alphabetically.  Read-only symbols are noted.  See
+symbols specific to the device **<cpu>** are displayed. If a **<cpu>**
+is specified, and :ref:`Source-Level Debugging <srcdbg>` is enabled on that
+CPU, then :ref:`source-level symbols <srcdbg_symbols>` are listed as well.
+Symbols are listed alphabetically.  Read-only symbols are noted.  See
 :ref:`debugger-devicespec` for details on how to specify a CPU.
 
 Examples:

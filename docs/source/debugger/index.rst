@@ -533,7 +533,7 @@ no parameters) will advance
 to the next instruction, whereas ``steps`` will advance to the next instruction
 that is associated with a source line other than 4.  When the original
 source is assembly language, ``step`` and ``steps`` generally behave the same.
-But when the original source is in a higher level language like C or BASIC, ``steps``
+But when the original source is in a higher-level language like C or BASIC, ``steps``
 executes the remainder of a block of instructions associated with
 the current source line.
 
@@ -555,6 +555,13 @@ CPU (e.g., register names) and from its global symbol table
 When source-level debugging is enabled, symbols from the source code will
 be imported from the MAME Debugging Information File and added
 to the list of symbols recognized by MAME's expression evaluator.
+
+A symbol from the MAME Debugging Information File representing a source-code
+variable evaluates to the variable's *address*, not its *value*.  So,
+for example, a 16-bit C compiler that compiles ``int harry = 4;`` will
+create a symbol named ``harry`` whose value is the address at which
+the variable is stored.  To view the *value* you would issue a command
+to the debugger console such as ``print w@harry``.
 
 * **Symbol collisions and priority**: It is possible that source-level symbols
   present in the MAME Debugging Information File will conflict with built-in symbols.
@@ -591,18 +598,21 @@ code will be loaded at run-time.  For example, the program might be written
 in position-independent code to allow an operating system to decide
 where to load the code at run-time.  In such cases, the assembler or compiler
 will be unable to provide the correct addresses in the MAME Debugging Information
-File.  You can have MAME apply an *offset* to the addresses from the debugging
-info so that the resulting addresses match where the code is loaded at
-run-time.  You can do this in two ways:
+File.  A build tool that supports run-time relocation could then start numbering
+its addresses at 0, assuming that the operating system will apply the appropriate
+offset when the binary is loaded.  Similarly, the MAME debugger may also
+apply an offset to the addresses from the debugging info so that the
+resulting addresses match where the code is loaded at run-time.  You can do this
+in two ways:
 
 * On the command-line, specify :ref:`-src_debug_offset <mame-commandline-srcdbgoffset>`
   with the offset to apply.
   This approach makes sense if the code to be debugged is reliably loaded
   at an offset you can predict.
 * At any time during the debugging of the program, use the command :ref:`debugger-command-sdoffset`
-  with the offset to apply.  This approach can be used by users or LUA scripts
-  that need to inspect memory to determine where the program was loaded.  Any
-  breakpoints set before ``sdoffset`` was executed will need to be removed
+  from the debugger console with the offset to apply.  This approach can be used by
+  users or LUA scripts that need to inspect memory to determine where the program was
+  loaded.  Any breakpoints set before ``sdoffset`` was executed will need to be removed
   and re-added so the new offset can be applied.  Any source-level symbols loaded
   from the MAME Debugging Information File will automatically evaluate to 
   values with the new offset the next time a command references them.
@@ -634,31 +644,51 @@ a configuration-specific subdirectory, such as
 ``build/linux_gcc/bin/x64/Release/libmame_srcdbg_static.a``.  The header
 file ``srcdbg_api.h`` includes declarations and documentation for the C
 functions comprising the API, along with comments that describe how to use
-them.  The raw format is described in ``srcdbg_format.h``, but it is not
-necessary to use its contents directly.  **Tools must not rely on any functionality
-other than that declared in ``srcdbg_api.h`` and ``srcdbg_format.h``.
-Other files will change without warning.**
+them.
+
+.. DANGER::
+	**Tools must not rely on any functionality     
+	other than that declared in** ``srcdbg_api.h`` 
+	**and** ``srcdbg_format.h``. **Other files will   
+	change without warning.**
 
 Tools written in **C++** can include  ``srcdbg_api.h`` and link to
 ``libmame_srcdbg_static.a`` without any further makefile changes.  Since
 the library's API is pure C, tools
 written in **C** can also include ``srcdbg_api.h`` and link to
 ``libmame_srcdbg_static.a``, but will need to add the C++ standard library
-to the link line (as the library's implementation uses C++).  For example,
+to the link line (as the library's *implementation* is C++).  For example,
 ``cc -m64 -o mytool mytool.c -L/path/to/lib/dir -lmame_srcdbg_static -lstdc++``.
-Note that -lstdc++ must appear at the *end*.
+Note that ``-lstdc++`` must appear at the *end*.
 
 Tools *not* written in C or C++ may be able to use the shared library
 ``libmame_srcdbg_shared.so`` or ``mame_srcdbg_shared.dll``, assuming the tool
 is written in a language that supports interfacing with shared libraries.
-On Linux the shared library follow's the recommended versioning names, with
-the initial version of the library's real name being
-``libmame_srcdbg_shared.so.1.0`` and soname being ``libmame_srcdbg_shared.so.1``.
-Tools redistributing the library 
 
-Build tools not written 
+.. admonition:: Linux shared library versioning
 
-If consuming the ``srcdbg`` library is not feasible, tools may
-also manually generate the binary format directly.  The format is defined in
-``srcdbg_format.h``.  Because this is error-prone, it is not recommended
-that tools generate the binary format directly.
+	On Linux the shared library follows the recommended versioning names, with
+	the initial version of the library's *real name* being
+	``libmame_srcdbg_shared.so.1.0`` and *soname* being ``libmame_srcdbg_shared.so.1``.
+	MAME does not have a setup program, so the responsibility is on tools
+	redistributing the shared library to perform the usual shared library installation
+	steps.  For example, a tool might want to insulate itself from the machine's
+	environment, and tuck its own copy of the shared library into a tool-specific
+	folder, and use the ``-rpath`` linker option to declare where the tool can
+	find ``libmame_srcdbg_shared.so`` at run-time.  Alternatively, a tool could
+	install ``libmame_srcdbg_shared.so`` into a machine-wide folder like
+	``/usr/lib`` and run ``sudo ldconfig`` to register the library and create
+	a symbolic link from the soname to the real name.  In any case, the tool
+	will need to manually create a symbolic link from the *linker name*
+	``libmame_srcdbg_shared.so`` to either the soname
+	(if ``ldconfig`` was run) or directly to the real
+	name to ensure that the build-time linker can find ``libmame_srcdbg_shared.so``.
+	Before proceeding with any of these options, it's recommended that you read up
+	on Linux shared library versioning, for example:
+	https://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
+
+If consuming neither the static nor shared version of the MAME srcdbg library is
+feasible, tools may also manually generate the binary format directly.  The format
+is defined in ``src/lib/srcdbg/srcdbg_format.h``.  Because this is error-prone,
+tools should prefer using the static or shared library over generating the binary
+format directly.
