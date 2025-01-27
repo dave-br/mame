@@ -1129,11 +1129,11 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 	// set m_step_source_returning_from_start_line (iii) for use next time
 	debug_disasm_buffer buffer(device());
 	u32 dasmresult = buffer.disassemble_info(pc);
-	m_step_source_returning_from_start_line =
-		((dasmresult & util::disasm_interface::SUPPORTED) != 0) &&
-		((dasmresult & util::disasm_interface::STEP_OUT) != 0) &&
-		has_file_line_cur &&
-		file_line_cur == *m_step_source_start;
+	// m_step_source_returning_from_start_line =
+	// 	((dasmresult & util::disasm_interface::SUPPORTED) != 0) &&
+	// 	((dasmresult & util::disasm_interface::STEP_OUT) != 0) &&
+	// 	has_file_line_cur &&
+	// 	file_line_cur == *m_step_source_start;
 	if (ret)
 	{
 		// We're stopping, so reset the source stepping state.
