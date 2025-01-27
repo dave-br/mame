@@ -2063,14 +2063,14 @@ void device_debug::prepare_for_step_overout(offs_t pc)
 			// source-level slipping.
 			m_stepsleft = 1;
 
-			file_line file_line_cur;
-			bool has_file_line_cur = m_device.machine().debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);
+			// file_line file_line_cur;
+			// bool has_file_line_cur = m_device.machine().debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);
 
 			// Look at instruction we're about to execute to properly
 			// set m_step_source_returning_from_start_line (iii) for use next time
-			m_step_source_returning_from_start_line =
-				has_file_line_cur &&
-				file_line_cur == *m_step_source_start;
+			m_step_source_returning_from_start_line = true;
+				// has_file_line_cur &&
+				// file_line_cur == *m_step_source_start;
 		}
 		else
 		{
