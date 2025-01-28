@@ -299,6 +299,7 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 		value->symbol_name_index = from_little_endian32(value->symbol_name_index);
 		value->symbol_value = from_little_endian32(value->symbol_value);
+		value->symbol_flags = from_little_endian32(value->symbol_flags);
 
 		if (value->symbol_name_index >= symbol_index)
 		{

@@ -165,11 +165,13 @@ public:
 	// debugger_cpu helpers
 	void compute_debug_flags();
 
+	// source-level debugging
+	void update_symbols_from_srcdbg(const srcdbg_provider_base & srcdbg_provider);
+
 private:
 	void halt_on_next_instruction_impl(util::format_argument_pack<char> &&args);
 
 	// internal helpers
-	void update_symbols_from_srcdbg(const srcdbg_provider_base & srcdbg_provider);
 	void prepare_for_step_overout(offs_t pc);
 	bool is_source_stepping_complete(offs_t pc);
 	void errorlog_write_line(const char *line);

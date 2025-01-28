@@ -83,10 +83,10 @@ LIB_PUBLIC int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsig
 	END_EXCEPTION_BOUNDARY
 }
 
-LIB_PUBLIC int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value)
+LIB_PUBLIC int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value, unsigned int symbol_flags)
 {
 	BEGIN_EXCEPTION_BOUNDARY
-	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_fixed_symbol(symbol_name, symbol_value);
+	return ((srcdbg_simple_generator *) srcdbg_simp_state)->add_global_fixed_symbol(symbol_name, symbol_value, symbol_flags);
 	END_EXCEPTION_BOUNDARY
 }
 

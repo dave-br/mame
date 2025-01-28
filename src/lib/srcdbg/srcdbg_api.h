@@ -105,6 +105,22 @@ extern "C" {
 #define MAME_SRCDBG_E_EXCEPTION         7
 
 
+/*********************************************************************
+  Symbol flags
+  
+  Flags passed to mame_srcdbg_simp_add_global_fixed_symbol to
+  customize symbol behavior
+**********************************************************************/
+
+/* Default symbol behavior */
+#define MAME_SRCDBG_SYMFLAG_DEFAULT     0x00000000
+
+/*
+   Symbol value should not change when run-time offset is applied
+   due to code relocation
+*/
+#define MAME_SRCDBG_SYMFLAG_CONSTANT    0x00000001
+
 
 /*********************************************************************
   Functions for generating "simple" format debugging info files
@@ -151,8 +167,9 @@ LIB_PUBLIC int mame_srcdbg_simp_add_line_mapping(void * srcdbg_simp_state, unsig
     [in] srcdbg_simp_state - Handle to source-debugging information file generation, as returned by mame_srcdbg_simp_open_new
     [in] symbol_name - Name of symbol
     [in] symbol_value - Value of symbol (such as an address)
+	[in] symbol_flags - Bitmask from MAME_SRCDBG_SYMFLAG_* values above
 */
-LIB_PUBLIC int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value);
+LIB_PUBLIC int mame_srcdbg_simp_add_global_fixed_symbol(void * srcdbg_simp_state, const char * symbol_name, int symbol_value, unsigned int symbol_flags);
 
 /*
     mame_srcdbg_simp_add_local_fixed_symbol - Adds a new local fixed symbol.  Such symbols

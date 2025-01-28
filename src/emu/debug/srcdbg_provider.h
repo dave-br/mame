@@ -95,18 +95,21 @@ public:
 	class global_fixed_symbol
 	{
 	public:
-		global_fixed_symbol(const std::string & name, offs_t value)
+		global_fixed_symbol(const std::string & name, offs_t value, u32 flags)
 			: m_name(name)
 			, m_value(value)
+			, m_flags(flags)
 		{
 		}
 
 		const char * name() const { return m_name.c_str(); };
 		offs_t value() const { return m_value; };
+		u32 flags() const { return m_flags; };
 
 	private:
 		std::string m_name;
 		offs_t m_value;
+		u32 m_flags;
 	};
 
 

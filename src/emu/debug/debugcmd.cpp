@@ -1285,7 +1285,8 @@ void debugger_commands::execute_time(const std::vector<std::string_view> &params
 
 void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_view> &params)
 {
-	if (m_machine.debugger().srcdbg_provider() == nullptr)
+	srcdbg_provider_base * srcdbg = m_machine.debugger().srcdbg_provider();
+	if (srcdbg == nullptr)
 	{
 		m_console.printf("Error : source-level debugging is not enabled\n");
 		return;
@@ -1295,7 +1296,8 @@ void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_
 	if (!m_console.validate_number_parameter(params[0], offset))
 		return;
 
-	m_machine.debugger().srcdbg_provider()->set_offset(s32(offset));
+	srcdbg->set_offset(s32(offset));
+	m_console.get_visible_cpu()->debug()->update_symbols_from_srcdbg(*srcdbg);
 	m_console.printf("Offset successfully applied\n");
 }
 

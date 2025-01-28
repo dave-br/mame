@@ -108,6 +108,9 @@ typedef struct
 
 	/* Fixed value of symbol, such as its address */
 	int symbol_value;
+
+	/* TODO */
+	unsigned int symbol_flags;
 } global_fixed_symbol_value;
 
 

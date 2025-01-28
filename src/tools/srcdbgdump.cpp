@@ -9,6 +9,7 @@
 ***************************************************************************/
 
 #include "srcdbg_format_reader.h"
+#include "srcdbg_api.h"
 
 #include "corefile.h"
 
@@ -113,7 +114,7 @@ bool srcdbg_dump::on_read_global_fixed_symbol_value(const global_fixed_symbol_va
 		printf("\n**** Global fixed symbol values: ****\n");
 		m_printed_global_fixed_symbol_value_title = true;
 	}
-	printf("Symbol name index: %u, symbol value: $%04X\n", value.symbol_name_index, value.symbol_value);
+	printf("Symbol name index: %u, symbol value: $%04X, symbol flags: $%04X\n", value.symbol_name_index, value.symbol_value, value.symbol_flags);
 	return true;
 }
 
@@ -165,6 +166,17 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	int srcdbg_lib_major, srcdbg_lib_minor;
+	const char * mame_build;
+	int ret = mame_srcdbg_get_version_info(&srcdbg_lib_major, &srcdbg_lib_minor, &mame_build);
+	if (ret != MAME_SRCDBG_E_SUCCESS)
+	{
+		fprintf(stderr, "Failed to get mame_srcdbg library version information: Error code %d\n", ret);
+		return 1;
+	}
+
+	printf(mame_build);
+	printf("\nUsing mame_srcdbg library %d.%d\n", srcdbg_lib_major, srcdbg_lib_minor);
 	printf("Dumping '%s'...\n", argv[1]);
 
 	std::string error;

@@ -126,7 +126,7 @@ bool writer_importer::on_read_global_fixed_symbol_value(const global_fixed_symbo
 {
 	assert (value.symbol_name_index < m_symbol_names.size());
 	const char * sym_name = m_symbol_names[value.symbol_name_index].c_str();
-	m_gen.add_global_fixed_symbol(sym_name, value.symbol_value + m_offset);
+	m_gen.add_global_fixed_symbol(sym_name, value.symbol_value + m_offset, value.symbol_flags);
 	return true;
 }
 
@@ -232,11 +232,12 @@ int srcdbg_simple_generator::add_line_mapping(unsigned short address_first, unsi
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
-int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, int symbol_value)
+int srcdbg_simple_generator::add_global_fixed_symbol(const char * symbol_name, int symbol_value, unsigned int symbol_flags)
 {
 	global_fixed_symbol_value global;
 	global.symbol_name_index = find_or_push_back(m_symbol_names, symbol_name, m_header.symbol_names_size);
 	global.symbol_value = symbol_value;
+	global.symbol_flags = symbol_flags;
 	m_global_fixed_symbol_values.push_back(global);
 	m_header.num_global_fixed_symbol_values++;
 	return MAME_SRCDBG_E_SUCCESS;
@@ -394,6 +395,7 @@ int srcdbg_simple_generator::close()
 	{
 		sym.symbol_name_index = little_endianize_int32(sym.symbol_name_index);
 		sym.symbol_value = little_endianize_int32(sym.symbol_value);
+		sym.symbol_flags = little_endianize_int32(sym.symbol_flags);
 		FWRITE_OR_RETURN(&sym, sizeof(sym), 1, m_output);
 	}
 

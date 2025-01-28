@@ -146,7 +146,7 @@ bool srcdbg_import::on_read_symbol_name(u32 symbol_name_index, std::string && sy
 
 bool srcdbg_import::on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value)
 {
-	srcdbg_provider_base::global_fixed_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value);
+	srcdbg_provider_base::global_fixed_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value, value.symbol_flags);
 	m_srcdbg_simple.m_global_fixed_symbols.push_back(std::move(sym));
 	return true;
 }

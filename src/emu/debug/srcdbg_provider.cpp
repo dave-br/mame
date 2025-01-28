@@ -14,6 +14,7 @@
 #include "srcdbg_provider_simple.h"
 #include "srcdbg_provider.h"
 #include "srcdbg_format_reader.h"
+#include "srcdbg_api.h"
 
 #include "emuopts.h"
 
@@ -76,12 +77,22 @@ void srcdbg_provider_base::get_srcdbg_symbols(
 	device_t * device,                             // [in] device to use when initializing symbol_tables
 	const device_state_interface * state) const    // [in] device_state_entry for accessing PC for scoped locals
 {
+	// User-provided offset to accomodate relocated code
+	s32 offset = get_offset();
+
 	// Global fixed symbols
 	const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = global_fixed_symbols();
 	*symtable_srcdbg_globals = new symbol_table(parent->machine(), symbol_table::SRCDBG_GLOBALS, parent, device);
 	for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
 	{
-		(*symtable_srcdbg_globals)->add(sym.name(), sym.value());
+		// Apply offset to symbol when appropriate
+		offs_t value = sym.value();
+		if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
+		{
+			value += offset;
+		}
+
+		(*symtable_srcdbg_globals)->add(sym.name(), value);
 	}
 
 	// Local symbols require a PC getter function so they can test if they're
