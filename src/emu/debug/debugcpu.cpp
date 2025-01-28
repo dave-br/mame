@@ -502,7 +502,7 @@ device_debug::device_debug(device_t &device)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
 	, m_step_source_start()
-	, m_step_source_returning_from_start_line(false)
+	, m_outs_encountered_return(false)
 	, m_stopaddr(0)
 	, m_stoptime(attotime::zero)
 	, m_stopirq(0)
@@ -1035,18 +1035,20 @@ void device_debug::instruction_hook(offs_t curpc)
 	if ((m_flags & (DEBUG_FLAG_STEPPING_OVER | DEBUG_FLAG_STEPPING_OUT | DEBUG_FLAG_STEPPING_BRANCH)) != 0 && (m_flags & (DEBUG_FLAG_CALL_IN_PROGRESS | DEBUG_FLAG_TEST_IN_PROGRESS)) == 0)
 		prepare_for_step_overout(m_state->pcbase());
 
-	// Once source-level stepping starts, keep track of the first encountered file/line
-	// of user source.
+	// Once source-level stepping starts, initialize bookkeeping
 	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
 		m_step_source_start == nullptr &&
 		machine.debugger().srcdbg_provider() != nullptr)
 	{
+		// keep track of the first encountered file/line of user source.
 		file_line curloc;
 		if (machine.debugger().srcdbg_provider()->address_to_file_line(curpc, curloc))
 		{
 			m_step_source_start = std::make_unique<file_line>(curloc);
 		}
-		m_step_source_returning_from_start_line = false;
+
+		// Source-stepping-out will set this first time a return is executed
+		m_outs_encountered_return = false;
 	}
 
 	// no longer in debugger code
@@ -1122,23 +1124,14 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 		(
 			(m_step_source_start == nullptr) ||           // i)
 			(file_line_cur != *m_step_source_start) ||    // ii)
-			m_step_source_returning_from_start_line       // iii)
+			m_outs_encountered_return                     // iii)
 		);
 
-	// Look at instruction we're about to execute to properly
-	// set m_step_source_returning_from_start_line (iii) for use next time
-	// debug_disasm_buffer buffer(device());
-	// u32 dasmresult = buffer.disassemble_info(pc);
-	// m_step_source_returning_from_start_line =
-	// 	((dasmresult & util::disasm_interface::SUPPORTED) != 0) &&
-	// 	((dasmresult & util::disasm_interface::STEP_OUT) != 0) &&
-	// 	has_file_line_cur &&
-	// 	file_line_cur == *m_step_source_start;
 	if (ret)
 	{
 		// We're stopping, so reset the source stepping state.
 		m_step_source_start.reset(nullptr);
-		m_step_source_returning_from_start_line = false;
+		m_outs_encountered_return = false;
 	}
 	else if ((m_flags & DEBUG_FLAG_STEPPING_OUT) != 0)
 	{
@@ -2062,15 +2055,7 @@ void device_debug::prepare_for_step_overout(offs_t pc)
 			// m_flags so is_source_stepping_complete can perform
 			// source-level slipping.
 			m_stepsleft = 1;
-
-			// file_line file_line_cur;
-			// bool has_file_line_cur = m_device.machine().debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);
-
-			// Look at instruction we're about to execute to properly
-			// set m_step_source_returning_from_start_line (iii) for use next time
-			m_step_source_returning_from_start_line = true;
-				// has_file_line_cur &&
-				// file_line_cur == *m_step_source_start;
+			m_outs_encountered_return = true;
 		}
 		else
 		{
