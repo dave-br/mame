@@ -114,7 +114,7 @@ bool srcdbg_dump::on_read_global_fixed_symbol_value(const global_fixed_symbol_va
 		printf("\n**** Global fixed symbol values: ****\n");
 		m_printed_global_fixed_symbol_value_title = true;
 	}
-	printf("Symbol name index: %u, symbol value: $%04X, symbol flags: $%04X\n", value.symbol_name_index, value.symbol_value, value.symbol_flags);
+	printf("Symbol name index: %u, symbol value: $%08X, symbol flags: $%08X\n", value.symbol_name_index, value.symbol_value, value.symbol_flags);
 	return true;
 }
 
@@ -125,7 +125,7 @@ bool srcdbg_dump::on_read_local_fixed_symbol_value(const local_fixed_symbol_valu
 		printf("\n**** Local fixed symbol values: ****\n");
 		m_printed_local_fixed_symbol_value_title = true;
 	}
-	printf("Symbol name index: %u, symbol value: $%04X\n", value.symbol_name_index, value.symbol_value);
+	printf("Symbol name index: %u, symbol value: $%08X\n", value.symbol_name_index, value.symbol_value);
 	for (u32 i = 0; i < value.num_address_ranges; i++)
 	{
 		printf("\taddress range: $%04X-$%04X\n", value.ranges[i].address_first, value.ranges[i].address_last);
@@ -175,8 +175,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	printf(mame_build);
-	printf("\nUsing mame_srcdbg library %d.%d\n", srcdbg_lib_major, srcdbg_lib_minor);
+	printf("%s\n", mame_build);
+	printf("Using mame_srcdbg library %d.%d\n", srcdbg_lib_major, srcdbg_lib_minor);
 	printf("Dumping '%s'...\n", argv[1]);
 
 	std::string error;
