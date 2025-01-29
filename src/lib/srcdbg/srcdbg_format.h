@@ -109,7 +109,8 @@ typedef struct
 	/* Fixed value of symbol, such as its address */
 	int symbol_value;
 
-	/* TODO */
+	/* Bitmask of flags to customize symbol behavior.  See list
+	   of MAME_SRCDBG_SYMFLAG_* values from srcdbg_api.h */
 	unsigned int symbol_flags;
 } global_fixed_symbol_value;
 
@@ -145,7 +146,7 @@ typedef struct
 	address_range range;
 
 	/* Register identifier this symbol is offset from.  See list of MAME_DBGSRC_REGISTER_*
-	   values from srcdbg_format_writer.h */
+	   values from srcdbg_api.h */
 	unsigned char reg;
 
 	/* Offset to be applied to register's value to produce the value of this symbol */
