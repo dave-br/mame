@@ -84,7 +84,9 @@ private:
 
 	void executeCommand(bool withClear);
 
-	bool sourceFrameActive();
+	bool sourceFrameActive() const;
+	bool address_from_cursor(offs_t & address) const;
+	const debug_breakpoint * breakpoint_from_cursor() const;
 
 	// Widgets and docks
 	QDockWidget *m_dasmDock;

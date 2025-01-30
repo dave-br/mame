@@ -180,8 +180,9 @@ void MainWindow::setProcessor(device_t *processor)
 	m_srcdbgFrame->view()->view()->set_source(*m_srcdbgFrame->view()->view()->source_for_device(processor));
 
 	// Scrollbar refresh - seems I should be able to do in the DebuggerView
+	m_procFrame->view()->verticalScrollBar()->setValue(m_procFrame->view()->view()->visible_position().y);
 	m_dasmFrame->view()->verticalScrollBar()->setValue(m_dasmFrame->view()->view()->visible_position().y);
-	m_dasmFrame->view()->verticalScrollBar()->setValue(m_dasmFrame->view()->view()->visible_position().y);
+	m_srcdbgFrame->view()->verticalScrollBar()->setValue(m_srcdbgFrame->view()->view()->visible_position().y);
 
 	// Window title
 	setWindowTitle(string_format("Debug: %s - %s '%s'", m_machine.system().name, processor->name(), processor->tag()).c_str());
@@ -289,78 +290,81 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::toggleBreakpointAtCursor(bool changedTo)
 {
-	debug_view_disasm * dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
-	if (sourceFrameActive())
-	{
-		dasmView = m_srcdbgFrame->view()->view<debug_view_sourcecode>();
-	}
-	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
-	{
-		std::optional<offs_t> const address = dasmView->selected_address();
-		if (!address.has_value())
-		{
-			return;
-		}
-		device_debug *const cpuinfo = dasmView->source()->device()->debug();
+	const debug_breakpoint *bp = breakpoint_from_cursor();
+	if (bp == nullptr)
+		return;
 
-		// Find an existing breakpoint at this address
-		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address.value());
-
-		// If none exists, add a new one
-		std::string command;
-		if (!bp)
-			command = string_format("bpset 0x%X", address.value());
-		else
-			command = string_format("bpclear 0x%X", bp->index());
-		m_machine.debugger().console().execute_command(command, true);
-		m_machine.debug_view().update_all();
-		m_machine.debugger().refresh_display();
-	}
+	// If none exists, add a new one
+	std::string command;
+	if (!bp)
+		command = string_format("bpset 0x%X", bp->address());
+	else
+		command = string_format("bpclear 0x%X", bp->index());
+	m_machine.debugger().console().execute_command(command, true);
+	m_machine.debug_view().update_all();
+	m_machine.debugger().refresh_display();
 }
 
 
 void MainWindow::enableBreakpointAtCursor(bool changedTo)
 {
-	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
-	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
-	{
-		std::optional<offs_t> const address = dasmView->selected_address();
-		if (!address.has_value())
-		{
-			return;
-		}
-		device_debug *const cpuinfo = dasmView->source()->device()->debug();
+	const debug_breakpoint *bp = breakpoint_from_cursor();
+	if (bp == nullptr)
+		return;
 
-		// Find an existing breakpoint at this address
-		const debug_breakpoint *bp = cpuinfo->breakpoint_find(address.value());
-
-		if (bp)
-		{
-			int32_t const bpindex = bp->index();
-			std::string command = string_format(bp->enabled() ? "bpdisable 0x%X" : "bpenable 0x%X", bpindex);
-			m_machine.debugger().console().execute_command(command, true);
-			m_machine.debug_view().update_all();
-			m_machine.debugger().refresh_display();
-		}
-	}
+	int32_t const bpindex = bp->index();
+	std::string command = string_format(bp->enabled() ? "bpdisable 0x%X" : "bpenable 0x%X", bpindex);
+	m_machine.debugger().console().execute_command(command, true);
+	m_machine.debug_view().update_all();
+	m_machine.debugger().refresh_display();
 }
 
 
 void MainWindow::runToCursor(bool changedTo)
 {
-	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
-	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
-	{
-		std::optional<offs_t> address = dasmView->selected_address();
-		if (!address.has_value())
-		{
-			return;
-		}
-		std::string command = string_format("go 0x%X", address.value());
-		m_machine.debugger().console().execute_command(command, true);
-	}
+	offs_t address;
+	if (!address_from_cursor(address))
+		return;
+
+	std::string command = string_format("go 0x%X", address);
+	m_machine.debugger().console().execute_command(command, true);
 }
 
+bool MainWindow::address_from_cursor(offs_t & address) const
+{
+	debug_view_disasm *const dasmView = 
+		sourceFrameActive() ?
+			m_srcdbgFrame->view()->view<debug_view_disasm>() :
+			m_dasmFrame->view()->view<debug_view_disasm>();
+
+	if (dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device()))
+	{
+		std::optional<offs_t> const opt_address = dasmView->selected_address();
+		if (opt_address.has_value())
+		{
+			address = opt_address.value();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+const debug_breakpoint * MainWindow::breakpoint_from_cursor() const
+{
+	offs_t address;
+	if (!address_from_cursor(address))
+		return nullptr;
+
+	debug_view_disasm *const dasmView = 
+		sourceFrameActive() ?
+			m_srcdbgFrame->view()->view<debug_view_disasm>() :
+			m_dasmFrame->view()->view<debug_view_disasm>();
+
+	device_debug *const cpuinfo = dasmView->source()->device()->debug();
+	return cpuinfo->breakpoint_find(address);
+}
 
 void MainWindow::rightBarChanged(QAction *changedTo)
 {
@@ -420,7 +424,7 @@ void MainWindow::executeCommand(bool withClear)
 }
 
 
-bool MainWindow::sourceFrameActive()
+bool MainWindow::sourceFrameActive() const
 {
 	 return m_dasmDock->widget() == m_srcdbgFrame;
 }
@@ -510,7 +514,10 @@ void MainWindow::unmountImage(bool changedTo)
 
 void MainWindow::dasmViewUpdated()
 {
-	debug_view_disasm *const dasmView = m_dasmFrame->view()->view<debug_view_disasm>();
+	debug_view_disasm *const dasmView = 
+		sourceFrameActive() ?
+			m_srcdbgFrame->view()->view<debug_view_disasm>() :
+			m_dasmFrame->view()->view<debug_view_disasm>();
 	bool const haveCursor = dasmView->cursor_visible() && (m_machine.debugger().console().get_visible_cpu() == dasmView->source()->device());
 	bool haveBreakpoint = false;
 	bool breakpointEnabled = false;
