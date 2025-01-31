@@ -290,14 +290,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::toggleBreakpointAtCursor(bool changedTo)
 {
-	const debug_breakpoint *bp = breakpoint_from_cursor();
-	if (bp == nullptr)
+	offs_t address;
+	if (!addressFromCursor(address))
 		return;
+
+	const debug_breakpoint *bp = breakpointFromAddress(address);
 
 	// If none exists, add a new one
 	std::string command;
 	if (!bp)
-		command = string_format("bpset 0x%X", bp->address());
+		command = string_format("bpset 0x%X", address);
 	else
 		command = string_format("bpclear 0x%X", bp->index());
 	m_machine.debugger().console().execute_command(command, true);
@@ -308,7 +310,11 @@ void MainWindow::toggleBreakpointAtCursor(bool changedTo)
 
 void MainWindow::enableBreakpointAtCursor(bool changedTo)
 {
-	const debug_breakpoint *bp = breakpoint_from_cursor();
+	offs_t address;
+	if (!addressFromCursor(address))
+		return;
+
+	const debug_breakpoint *bp = breakpointFromAddress(address);
 	if (bp == nullptr)
 		return;
 
@@ -323,14 +329,15 @@ void MainWindow::enableBreakpointAtCursor(bool changedTo)
 void MainWindow::runToCursor(bool changedTo)
 {
 	offs_t address;
-	if (!address_from_cursor(address))
+	if (!addressFromCursor(address))
 		return;
 
 	std::string command = string_format("go 0x%X", address);
 	m_machine.debugger().console().execute_command(command, true);
 }
 
-bool MainWindow::address_from_cursor(offs_t & address) const
+
+bool MainWindow::addressFromCursor(offs_t & address) const
 {
 	debug_view_disasm *const dasmView = 
 		sourceFrameActive() ?
@@ -351,12 +358,8 @@ bool MainWindow::address_from_cursor(offs_t & address) const
 }
 
 
-const debug_breakpoint * MainWindow::breakpoint_from_cursor() const
+const debug_breakpoint * MainWindow::breakpointFromAddress(offs_t address) const
 {
-	offs_t address;
-	if (!address_from_cursor(address))
-		return nullptr;
-
 	debug_view_disasm *const dasmView = 
 		sourceFrameActive() ?
 			m_srcdbgFrame->view()->view<debug_view_disasm>() :
@@ -365,6 +368,7 @@ const debug_breakpoint * MainWindow::breakpoint_from_cursor() const
 	device_debug *const cpuinfo = dasmView->source()->device()->debug();
 	return cpuinfo->breakpoint_find(address);
 }
+
 
 void MainWindow::rightBarChanged(QAction *changedTo)
 {
@@ -600,6 +604,7 @@ DasmDockWidget::~DasmDockWidget()
 {
 }
 
+
 SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* = nullptr */) :
 	QWidget(parent),
 	m_machine(machine)
@@ -633,6 +638,7 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 	connect(m_srcdbgCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SrcdbgDockWidget::srcfileChanged);
 }
 
+
 void SrcdbgDockWidget::srcfileChanged(int index)
 {
 	downcast<debug_view_sourcecode*>(m_srcdbgView->view())->set_src_index(u16(index));
@@ -643,8 +649,10 @@ SrcdbgDockWidget::~SrcdbgDockWidget()
 {
 }
 
+
 ProcessorDockWidget::~ProcessorDockWidget()
 {
 }
+
 
 } // namespace osd::debugger::qt
