@@ -185,7 +185,8 @@ void DebuggerView::paintEvent(QPaintEvent *event)
 
 			// There is a touchy interplay between font height, drawing difference, visible position, etc
 			// Fonts don't get drawn "down and to the left" like boxes, so some wiggling is needed.
-			painter.drawText(x * fontWidth, (y * fontHeight + (fontHeight * 0.80)), text);
+			// Second parameter (baseline) can't be too low or underscores will get overwritten by next line
+			painter.drawText(x * fontWidth, (y * fontHeight + int(float(fontHeight) * 0.75)), text);
 		}
 	}
 }

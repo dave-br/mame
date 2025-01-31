@@ -147,23 +147,23 @@ MainWindow::MainWindow(DebuggerQt &debugger, QWidget *parent) :
 	dockMenu->addAction(cpuDock->toggleViewAction());
 
 	// The disassembly / source-level debugging dock
-	m_dasmDock = new QDockWidget("dasm", this);
-	m_dasmDock->setObjectName("dasmdock");
-	m_dasmDock->setAllowedAreas(Qt::TopDockWidgetArea);
+	m_codeDock = new QDockWidget("code", this);
+	m_codeDock->setObjectName("codedock");
+	m_codeDock->setAllowedAreas(Qt::TopDockWidgetArea);
 
 	// Disassembly frame
-	m_dasmFrame = new DasmDockWidget(m_machine, m_dasmDock);
-	connect(m_dasmFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
+	m_dasmFrame = new DasmDockWidget(m_machine, m_codeDock);
+	connect(m_dasmFrame->view(), &DebuggerView::updated, this, &MainWindow::codeViewUpdated);
 
 	// Source-level debugging frame
-	m_srcdbgFrame = new SrcdbgDockWidget(m_machine, m_dasmDock);
-	connect(m_srcdbgFrame->view(), &DebuggerView::updated, this, &MainWindow::dasmViewUpdated);
+	m_srcdbgFrame = new SrcdbgDockWidget(m_machine, m_codeDock);
+	connect(m_srcdbgFrame->view(), &DebuggerView::updated, this, &MainWindow::codeViewUpdated);
 
-	m_dasmDock->setWidget(m_srcdbgFrame);    // Temporary, so view can initialize its size fields
-	m_dasmDock->setWidget(m_dasmFrame);      // Disassembly is the actual view to show on startup
+	m_codeDock->setWidget(m_srcdbgFrame);    // Temporary, so view can initialize its size fields
+	m_codeDock->setWidget(m_dasmFrame);      // Disassembly is the actual view to show on startup
 
-	addDockWidget(Qt::TopDockWidgetArea, m_dasmDock);
-	dockMenu->addAction(m_dasmDock->toggleViewAction());
+	addDockWidget(Qt::TopDockWidgetArea, m_codeDock);
+	dockMenu->addAction(m_codeDock->toggleViewAction());
 }
 
 
@@ -381,12 +381,12 @@ void MainWindow::srcdbgBarChanged(QAction *changedTo)
 {
 	if (changedTo->data().toInt() == MENU_SHOW_SOURCE)
 	{
-		m_dasmDock->setWidget(m_srcdbgFrame);
+		m_codeDock->setWidget(m_srcdbgFrame);
 		m_machine.debug_view().update_all(DVT_SOURCE);
 	}
 	else
 	{
-		m_dasmDock->setWidget(m_dasmFrame);
+		m_codeDock->setWidget(m_dasmFrame);
 		m_machine.debug_view().update_all(DVT_DISASSEMBLY);
 	}
 }
@@ -430,7 +430,7 @@ void MainWindow::executeCommand(bool withClear)
 
 bool MainWindow::sourceFrameActive() const
 {
-	 return m_dasmDock->widget() == m_srcdbgFrame;
+	 return m_codeDock->widget() == m_srcdbgFrame;
 }
 
 
@@ -516,7 +516,7 @@ void MainWindow::unmountImage(bool changedTo)
 }
 
 
-void MainWindow::dasmViewUpdated()
+void MainWindow::codeViewUpdated()
 {
 	debug_view_disasm *const dasmView = 
 		sourceFrameActive() ?
@@ -549,6 +549,11 @@ void MainWindow::dasmViewUpdated()
 	m_breakpointToggleAct->setEnabled(haveCursor);
 	m_breakpointEnableAct->setEnabled(haveBreakpoint);
 	m_runToCursorAct->setEnabled(haveCursor);
+
+	if (sourceFrameActive())
+	{
+		m_srcdbgFrame->updateComboSelection();
+	}
 }
 
 
@@ -647,6 +652,15 @@ void SrcdbgDockWidget::srcfileChanged(int index)
 
 SrcdbgDockWidget::~SrcdbgDockWidget()
 {
+}
+
+
+// While stepping, if the current file changes, update the
+// combo box to show the new filename
+void SrcdbgDockWidget::updateComboSelection()
+{
+	m_srcdbgCombo->setCurrentIndex(
+		view()->view<debug_view_sourcecode>()->cur_src_index());
 }
 
 

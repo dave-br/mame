@@ -67,7 +67,7 @@ private slots:
 	void mountImage(bool changedTo);
 	void unmountImage(bool changedTo);
 
-	void dasmViewUpdated();
+	void codeViewUpdated();
 
 	// Closing the main window hides the debugger and runs the emulated system
 	virtual void debugActClose() override;
@@ -89,7 +89,7 @@ private:
 	const debug_breakpoint * breakpointFromAddress(offs_t address) const;
 
 	// Widgets and docks
-	QDockWidget *m_dasmDock;
+	QDockWidget *m_codeDock;            // A dock that shows disassembly or source code
 	QLineEdit *m_inputEdit;
 	DebuggerView *m_consoleView;
 	ProcessorDockWidget *m_procFrame;
@@ -159,6 +159,8 @@ public:
 
 	QSize minimumSizeHint() const { return QSize(150, 150); }
 	QSize sizeHint() const { return QSize(150, 200); }
+
+	void updateComboSelection();
 
 private slots:
 	void srcfileChanged(int index);
