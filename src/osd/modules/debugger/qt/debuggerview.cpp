@@ -82,21 +82,37 @@ void DebuggerView::paintEvent(QPaintEvent *event)
 	bool const fullWidth = lineWidth >= m_view->total_size().x;
 	int const contentHeight = height() - (fullWidth ? 0 : horizontalScrollBar()->height());
 	m_view->set_visible_size(debug_view_xy(lineWidth, contentHeight / fontHeight));
+	debug_view_xy orig_visible_pos = m_view->visible_position();
 
 	// Handle the scroll bars
+
 	if (view()->type() == DVT_SOURCE)
+	{
 			printf("DebuggerView::paintEvent1: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
+	}
 	int const horizontalScrollCharDiff = m_view->total_size().x - m_view->visible_size().x;
 	horizontalScrollBar()->setRange(0, (std::max)(0, horizontalScrollCharDiff));
 	horizontalScrollBar()->setPageStep(lineWidth - 1);
 
 	int const verticalScrollCharDiff = m_view->total_size().y - m_view->visible_size().y;
 	int const verticalScrollSize = (std::max)(0, verticalScrollCharDiff);
-	bool const atEnd = verticalScrollBar()->value() == verticalScrollBar()->maximum();
 	verticalScrollBar()->setRange(0, verticalScrollSize);
 	verticalScrollBar()->setPageStep((contentHeight / fontHeight) - 1);
 	if (view()->type() == DVT_SOURCE)
+			printf("DebuggerView::paintEvent1.5: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
+	if (verticalScrollBar()->minimum() <= orig_visible_pos.y &&
+		orig_visible_pos.y <= verticalScrollBar()->maximum())
+	{
+		verticalScrollBar()->setValue(orig_visible_pos.y);
+	}
+	if (horizontalScrollBar()->minimum() <= orig_visible_pos.x &&
+		orig_visible_pos.x <= horizontalScrollBar()->maximum())
+	{
+		horizontalScrollBar()->setValue(orig_visible_pos.x);
+	}
+	if (view()->type() == DVT_SOURCE)
 			printf("DebuggerView::paintEvent2: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
+	bool const atEnd = verticalScrollBar()->value() == verticalScrollBar()->maximum();
 	if (m_preferBottom && atEnd)
 		verticalScrollBar()->setValue(verticalScrollSize);
 	if (view()->type() == DVT_SOURCE)
@@ -424,8 +440,19 @@ void DebuggerView::debuggerViewUpdate(debug_view &debugView, void *osdPrivate)
 	DebuggerView *dView = reinterpret_cast<DebuggerView *>(osdPrivate);
 	if (dView->view()->type() == DVT_SOURCE)
 			printf("DebuggerView::debuggerViewUpdate: changing from %d to %d\n", dView->verticalScrollBar()->value(), dView->view()->visible_position().y);
-	dView->verticalScrollBar()->setValue(dView->view()->visible_position().y);
-	dView->horizontalScrollBar()->setValue(dView->view()->visible_position().x);
+
+	debug_view_xy orig_visible_pos = dView->view()->visible_position();
+
+	int const horizontalScrollCharDiff = dView->view()->total_size().x - dView->view()->visible_size().x;
+	dView->horizontalScrollBar()->setRange(0, (std::max)(0, horizontalScrollCharDiff));
+
+	int const verticalScrollCharDiff = dView->view()->total_size().y - dView->view()->visible_size().y;
+	int const verticalScrollSize = (std::max)(0, verticalScrollCharDiff);
+	dView->verticalScrollBar()->setRange(0, verticalScrollSize);
+
+
+	dView->verticalScrollBar()->setValue(orig_visible_pos.y);
+	dView->horizontalScrollBar()->setValue(orig_visible_pos.x);
 	dView->viewport()->update();
 	dView->update();
 	emit dView->updated();
