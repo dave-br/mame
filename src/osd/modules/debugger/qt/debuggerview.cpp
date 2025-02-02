@@ -69,6 +69,7 @@ int DebuggerView::sourceIndex() const
 
 void DebuggerView::paintEvent(QPaintEvent *event)
 {
+	printf("DebuggerView::paintEvent0: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
 	// Tell the MAME debug view how much real estate is available
 	QFontMetrics actualFont = fontMetrics();
 	double const fontWidth = actualFont.horizontalAdvance(QString(100, '_')) / 100.;
@@ -80,6 +81,7 @@ void DebuggerView::paintEvent(QPaintEvent *event)
 	m_view->set_visible_size(debug_view_xy(lineWidth, contentHeight / fontHeight));
 
 	// Handle the scroll bars
+	printf("DebuggerView::paintEvent1: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
 	int const horizontalScrollCharDiff = m_view->total_size().x - m_view->visible_size().x;
 	horizontalScrollBar()->setRange(0, (std::max)(0, horizontalScrollCharDiff));
 	horizontalScrollBar()->setPageStep(lineWidth - 1);
@@ -89,8 +91,10 @@ void DebuggerView::paintEvent(QPaintEvent *event)
 	bool const atEnd = verticalScrollBar()->value() == verticalScrollBar()->maximum();
 	verticalScrollBar()->setRange(0, verticalScrollSize);
 	verticalScrollBar()->setPageStep((contentHeight / fontHeight) - 1);
+	printf("DebuggerView::paintEvent2: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
 	if (m_preferBottom && atEnd)
 		verticalScrollBar()->setValue(verticalScrollSize);
+	printf("DebuggerView::paintEvent3: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
 
 	// Draw the viewport widget
 	QPainter painter(viewport());
@@ -189,6 +193,7 @@ void DebuggerView::paintEvent(QPaintEvent *event)
 			painter.drawText(x * fontWidth, (y * fontHeight + int(float(fontHeight) * 0.75)), text);
 		}
 	}
+	printf("DebuggerView::paintEvent4: verticalScrollBar()->value() = %d\n", verticalScrollBar()->value());
 }
 
 
@@ -290,6 +295,7 @@ void DebuggerView::keyPressEvent(QKeyEvent* event)
 	m_view->process_char(keyPress);
 
 	// Catch the view up with the cursor
+	printf("DebuggerView::keyPressEvent: changing from %d to %d\n", verticalScrollBar()->value(), m_view->visible_position().y);
 	verticalScrollBar()->setValue(m_view->visible_position().y);
 
 	viewport()->update();
@@ -356,6 +362,7 @@ void DebuggerView::addItemsToContextMenu(QMenu *menu)
 
 void DebuggerView::verticalScrollSlot(int value)
 {
+	printf("    DebuggerView::verticalScrollSlot(%d)\n", value);
 	m_view->set_visible_position(debug_view_xy(horizontalScrollBar()->value(), value));
 }
 
@@ -406,6 +413,7 @@ void DebuggerView::debuggerViewUpdate(debug_view &debugView, void *osdPrivate)
 {
 	// Get a handle to the DebuggerView being updated and redraw
 	DebuggerView *dView = reinterpret_cast<DebuggerView *>(osdPrivate);
+	printf("DebuggerView::debuggerViewUpdate: changing from %d to %d\n", dView->verticalScrollBar()->value(), dView->view()->visible_position().y);
 	dView->verticalScrollBar()->setValue(dView->view()->visible_position().y);
 	dView->horizontalScrollBar()->setValue(dView->view()->visible_position().x);
 	dView->viewport()->update();
