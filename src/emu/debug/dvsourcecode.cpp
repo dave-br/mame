@@ -335,6 +335,8 @@ void debug_view_sourcecode::update_visible_lines(offs_t pc)
 		return;
 	}
 
+	begin_update();
+
 	u32 line_for_cur_pc = m_line_for_cur_pc.value();
 
 	if (m_displayed_src_file->num_lines() <= m_visible.y)
@@ -357,6 +359,10 @@ void debug_view_sourcecode::update_visible_lines(offs_t pc)
 		// Main case, center line_for_cur_pc in view
 		m_topleft.y = line_for_cur_pc - 1 - m_visible.y / 2;
 	}
+
+	view_notify(VIEW_NOTIFY_VISIBLE_CHANGED);
+	end_update();
+
 }
 
 
