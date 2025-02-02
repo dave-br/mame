@@ -659,9 +659,9 @@ SrcdbgDockWidget::~SrcdbgDockWidget()
 // combo box to show the new filename
 void SrcdbgDockWidget::updateComboSelection()
 {
-	// u16 newIndex = view()->view<debug_view_sourcecode>()->cur_src_index();
-	// if (m_srcdbgCombo->currentIndex() != newIndex)
-	// 	m_srcdbgCombo->setCurrentIndex(newIndex);
+	u16 newIndex = view()->view<debug_view_sourcecode>()->cur_src_index();
+	if (m_srcdbgCombo->currentIndex() != newIndex)
+		m_srcdbgCombo->setCurrentIndex(newIndex);
 }
 
 
