@@ -692,3 +692,13 @@ feasible, tools may also manually generate the binary format directly.  The form
 is defined in ``src/lib/srcdbg/srcdbg_format.h``.  Because this is error-prone,
 tools should prefer using the static or shared library over generating the binary
 format directly.
+
+
+.. _srcdbg_dump:
+
+Viewing MAME Debugging Information Files with srcdbgdump
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A small console executable, :ref:`srcdbgdump <othertools_srcdbgdump>` is built
+along with other MAME tools.  It may be used to view the contents
+of MAME Debugging Information files.  
