@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
-// copyright-holders:Vas Crabb
+// copyright-holders:tim lindner
 //============================================================
 //
-//  disassemblyview.h - MacOS X Cocoa debug window handling
+//  srcdebugview.h - MacOS X Cocoa source debug window handling
 //
 //============================================================
 
@@ -10,17 +10,11 @@
 
 #import "debugview.h"
 
-#include "debug/dvdisasm.h"
+#include "debug/dvsourcecode.h"
 
 #import <Cocoa/Cocoa.h>
 
-enum
-{
-	MENU_SHOW_SOURCE,
-	MENU_SHOW_DISASM
-};
-
-@interface MAMEDisassemblyView : MAMEDebugView <MAMEDebugViewSubviewSupport, MAMEDebugViewExpressionSupport>
+@interface MAMESrcDebugView : MAMEDebugView <MAMEDebugViewSubviewSupport>
 {
 }
 
@@ -31,16 +25,16 @@ enum
 - (NSString *)selectedSubviewName;
 - (int)selectedSubviewIndex;
 - (void)selectSubviewAtIndex:(int)index;
-- (BOOL)selectSubviewForDevice:(device_t *)device;
-- (BOOL)selectSubviewForSpace:(address_space *)space;
+// - (BOOL)selectSubviewForDevice:(device_t *)device;
+// - (BOOL)selectSubviewForSpace:(address_space *)space;
 
-- (NSString *)expression;
-- (void)setExpression:(NSString *)exp;
+// - (NSString *)expression;
+// - (void)setExpression:(NSString *)exp;
 
-- (debug_view_disasm_source const *)source;
-- (offs_t)selectedAddress;
+// - (debug_view_sourcecode const *)source;
+// - (offs_t)selectedLine;
 
-- (IBAction)showRightColumn:(id)sender;
+// - (IBAction)showRightColumn:(id)sender;
 - (IBAction)sourceDebugBarChanged:(id)sender;
 
 - (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;

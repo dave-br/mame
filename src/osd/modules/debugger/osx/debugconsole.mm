@@ -20,6 +20,7 @@
 #import "memoryviewer.h"
 #import "pointsviewer.h"
 #import "registersview.h"
+#import "srcdebugview.h"
 
 #include "debugger.h"
 #include "debug/debugcon.h"
@@ -32,7 +33,7 @@
 @implementation MAMEDebugConsole
 
 - (id)initWithMachine:(running_machine &)m {
-	NSScrollView    *regScroll, *dasmScroll, *consoleScroll;
+	NSScrollView    *regScroll, *dasmScroll, *srcdbgScroll, *consoleScroll;
 	NSView          *consoleContainer;
 	NSPopUpButton   *actionButton;
 	NSRect          rct;
@@ -66,6 +67,17 @@
 	[dasmScroll setDrawsBackground:NO];
 	[dasmScroll setDocumentView:dasmView];
 	[dasmView release];
+
+	// create the source debug view
+	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
+	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	[srcdbgScroll setHasHorizontalScroller:YES];
+	[srcdbgScroll setHasVerticalScroller:YES];
+	[srcdbgScroll setAutohidesScrollers:YES];
+	[srcdbgScroll setBorderType:NSBezelBorder];
+	[srcdbgScroll setDrawsBackground:NO];
+	[srcdbgScroll setDocumentView:srcdbgView];
+	[srcdbgView release];
 
 	// create the console view
 	consoleView = [[MAMEConsoleView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
@@ -115,8 +127,10 @@
 	[dasmSplit setDelegate:self];
 	[dasmSplit setVertical:NO];
 	[dasmSplit addSubview:dasmScroll];
+	[dasmSplit addSubview:srcdbgScroll];
 	[dasmSplit addSubview:consoleContainer];
 	[dasmScroll release];
+	[srcdbgScroll release];
 	[consoleContainer release];
 
 	// create the split between the registers and the console
@@ -154,6 +168,13 @@
 														  borderType:[dasmScroll borderType]
 														 controlSize:NSControlSizeRegular
 													   scrollerStyle:NSScrollerStyleOverlay];
+// 	NSSize const    srcdbgCurrent = [srcdbgScroll frame].size;
+// 	NSSize const    srcdbgSize = [NSScrollView frameSizeForContentSize:[srcdbgView maximumFrameSize]
+// 											 horizontalScrollerClass:[NSScroller class]
+// 											   verticalScrollerClass:[NSScroller class]
+// 														  borderType:[srcdbgScroll borderType]
+// 														 controlSize:NSControlSizeRegular
+// 													   scrollerStyle:NSScrollerStyleOverlay];
 	NSSize const    consoleCurrent = [consoleContainer frame].size;
 	NSSize          consoleSize = [NSScrollView frameSizeForContentSize:[consoleView maximumFrameSize]
 												horizontalScrollerClass:[NSScroller class]
@@ -194,6 +215,8 @@
 											 selector:@selector(auxiliaryWindowWillClose:)
 												 name:MAMEAuxiliaryDebugWindowWillCloseNotification
 											   object:nil];
+
+	[srcdbgView setHidden:true];
 
 	// don't forget the return value
 	return self;
@@ -446,6 +469,7 @@
 								  : NSMaxY([[[dasmSplit subviews] objectAtIndex:0] frame]));
 	}
 	[dasmView saveConfigurationToNode:node];
+	[srcdbgView saveConfigurationToNode:node];
 	[history saveConfigurationToNode:node];
 }
 
@@ -461,6 +485,7 @@
 			  ofDividerAtIndex:0];
 	}
 	[dasmView restoreConfigurationFromNode:node];
+	[srcdbgView restoreConfigurationFromNode:node];
 	[history restoreConfigurationFromNode:node];
 }
 
@@ -513,6 +538,13 @@
 														  userInfo:info];
 		machine->debugger().console().get_visible_cpu()->debug()->go();
 	}
+}
+
+
+- (void)setDisasemblyView:(BOOL)value
+{
+	[dasmView setHidden:value];
+	[srcdbgView setHidden:!value];
 }
 
 

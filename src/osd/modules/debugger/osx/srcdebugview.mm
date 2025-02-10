@@ -1,23 +1,29 @@
 // license:BSD-3-Clause
-// copyright-holders:Vas Crabb
+// copyright-holders:tim lindner
 //============================================================
 //
-//  disassemblyview.m - MacOS X Cocoa debug window handling
+//  srcdebugview.m - MacOS X Cocoa debug window handling
 //
 //============================================================
 
 #include "emu.h"
-#import "disassemblyview.h"
+#import "srcdebugview.h"
 
 #include "debug/debugvw.h"
 
 #include "util/xmlfile.h"
 
+enum
+{
+	MENU_SHOW_SOURCE,
+	MENU_SHOW_DISASM
+};
 
-@implementation MAMEDisassemblyView
+
+@implementation MAMESrcDebugView
 
 - (id)initWithFrame:(NSRect)f machine:(running_machine &)m {
-	if (!(self = [super initWithFrame:f type:DVT_DISASSEMBLY machine:m wholeLineScroll:NO]))
+	if (!(self = [super initWithFrame:f type:DVT_SOURCE machine:m wholeLineScroll:NO]))
 		return nil;
 	return self;
 }
@@ -31,9 +37,10 @@
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
 	SEL const action = [item action];
 
-	if (action == @selector(showRightColumn:))
+	if (action == @selector(sourceDebugBarChanged:))
 	{
-		[item setState:((downcast<debug_view_disasm *>(view)->right_column() == [item tag]) ? NSOnState : NSOffState)];
+// 		[item setState:((downcast<debug_view_disasm *>(view)->right_column() == [item tag]) ? NSOnState : NSOffState)];
+// TODO set check for source item
 		return YES;
 	}
 	else
@@ -204,9 +211,9 @@
 }
 
 
-- (debug_view_disasm_source const *)source {
-	return downcast<debug_view_disasm_source const *>(view->source());
-}
+// - (debug_view_disasm_source const *)source {
+// 	return downcast<debug_view_disasm_source const *>(view->source());
+// }
 
 
 - (offs_t)selectedAddress {
@@ -226,17 +233,11 @@
 	if ([sender tag] == MENU_SHOW_SOURCE)
 	{
 // 		m_codeDock->setWidget(m_srcdbgFrame);
-		NSWindow *window = [self window];
-		id del = [window delegate];
-		[del setDisasemblyView:true];
 		machine->debug_view().update_all(DVT_SOURCE);
 	}
 	else
 	{
 // 		m_codeDock->setWidget(m_dasmFrame);
-		NSWindow *window = [self window];
-		id del = [window delegate];
-		[del setDisasemblyView:false];
 		machine->debug_view().update_all(DVT_DISASSEMBLY);
 	}
 }
