@@ -34,7 +34,7 @@
 
 - (id)initWithMachine:(running_machine &)m {
 	NSScrollView    *regScroll, *dasmScroll, *srcdbgScroll, *consoleScroll;
-	NSView          *consoleContainer;
+	NSView          *consoleContainer, *dasmContainer;
 	NSPopUpButton   *actionButton;
 	NSRect          rct;
 
@@ -59,7 +59,9 @@
 	// create the disassembly view
 	dasmView = [[MAMEDisassemblyView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
 	[dasmView setExpression:@"curpc"];
+	[dasmView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	dasmScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	[dasmScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[dasmScroll setHasHorizontalScroller:YES];
 	[dasmScroll setHasVerticalScroller:YES];
 	[dasmScroll setAutohidesScrollers:YES];
@@ -70,7 +72,9 @@
 
 	// create the source debug view
 	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
+	[srcdbgView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	[srcdbgScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[srcdbgScroll setHasHorizontalScroller:YES];
 	[srcdbgScroll setHasVerticalScroller:YES];
 	[srcdbgScroll setAutohidesScrollers:YES];
@@ -78,6 +82,15 @@
 	[srcdbgScroll setDrawsBackground:NO];
 	[srcdbgScroll setDocumentView:srcdbgView];
 	[srcdbgView release];
+
+	// Create disassembly container
+	dasmContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	[dasmContainer addSubview:dasmScroll];
+	[dasmContainer addSubview:srcdbgScroll];
+	[dasmContainer setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	[dasmScroll release];
+	[srcdbgScroll release];
+	[dasmScroll setHidden:true];
 
 	// create the console view
 	consoleView = [[MAMEConsoleView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
@@ -126,11 +139,10 @@
 	dasmSplit = [[NSSplitView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
 	[dasmSplit setDelegate:self];
 	[dasmSplit setVertical:NO];
-	[dasmSplit addSubview:dasmScroll];
-	[dasmSplit addSubview:srcdbgScroll];
+	[dasmSplit addSubview:dasmContainer];
 	[dasmSplit addSubview:consoleContainer];
-	[dasmScroll release];
-	[srcdbgScroll release];
+	[dasmSplit setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	[dasmContainer release];
 	[consoleContainer release];
 
 	// create the split between the registers and the console
@@ -215,8 +227,6 @@
 											 selector:@selector(auxiliaryWindowWillClose:)
 												 name:MAMEAuxiliaryDebugWindowWillCloseNotification
 											   object:nil];
-
-	[srcdbgView setHidden:true];
 
 	// don't forget the return value
 	return self;
