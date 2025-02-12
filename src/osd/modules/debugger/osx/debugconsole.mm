@@ -71,9 +71,9 @@
 	[dasmView release];
 
 	// create the source debug view
-	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
+	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78) machine:*machine];
 	[srcdbgView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78)];
 	[srcdbgScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[srcdbgScroll setHasHorizontalScroller:YES];
 	[srcdbgScroll setHasVerticalScroller:YES];
@@ -83,14 +83,32 @@
 	[srcdbgScroll setDocumentView:srcdbgView];
 	[srcdbgView release];
 
+	// create the source popup button
+	sourceButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 78, 100, 19)];
+	[sourceButton setAutoresizingMask:(NSViewWidthSizable | NSViewMinXMargin | NSViewMinYMargin)];
+	[sourceButton setBezelStyle:NSBezelStyleShadowlessSquare];
+	[sourceButton setFocusRingType:NSFocusRingTypeNone];
+	[sourceButton setFont:defaultFont];
+	[sourceButton setTarget:self];
+	[sourceButton setAction:@selector(changeSubview:)];
+	[[sourceButton cell] setArrowPosition:NSPopUpArrowAtBottom];
+
+	// create source container to group together the popup and debug view
+	srcdbgContainerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	[srcdbgContainerView addSubview:srcdbgScroll];
+	[srcdbgContainerView addSubview:sourceButton];
+	[srcdbgContainerView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	[srcdbgScroll release];
+	[sourceButton release];
+
 	// Create disassembly container
 	dasmContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
 	[dasmContainer addSubview:dasmScroll];
-	[dasmContainer addSubview:srcdbgScroll];
+	[dasmContainer addSubview:srcdbgContainerView];
 	[dasmContainer setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[dasmScroll release];
-	[srcdbgScroll release];
-	[dasmScroll setHidden:true];
+	[srcdbgContainerView release];
+	[srcdbgContainerView setHidden:true];
 
 	// create the console view
 	consoleView = [[MAMEConsoleView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
@@ -554,7 +572,7 @@
 - (void)setDisasemblyView:(BOOL)value
 {
 	[dasmView setHidden:value];
-	[srcdbgView setHidden:!value];
+	[srcdbgContainerView setHidden:!value];
 }
 
 

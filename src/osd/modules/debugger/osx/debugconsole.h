@@ -25,6 +25,8 @@
 	MAMERegistersView       *regView;
 	MAMEDisassemblyView     *dasmView;
 	MAMESrcDebugView        *srcdbgView;
+	NSPopUpButton			*sourceButton;
+	NSView					*srcdbgContainerView;
 	MAMEDebugView           *consoleView;
 	NSTextField             *commandField;
 }

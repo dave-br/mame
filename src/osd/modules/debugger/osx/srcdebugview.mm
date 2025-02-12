@@ -229,20 +229,6 @@ enum
 }
 
 
-- (IBAction)sourceDebugBarChanged:(id)sender {
-	if ([sender tag] == MENU_SHOW_SOURCE)
-	{
-// 		m_codeDock->setWidget(m_srcdbgFrame);
-		machine->debug_view().update_all(DVT_SOURCE);
-	}
-	else
-	{
-// 		m_codeDock->setWidget(m_dasmFrame);
-		machine->debug_view().update_all(DVT_DISASSEMBLY);
-	}
-}
-
-
 - (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
 	NSMenuItem *breakItem = [menu insertItemWithTitle:@"Toggle Breakpoint at Cursor"
 											   action:@selector(debugToggleBreakpoint:)
@@ -327,6 +313,24 @@ enum
 		[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
 }
 
+- (IBAction)sourceDebugBarChanged:(id)sender {
+	if ([sender tag] == MENU_SHOW_SOURCE)
+	{
+// 		m_codeDock->setWidget(m_srcdbgFrame);
+		NSWindow *window = [self window];
+		id del = [window delegate];
+		[del setDisasemblyView:true];
+		machine->debug_view().update_all(DVT_SOURCE);
+	}
+	else
+	{
+// 		m_codeDock->setWidget(m_dasmFrame);
+		NSWindow *window = [self window];
+		id del = [window delegate];
+		[del setDisasemblyView:false];
+		machine->debug_view().update_all(DVT_DISASSEMBLY);
+	}
+}
 
 - (void)saveConfigurationToNode:(util::xml::data_node *)node {
 	[super saveConfigurationToNode:node];
