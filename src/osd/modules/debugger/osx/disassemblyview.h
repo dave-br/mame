@@ -38,7 +38,7 @@ enum
 - (void)setExpression:(NSString *)exp;
 
 - (debug_view_disasm_source const *)source;
-- (offs_t)selectedAddress;
+- (NSNumber *)selectedAddress;
 
 - (IBAction)showRightColumn:(id)sender;
 - (IBAction)sourceDebugBarChanged:(id)sender;

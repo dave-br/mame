@@ -294,16 +294,20 @@
 	device_t &device = *[dasmView source]->device();
 	if ([dasmView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
 	{
-		offs_t const address = [dasmView selectedAddress];
-		const debug_breakpoint *bp = [dasmView source]->device()->debug()->breakpoint_find(address);
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
+		{
+			offs_t const address = [num unsignedIntValue];
+			const debug_breakpoint *bp = [dasmView source]->device()->debug()->breakpoint_find(address);
 
-		// if it doesn't exist, add a new one
-		NSString *command;
-		if (bp == nullptr)
-			command = [NSString stringWithFormat:@"bpset 0x%lX", (unsigned long)address];
-		else
-			command = [NSString stringWithFormat:@"bpclear 0x%X", (unsigned)bp->index()];
-		machine->debugger().console().execute_command([command UTF8String], 1);
+			// if it doesn't exist, add a new one
+			NSString *command;
+			if (bp == nullptr)
+				command = [NSString stringWithFormat:@"bpset 0x%lX", (unsigned long)address];
+			else
+				command = [NSString stringWithFormat:@"bpclear 0x%X", (unsigned)bp->index()];
+			machine->debugger().console().execute_command([command UTF8String], 1);
+		}
 	}
 }
 
@@ -312,15 +316,20 @@
 	device_t &device = *[dasmView source]->device();
 	if ([dasmView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
 	{
-		const debug_breakpoint *bp = [dasmView source]->device()->debug()->breakpoint_find([dasmView selectedAddress]);
-		if (bp != nullptr)
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
 		{
-			NSString *command;
-			if (bp->enabled())
-				command = [NSString stringWithFormat:@"bpdisable 0x%X", (unsigned)bp->index()];
-			else
-				command = [NSString stringWithFormat:@"bpenable 0x%X", (unsigned)bp->index()];
-			machine->debugger().console().execute_command([command UTF8String], 1);
+			offs_t const address = [num unsignedIntValue];
+			const debug_breakpoint *bp = [dasmView source]->device()->debug()->breakpoint_find(address);
+			if (bp != nullptr)
+			{
+				NSString *command;
+				if (bp->enabled())
+					command = [NSString stringWithFormat:@"bpdisable 0x%X", (unsigned)bp->index()];
+				else
+					command = [NSString stringWithFormat:@"bpenable 0x%X", (unsigned)bp->index()];
+				machine->debugger().console().execute_command([command UTF8String], 1);
+			}
 		}
 	}
 }
@@ -330,8 +339,13 @@
 	device_t &device = *[dasmView source]->device();
 	if ([dasmView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
 	{
-		NSString *command = [NSString stringWithFormat:@"go 0x%lX", (unsigned long)[dasmView selectedAddress]];
-		machine->debugger().console().execute_command([command UTF8String], 1);
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
+		{
+			offs_t const address = [num unsignedIntValue];
+			NSString *command = [NSString stringWithFormat:@"go 0x%lX", (unsigned long)address];
+			machine->debugger().console().execute_command([command UTF8String], 1);
+		}
 	}
 }
 
@@ -639,7 +653,12 @@
 	const debug_breakpoint *breakpoint = nullptr;
 	if (haveCursor)
 	{
-		breakpoint = [dasmView source]->device()->debug()->breakpoint_find([dasmView selectedAddress]);
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
+		{
+			offs_t const address = [num unsignedIntValue];
+			breakpoint = [dasmView source]->device()->debug()->breakpoint_find(address);
+		}
 	}
 
 	if (action == @selector(debugToggleBreakpoint:))

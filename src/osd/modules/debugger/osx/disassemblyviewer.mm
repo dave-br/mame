@@ -176,7 +176,10 @@
 	if ([dasmView cursorVisible])
 	{
 		device_t &device = *[dasmView source]->device();
-		offs_t const address = [dasmView selectedAddress];
+		NSNumber *num = [dasmView selectedAddress];
+		if (!num) return;
+
+		offs_t const address = [num unsignedIntValue];
 		const debug_breakpoint *bp = device.debug()->breakpoint_find(address);
 
 		// if it doesn't exist, add a new one
@@ -203,16 +206,20 @@
 	if ([dasmView cursorVisible])
 	{
 		device_t &device = *[dasmView source]->device();
-		offs_t const address = [dasmView selectedAddress];
-		const debug_breakpoint *bp = device.debug()->breakpoint_find(address);
-		if (bp != nullptr)
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
 		{
-			device.debug()->breakpoint_enable(bp->index(), !bp->enabled());
-			machine->debugger().console().printf("Breakpoint %X %s\n",
-												 (uint32_t)bp->index(),
-												 bp->enabled() ? "enabled" : "disabled");
-			machine->debug_view().update_all();
-			machine->debugger().refresh_display();
+			offs_t const address = [num unsignedIntValue];
+			const debug_breakpoint *bp = device.debug()->breakpoint_find(address);
+			if (bp != nullptr)
+			{
+				device.debug()->breakpoint_enable(bp->index(), !bp->enabled());
+				machine->debugger().console().printf("Breakpoint %X %s\n",
+													 (uint32_t)bp->index(),
+													 bp->enabled() ? "enabled" : "disabled");
+				machine->debug_view().update_all();
+				machine->debugger().refresh_display();
+			}
 		}
 	}
 }
@@ -220,7 +227,13 @@
 
 - (IBAction)debugRunToCursor:(id)sender {
 	if ([dasmView cursorVisible])
-		[dasmView source]->device()->debug()->go([dasmView selectedAddress]);
+	{
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
+		{
+			[dasmView source]->device()->debug()->go([num unsignedIntValue]);
+		}
+	}
 }
 
 
@@ -256,7 +269,11 @@
 	const debug_breakpoint *breakpoint = nullptr;
 	if (haveCursor)
 	{
-		breakpoint = [dasmView source]->device()->debug()->breakpoint_find([dasmView selectedAddress]);
+		NSNumber *num = [dasmView selectedAddress];
+		if (num)
+		{
+			breakpoint = [dasmView source]->device()->debug()->breakpoint_find([num unsignedIntValue]);
+		}
 	}
 
 	if (action == @selector(debugToggleBreakpoint:))

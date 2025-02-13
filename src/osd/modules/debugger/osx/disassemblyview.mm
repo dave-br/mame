@@ -209,11 +209,16 @@
 }
 
 
-- (offs_t)selectedAddress {
-	// TODO: Change this and callers to work properly with selected_address
-	// returning optional<offs_t>
-	return 0;
-	//return downcast<debug_view_disasm *>(view)->selected_address();
+- (NSNumber *)selectedAddress {
+	std::optional<offs_t> address = downcast<debug_view_disasm *>(view)->selected_address();
+	if (address.has_value())
+	{
+		return [NSNumber numberWithUnsignedInt:address.value()];
+	}
+	else
+	{
+		return nil;
+	}
 }
 
 
