@@ -27,11 +27,42 @@
 // Static helpers
 // ------------------------------------------------------------------------------------
 
+#if defined(_WIN32)
+#define PATH_PREFIX_COMPARE core_strnicmp
+#else
+#define PATH_PREFIX_COMPARE strnicmp
+#endif
 
-static void normalize_path_separators(std::string & path)
+static void 
+normalize_path_separators(std::string & path)
 {
 	strreplace(path, "/", PATH_SEPARATOR);
 	strreplace(path, "\\", PATH_SEPARATOR);
+}
+
+
+static void
+normalize_path_map(std::string & path_map)
+{
+	if (path_map.empty())
+	{
+		return;
+	}
+
+	// Terse way to count paths
+	int num_semis = strreplace(path_map, ";", ";");
+	if (num_semis % 2 == 0)
+	{
+		// There should be an even number of paths in a path map.
+		// So there should be an odd number of semicolons separating
+		// the paths.  But it's even, so fail with an error message
+		throw emu_fatalerror(
+			"Invalid value found for option %s: '%s'\n"
+			"There must be an even number of paths, delimited by semicolons",
+			OPTION_SRCDBGPREFIXMAP, path_map);			
+	}
+
+	normalize_path_separators(path_map);
 }
 
 
@@ -66,7 +97,7 @@ srcdbg_import::srcdbg_import(srcdbg_provider_simple & srcdbg_simple)
 	, m_symbol_names()
 	, m_normalized_debug_source_path_map(srcdbg_simple.m_machine.options().srcdbg_prefix_map())
 {
-	normalize_path_separators(m_normalized_debug_source_path_map);
+	normalize_path_map(m_normalized_debug_source_path_map);
 }
 
 
@@ -234,17 +265,23 @@ void srcdbg_import::generate_local_path(const std::string & built, std::string &
 // drive letters or parent folders
 void srcdbg_import::apply_source_prefix_map(std::string & local)
 {
+	if (m_normalized_debug_source_path_map.empty())
+	{
+		return;
+	}
+
 	path_iterator path(m_normalized_debug_source_path_map);
 	std::string prefix_find, prefix_replace;
 	while (path.next(prefix_find))
 	{
 		if (!path.next(prefix_replace))
 		{
-			// Invalid map string (odd number of paths), so just skip last entry
-			break;
+			// Treat final path as empty.  (Semicolon delimters have already been counted,
+			// so the path prefix format is known to be valid.)
+			prefix_replace = "";
 		}
 
-		if (strncmp(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
+		if (PATH_PREFIX_COMPARE(prefix_find. c_str(), local.c_str(), prefix_find.size()) == 0)
 		{
 			// Found a match; replace local's prefix_find with prefix_replace
 			std::string new_local = prefix_replace;
