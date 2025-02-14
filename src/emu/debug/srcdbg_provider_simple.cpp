@@ -33,16 +33,14 @@
 #define PATH_PREFIX_COMPARE strncmp
 #endif
 
-static void 
-normalize_path_separators(std::string & path)
+static void normalize_path_separators(std::string & path)
 {
 	strreplace(path, "/", PATH_SEPARATOR);
 	strreplace(path, "\\", PATH_SEPARATOR);
 }
 
 
-static void
-normalize_path_map(std::string & path_map)
+static void normalize_path_map(std::string & path_map)
 {
 	if (path_map.empty())
 	{
@@ -58,8 +56,9 @@ normalize_path_map(std::string & path_map)
 		// the paths.  But it's even, so fail with an error message
 		throw emu_fatalerror(
 			"Invalid value found for option %s: '%s'\n"
-			"There must be an even number of paths, delimited by semicolons",
-			OPTION_SRCDBGPREFIXMAP, path_map);			
+			"There must be an even number of paths, with (an odd number of) semicolons between them",
+			OPTION_SRCDBGPREFIXMAP,
+			path_map);			
 	}
 
 	normalize_path_separators(path_map);
@@ -276,12 +275,12 @@ void srcdbg_import::apply_source_prefix_map(std::string & local)
 	{
 		if (!path.next(prefix_replace))
 		{
-			// Treat final path as empty.  (Semicolon delimters have already been counted,
+			// Treat final path as empty.  (Semicolon delimiters have already been counted,
 			// so the path prefix format is known to be valid.)
 			prefix_replace = "";
 		}
 
-		if (PATH_PREFIX_COMPARE(prefix_find. c_str(), local.c_str(), prefix_find.size()) == 0)
+		if (PATH_PREFIX_COMPARE(prefix_find.c_str(), local.c_str(), prefix_find.size()) == 0)
 		{
 			// Found a match; replace local's prefix_find with prefix_replace
 			std::string new_local = prefix_replace;
