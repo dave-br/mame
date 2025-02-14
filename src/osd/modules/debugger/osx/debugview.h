@@ -82,5 +82,6 @@
 @protocol MAMEDebugViewDisasemblyContainer <NSObject>
 
 - (void) setDisasemblyView:(BOOL)value;
+- (BOOL) getDisasemblyView;
 
 @end

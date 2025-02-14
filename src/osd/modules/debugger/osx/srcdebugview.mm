@@ -349,6 +349,31 @@ enum
 	}
 }
 
+- (BOOL)validateMenuItem:(NSMenuItem *)item {
+	SEL const action = [item action];
+
+	if (action == @selector(sourceDebugChanged:))
+    {
+		NSWindow *window = [self window];
+		id delegate = [window delegate];
+		BOOL which = [delegate getDisasemblyView];
+		if (which == [item tag])
+		{
+			[item setState:NSControlStateValueOn];
+		}
+		else
+		{
+			[item setState:NSControlStateValueOff];
+		}
+
+    	return YES;
+	}
+	else
+	{
+		return [super validateMenuItem:item];
+	}
+}
+
 - (void)saveConfigurationToNode:(util::xml::data_node *)node {
 	[super saveConfigurationToNode:node];
 	debug_view_disasm *const dasmView = downcast<debug_view_disasm *>(view);

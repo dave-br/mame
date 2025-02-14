@@ -251,7 +251,6 @@
 	return self;
 }
 
-
 - (void)dealloc {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 
@@ -590,6 +589,10 @@
 	[srcdbgContainerView setHidden:!value];
 }
 
+- (BOOL) getDisasemblyView
+{
+	return [srcdbgContainerView isHidden];
+}
 
 - (CGFloat)splitView:(NSSplitView *)sender constrainMinCoordinate:(CGFloat)min ofSubviewAt:(NSInteger)offs {
 	return (min < 100) ? 100 : min;
@@ -645,7 +648,6 @@
 }
 
 - (IBAction)sourceDebugBarChanged:(id)sender {
-	NSLog(@"debugconsole sourceDebugBarChanged: %ld", [sender tag]);
 	[srcdbgView setSourceIndex:[sender tag]];
 }
 

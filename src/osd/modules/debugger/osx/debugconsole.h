@@ -72,5 +72,6 @@
 - (void)splitView:(NSSplitView *)sender resizeSubviewsWithOldSize:(NSSize)oldSize;
 
 - (void)setDisasemblyView:(BOOL)value;
+- (BOOL) getDisasemblyView;
 
 @end

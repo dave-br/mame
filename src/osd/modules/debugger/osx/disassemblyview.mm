@@ -36,6 +36,22 @@
 		[item setState:((downcast<debug_view_disasm *>(view)->right_column() == [item tag]) ? NSOnState : NSOffState)];
 		return YES;
 	}
+	else if (action == @selector(sourceDebugChanged:))
+    {
+		NSWindow *window = [self window];
+		id delegate = [window delegate];
+		BOOL which = [delegate getDisasemblyView];
+		if (which == [item tag])
+		{
+			[item setState:NSControlStateValueOn];
+		}
+		else
+		{
+			[item setState:NSControlStateValueOff];
+		}
+
+    	return YES;
+	}
 	else
 	{
 		return [super validateMenuItem:item];
