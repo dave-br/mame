@@ -30,7 +30,7 @@
 #if defined(_WIN32)
 #define PATH_PREFIX_COMPARE core_strnicmp
 #else
-#define PATH_PREFIX_COMPARE strnicmp
+#define PATH_PREFIX_COMPARE strncmp
 #endif
 
 static void 
