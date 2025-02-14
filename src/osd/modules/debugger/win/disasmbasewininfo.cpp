@@ -163,16 +163,18 @@ void disasmbasewin_info::update_menu()
 
 bool disasmbasewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	if (m_views[VIEW_IDX_DISASM].get() != nullptr &&
-		m_views[VIEW_IDX_DISASM]->is_visible() &&
-		handle_disasm_command(wparam, lparam))
+	if (m_views[VIEW_IDX_DISASM].get() != nullptr)
 	{
-		return true;
-	}
+		if (m_views[VIEW_IDX_DISASM]->is_visible() &&
+			handle_disasm_command(wparam, lparam))
+		{
+			return true;
+		}
 
-	if (handle_common_command(wparam, lparam))
-	{
-		return true;
+		if (handle_common_command(wparam, lparam))
+		{
+			return true;
+		}
 	}
 
 	return editwin_info::handle_command(wparam, lparam);

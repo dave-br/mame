@@ -121,10 +121,11 @@ protected:
 		ID_DEVICE_OPTIONS   // always keep this at the end
 	};
 
-	// Indices for use with m_views.  Each *win_info class should use these
-	// indices to find its *view_info class regardless of whether it appears
-	// as a frame within the main consolewin_info OR as an independent
-	// free-floating window.
+	// Indices for use with m_views.  Each *win_info class that can appear
+	// as a frame within the main consolewin_info should use these
+	// indices to find its *view_info class, even when it's currently
+	// shown as an independent free-floating window.  All other *win_info
+	// classes (e.g., logwin_info, pointswin_info, etc.) just use m_views[0]
 	enum
 	{
 		VIEW_IDX_SOURCE,
