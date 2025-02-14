@@ -34,20 +34,21 @@ enum
 }
 
 
-- (BOOL)validateMenuItem:(NSMenuItem *)item {
-	SEL const action = [item action];
-
-	if (action == @selector(sourceDebugBarChanged:))
-	{
-// 		[item setState:((downcast<debug_view_disasm *>(view)->right_column() == [item tag]) ? NSOnState : NSOffState)];
-// TODO set check for source item
-		return YES;
-	}
-	else
-	{
-		return [super validateMenuItem:item];
-	}
-}
+// - (BOOL)validateMenuItem:(NSMenuItem *)item {
+// 	SEL const action = [item action];
+//
+// 	if (action == @selector(sourceDebugBarChanged:))
+// 	{
+// 		NSLog( @"chacking" );
+// // 		[item setState:((downcast<debug_view_disasm *>(view)->right_column() == [item tag]) ? NSOnState : NSOffState)];
+// // TODO set check for source item
+// 		return YES;
+// 	}
+// 	else
+// 	{
+// 		return [super validateMenuItem:item];
+// 	}
+// }
 
 
 - (NSSize)maximumFrameSize {
@@ -114,13 +115,13 @@ enum
 	[menu addItem:[NSMenuItem separatorItem]];
 
 	item = [menu addItemWithTitle:@"Show Source"
-						   action:@selector(sourceDebugBarChanged:)
+						   action:@selector(sourceDebugChanged:)
 					keyEquivalent:@"u"];
 	[item setTarget:self];
 	[item setTag:MENU_SHOW_SOURCE];
 
 	item = [menu addItemWithTitle:@"Show Disassembly"
-						   action:@selector(sourceDebugBarChanged:)
+						   action:@selector(sourceDebugChanged:)
 					keyEquivalent:@"U"];
 	[item setTarget:self];
 	[item setTag:MENU_SHOW_DISASM];
@@ -147,19 +148,19 @@ enum
 }
 
 
-- (void)selectSubviewAtIndex:(int)index {
-	const int   selected = [self selectedSubviewIndex];
-	if (selected != index)
-	{
-		const debug_view_source *source = view->source(index);
-		if (source != nullptr)
-		{
-			view->set_source(*source);
-			if ([[self window] firstResponder] != self)
-				view->set_cursor_visible(false);
-		}
-	}
-}
+// - (void)selectSubviewAtIndex:(int)index {
+// 	const int   selected = [self selectedSubviewIndex];
+// 	if (selected != index)
+// 	{
+// 		const debug_view_source *source = view->source(index);
+// 		if (source != nullptr)
+// 		{
+// 			view->set_source(*source);
+// 			if ([[self window] firstResponder] != self)
+// 				view->set_cursor_visible(false);
+// 		}
+// 	}
+// }
 
 
 - (BOOL)selectSubviewForDevice:(device_t *)device {
@@ -224,110 +225,126 @@ enum
 }
 
 
-- (IBAction)showRightColumn:(id)sender {
-	downcast<debug_view_disasm *>(view)->set_right_column((disasm_right_column) [sender tag]);
-}
+// - (IBAction)showRightColumn:(id)sender {
+// 	downcast<debug_view_disasm *>(view)->set_right_column((disasm_right_column) [sender tag]);
+// }
 
 
-- (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
-	NSMenuItem *breakItem = [menu insertItemWithTitle:@"Toggle Breakpoint at Cursor"
-											   action:@selector(debugToggleBreakpoint:)
-										keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF9FunctionKey]
-											  atIndex:index++];
-	[breakItem setKeyEquivalentModifierMask:0];
-
-	NSMenuItem *disableItem = [menu insertItemWithTitle:@"Disable Breakpoint at Cursor"
-												 action:@selector(debugToggleBreakpointEnable:)
-										  keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF9FunctionKey]
-												atIndex:index++];
-	[disableItem setKeyEquivalentModifierMask:NSEventModifierFlagShift];
-
-	NSMenu      *runMenu = [[menu itemWithTitle:@"Run"] submenu];
-	NSMenuItem  *runItem;
-	if (runMenu != nil) {
-		runItem = [runMenu addItemWithTitle:@"to Cursor"
-									 action:@selector(debugRunToCursor:)
-							  keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF4FunctionKey]];
-	} else {
-		runItem = [menu insertItemWithTitle:@"Run to Cursor"
-									 action:@selector(debugRunToCursor:)
-							  keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF4FunctionKey]
-									atIndex:index++];
-	}
-	[runItem setKeyEquivalentModifierMask:0];
-
-	[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
-
-	NSMenuItem *rawItem = [menu insertItemWithTitle:@"Show Raw Opcodes"
-											 action:@selector(showRightColumn:)
-									  keyEquivalent:@"r"
-											atIndex:index++];
-	[rawItem setTarget:self];
-	[rawItem setTag:DASM_RIGHTCOL_RAW];
-
-	NSMenuItem *encItem = [menu insertItemWithTitle:@"Show Encrypted Opcodes"
-											 action:@selector(showRightColumn:)
-									  keyEquivalent:@"e"
-											atIndex:index++];
-	[encItem setTarget:self];
-	[encItem setTag:DASM_RIGHTCOL_ENCRYPTED];
-
-	NSMenuItem *commentsItem = [menu insertItemWithTitle:@"Show Comments"
-												  action:@selector(showRightColumn:)
-										   keyEquivalent:@"n"
-												 atIndex:index++];
-	[commentsItem setTarget:self];
-	[commentsItem setTag:DASM_RIGHTCOL_COMMENTS];
-
-	[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
-
-	NSMenuItem *showSource = [menu insertItemWithTitle:@"Show Source"
-											    action:@selector(sourceDebugBarChanged:)
-										 keyEquivalent:@"u"
-											   atIndex:index++ ];
-
-	[showSource setTarget:self];
-	[showSource setTag:MENU_SHOW_SOURCE];
-
-	NSMenuItem *showDisasembly = [menu insertItemWithTitle:@"Show Disassembly"
-													action:@selector(sourceDebugBarChanged:)
-											 keyEquivalent:@"U"
-												   atIndex:index++ ];
-	[showDisasembly setTarget:self];
-	[showDisasembly setTag:MENU_SHOW_DISASM];
-
-	if (index < [menu numberOfItems])
-		[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
-}
+// - (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
+// 	NSMenuItem *breakItem = [menu insertItemWithTitle:@"Toggle Breakpoint at Cursor"
+// 											   action:@selector(debugToggleBreakpoint:)
+// 										keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF9FunctionKey]
+// 											  atIndex:index++];
+// 	[breakItem setKeyEquivalentModifierMask:0];
+//
+// 	NSMenuItem *disableItem = [menu insertItemWithTitle:@"Disable Breakpoint at Cursor"
+// 												 action:@selector(debugToggleBreakpointEnable:)
+// 										  keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF9FunctionKey]
+// 												atIndex:index++];
+// 	[disableItem setKeyEquivalentModifierMask:NSEventModifierFlagShift];
+//
+// 	NSMenu      *runMenu = [[menu itemWithTitle:@"Run"] submenu];
+// 	NSMenuItem  *runItem;
+// 	if (runMenu != nil) {
+// 		runItem = [runMenu addItemWithTitle:@"to Cursor"
+// 									 action:@selector(debugRunToCursor:)
+// 							  keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF4FunctionKey]];
+// 	} else {
+// 		runItem = [menu insertItemWithTitle:@"Run to Cursor"
+// 									 action:@selector(debugRunToCursor:)
+// 							  keyEquivalent:[NSString stringWithFormat:@"%C", (short)NSF4FunctionKey]
+// 									atIndex:index++];
+// 	}
+// 	[runItem setKeyEquivalentModifierMask:0];
+//
+// 	[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
+//
+// 	NSMenuItem *rawItem = [menu insertItemWithTitle:@"Show Raw Opcodes"
+// 											 action:@selector(showRightColumn:)
+// 									  keyEquivalent:@"r"
+// 											atIndex:index++];
+// 	[rawItem setTarget:self];
+// 	[rawItem setTag:DASM_RIGHTCOL_RAW];
+//
+// 	NSMenuItem *encItem = [menu insertItemWithTitle:@"Show Encrypted Opcodes"
+// 											 action:@selector(showRightColumn:)
+// 									  keyEquivalent:@"e"
+// 											atIndex:index++];
+// 	[encItem setTarget:self];
+// 	[encItem setTag:DASM_RIGHTCOL_ENCRYPTED];
+//
+// 	NSMenuItem *commentsItem = [menu insertItemWithTitle:@"Show Comments"
+// 												  action:@selector(showRightColumn:)
+// 										   keyEquivalent:@"n"
+// 												 atIndex:index++];
+// 	[commentsItem setTarget:self];
+// 	[commentsItem setTag:DASM_RIGHTCOL_COMMENTS];
+//
+// 	[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
+//
+// 	NSMenuItem *showSource = [menu insertItemWithTitle:@"Show Source"
+// 											    action:@selector(sourceDebugBarChanged:)
+// 										 keyEquivalent:@"u"
+// 											   atIndex:index++ ];
+//
+// 	[showSource setTarget:self];
+// 	[showSource setTag:MENU_SHOW_SOURCE];
+//
+// 	NSMenuItem *showDisasembly = [menu insertItemWithTitle:@"Show Disassembly"
+// 													action:@selector(sourceDebugBarChanged:)
+// 											 keyEquivalent:@"U"
+// 												   atIndex:index++ ];
+// 	[showDisasembly setTarget:self];
+// 	[showDisasembly setTag:MENU_SHOW_DISASM];
+//
+// 	if (index < [menu numberOfItems])
+// 		[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
+// }
 
 
 - (void)insertSubviewItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
-	for (auto &source : view->source_list())
+	const debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
+	const srcdbg_provider_base *debug_info = dv_source->srcdbg_provider();
+
+	if (debug_info)
 	{
-		[[menu insertItemWithTitle:[NSString stringWithUTF8String:source->name()]
-							action:NULL
-					 keyEquivalent:@""
-						   atIndex:index++] setTag:view->source_index(*source)];
+		std::size_t num_files = debug_info->num_files();
+		for (std::size_t i = 0; i < num_files; i++)
+		{
+			const char * entry_text = debug_info->file_index_to_path(i).built();
+			NSString *title = [NSString stringWithUTF8String:entry_text];
+			[[menu insertItemWithTitle:title
+								action:@selector(sourceDebugBarChanged:)
+						 keyEquivalent:@""
+							   atIndex:index++] setTag:i];
+		}
 	}
-	if (index < [menu numberOfItems])
-		[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
 }
 
-- (IBAction)sourceDebugBarChanged:(id)sender {
+// - (IBAction)sourceDebugBarChanged:(id)sender {
+// 	NSLog(@"srcdbg sourceDebugBarChanged");
+// }
+
+- (void)setSourceIndex:(int)index {
+ 	debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
+	dv_source->set_src_index(index);
+}
+
+- (IBAction)sourceDebugChanged:(id)sender {
 	if ([sender tag] == MENU_SHOW_SOURCE)
 	{
 // 		m_codeDock->setWidget(m_srcdbgFrame);
 		NSWindow *window = [self window];
-		id del = [window delegate];
-		[del setDisasemblyView:true];
+		id delegate = [window delegate];
+		[delegate setDisasemblyView:true];
 		machine->debug_view().update_all(DVT_SOURCE);
 	}
 	else
 	{
 // 		m_codeDock->setWidget(m_dasmFrame);
 		NSWindow *window = [self window];
-		id del = [window delegate];
-		[del setDisasemblyView:false];
+		id delegate = [window delegate];
+		[delegate setDisasemblyView:false];
 		machine->debug_view().update_all(DVT_DISASSEMBLY);
 	}
 }

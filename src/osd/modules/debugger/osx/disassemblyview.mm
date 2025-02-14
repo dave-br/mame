@@ -107,13 +107,13 @@
 	[menu addItem:[NSMenuItem separatorItem]];
 
 	item = [menu addItemWithTitle:@"Show Source"
-						   action:@selector(sourceDebugBarChanged:)
+						   action:@selector(sourceDebugChanged:)
 					keyEquivalent:@"u"];
 	[item setTarget:self];
 	[item setTag:MENU_SHOW_SOURCE];
 
 	item = [menu addItemWithTitle:@"Show Disassembly"
-						   action:@selector(sourceDebugBarChanged:)
+						   action:@selector(sourceDebugChanged:)
 					keyEquivalent:@"U"];
 	[item setTarget:self];
 	[item setTag:MENU_SHOW_DISASM];
@@ -227,7 +227,7 @@
 }
 
 
-- (IBAction)sourceDebugBarChanged:(id)sender {
+- (IBAction)sourceDebugChanged:(id)sender {
 	if ([sender tag] == MENU_SHOW_SOURCE)
 	{
 // 		m_codeDock->setWidget(m_srcdbgFrame);
@@ -245,7 +245,6 @@
 		machine->debug_view().update_all(DVT_DISASSEMBLY);
 	}
 }
-
 
 - (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
 	NSMenuItem *breakItem = [menu insertItemWithTitle:@"Toggle Breakpoint at Cursor"
@@ -300,7 +299,7 @@
 	[menu insertItem:[NSMenuItem separatorItem] atIndex:index++];
 
 	NSMenuItem *showSource = [menu insertItemWithTitle:@"Show Source"
-											    action:@selector(sourceDebugBarChanged:)
+											    action:@selector(sourceDebugChanged:)
 										 keyEquivalent:@"u"
 											   atIndex:index++ ];
 
@@ -308,7 +307,7 @@
 	[showSource setTag:MENU_SHOW_SOURCE];
 
 	NSMenuItem *showDisasembly = [menu insertItemWithTitle:@"Show Disassembly"
-													action:@selector(sourceDebugBarChanged:)
+													action:@selector(sourceDebugChanged:)
 											 keyEquivalent:@"U"
 												   atIndex:index++ ];
 	[showDisasembly setTarget:self];

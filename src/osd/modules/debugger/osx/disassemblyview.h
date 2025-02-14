@@ -41,7 +41,7 @@ enum
 - (NSNumber *)selectedAddress;
 
 - (IBAction)showRightColumn:(id)sender;
-- (IBAction)sourceDebugBarChanged:(id)sender;
+- (IBAction)sourceDebugChanged:(id)sender;
 
 - (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;
 - (void)insertSubviewItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;

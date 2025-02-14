@@ -14,7 +14,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface MAMESrcDebugView : MAMEDebugView <MAMEDebugViewSubviewSupport>
+@interface MAMESrcDebugView : MAMEDebugView
 {
 }
 
@@ -24,7 +24,10 @@
 
 - (NSString *)selectedSubviewName;
 - (int)selectedSubviewIndex;
-- (void)selectSubviewAtIndex:(int)index;
+// - (void)selectSubviewAtIndex:(int)index;
+
+- (void)setSourceIndex:(int)index;
+
 // - (BOOL)selectSubviewForDevice:(device_t *)device;
 // - (BOOL)selectSubviewForSpace:(address_space *)space;
 
@@ -35,9 +38,10 @@
 // - (offs_t)selectedLine;
 
 // - (IBAction)showRightColumn:(id)sender;
-- (IBAction)sourceDebugBarChanged:(id)sender;
+- (IBAction)sourceDebugChanged:(id)sender;
+// - (IBAction)sourceDebugBarChanged:(id)sender;
 
-- (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;
+// - (void)insertActionItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;
 - (void)insertSubviewItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;
 
 - (void)saveConfigurationToNode:(util::xml::data_node *)node;

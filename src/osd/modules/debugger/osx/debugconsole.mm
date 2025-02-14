@@ -92,6 +92,7 @@
 	[sourceButton setTarget:self];
 	[sourceButton setAction:@selector(changeSubview:)];
 	[[sourceButton cell] setArrowPosition:NSPopUpArrowAtBottom];
+	[srcdbgView insertSubviewItemsInMenu:[sourceButton menu] atIndex:0];
 
 	// create source container to group together the popup and debug view
 	srcdbgContainerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
@@ -643,6 +644,10 @@
 	[[[sender subviews] objectAtIndex:1] setFrame:second];
 }
 
+- (IBAction)sourceDebugBarChanged:(id)sender {
+	NSLog(@"debugconsole sourceDebugBarChanged: %ld", [sender tag]);
+	[srcdbgView setSourceIndex:[sender tag]];
+}
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
 	SEL const action = [item action];

@@ -35,6 +35,8 @@
 
 - (void)setCPU:(device_t *)device;
 
+- (IBAction)sourceDebugBarChanged:(id)sender;
+
 - (IBAction)doCommand:(id)sender;
 
 - (IBAction)debugToggleBreakpoint:(id)sender;
