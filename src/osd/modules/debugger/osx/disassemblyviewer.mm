@@ -278,6 +278,7 @@
 
 	if (action == @selector(debugToggleBreakpoint:))
 	{
+		NSLog( @"dissesembly validate menu item debugToggleBreakpoint");
 		if (haveCursor)
 		{
 			if (breakpoint != nullptr)

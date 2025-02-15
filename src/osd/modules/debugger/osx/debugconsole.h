@@ -24,6 +24,7 @@
 	NSSplitView             *regSplit, *dasmSplit;
 	MAMERegistersView       *regView;
 	MAMEDisassemblyView     *dasmView;
+	NSScrollView		    *dasmScroll;
 	MAMESrcDebugView        *srcdbgView;
 	NSPopUpButton			*sourceButton;
 	NSView					*srcdbgContainerView;
@@ -34,6 +35,7 @@
 - (id)initWithMachine:(running_machine &)m;
 
 - (void)setCPU:(device_t *)device;
+- (BOOL)sourceFrameActive;
 
 - (IBAction)sourceDebugBarChanged:(id)sender;
 

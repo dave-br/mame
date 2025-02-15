@@ -35,6 +35,7 @@ extern NSString *const MAMESaveDebuggerConfigurationNotification;
 - (id)initWithMachine:(running_machine &)m title:(NSString *)t;
 
 - (void)activate;
+- (BOOL)sourceFrameActive;
 
 - (IBAction)debugBreak:(id)sender;
 - (IBAction)debugRun:(id)sender;

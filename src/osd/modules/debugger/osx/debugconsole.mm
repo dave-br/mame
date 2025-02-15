@@ -33,7 +33,7 @@
 @implementation MAMEDebugConsole
 
 - (id)initWithMachine:(running_machine &)m {
-	NSScrollView    *regScroll, *dasmScroll, *srcdbgScroll, *consoleScroll;
+	NSScrollView    *regScroll, *srcdbgScroll, *consoleScroll;
 	NSView          *consoleContainer, *dasmContainer;
 	NSPopUpButton   *actionButton;
 	NSRect          rct;
@@ -72,6 +72,7 @@
 
 	// create the source debug view
 	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78) machine:*machine];
+	[srcdbgView setExpression:@"curpc"];
 	[srcdbgView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78)];
 	[srcdbgScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
@@ -109,6 +110,7 @@
 	[dasmContainer setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[dasmScroll release];
 	[srcdbgContainerView release];
+
 	[srcdbgContainerView setHidden:true];
 
 	// create the console view
@@ -199,13 +201,7 @@
 														  borderType:[dasmScroll borderType]
 														 controlSize:NSControlSizeRegular
 													   scrollerStyle:NSScrollerStyleOverlay];
-// 	NSSize const    srcdbgCurrent = [srcdbgScroll frame].size;
-// 	NSSize const    srcdbgSize = [NSScrollView frameSizeForContentSize:[srcdbgView maximumFrameSize]
-// 											 horizontalScrollerClass:[NSScroller class]
-// 											   verticalScrollerClass:[NSScroller class]
-// 														  borderType:[srcdbgScroll borderType]
-// 														 controlSize:NSControlSizeRegular
-// 													   scrollerStyle:NSScrollerStyleOverlay];
+	[srcdbgView maximumFrameSize]; // called to correctly setup source
 	NSSize const    consoleCurrent = [consoleContainer frame].size;
 	NSSize          consoleSize = [NSScrollView frameSizeForContentSize:[consoleView maximumFrameSize]
 												horizontalScrollerClass:[NSScroller class]
@@ -262,10 +258,15 @@
 	[super dealloc];
 }
 
+- (BOOL)sourceFrameActive
+{
+	return ![dasmScroll isHidden];
+}
 
 - (void)setCPU:(device_t *)device {
 	[regView selectSubviewForDevice:device];
 	[dasmView selectSubviewForDevice:device];
+	[srcdbgView selectSubviewForDevice:device];
 	[window setTitle:[NSString stringWithFormat:@"Debug: %s - %s '%s'",
 												device->machine().system().name,
 												device->name(),
@@ -291,14 +292,16 @@
 
 
 - (IBAction)debugToggleBreakpoint:(id)sender {
-	device_t &device = *[dasmView source]->device();
-	if ([dasmView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
+	MAMEDisassemblyView *visibleView = [dasmScroll isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
+	NSNumber *num = [visibleView selectedAddress];
+
+	if (num)
 	{
-		NSNumber *num = [dasmView selectedAddress];
-		if (num)
+		offs_t const address = [num unsignedIntValue];
+		device_t &device = *[visibleView source]->device();
+		if ([visibleView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
 		{
-			offs_t const address = [num unsignedIntValue];
-			const debug_breakpoint *bp = [dasmView source]->device()->debug()->breakpoint_find(address);
+			const debug_breakpoint *bp = [visibleView source]->device()->debug()->breakpoint_find(address);
 
 			// if it doesn't exist, add a new one
 			NSString *command;
@@ -311,16 +314,17 @@
 	}
 }
 
-
 - (IBAction)debugToggleBreakpointEnable:(id)sender {
-	device_t &device = *[dasmView source]->device();
-	if ([dasmView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
+	MAMEDisassemblyView *visibleView = [dasmScroll isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
+	NSNumber *num = [visibleView selectedAddress];
+
+	if (num)
 	{
-		NSNumber *num = [dasmView selectedAddress];
-		if (num)
+		device_t &device = *[visibleView source]->device();
+		if ([visibleView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
 		{
 			offs_t const address = [num unsignedIntValue];
-			const debug_breakpoint *bp = [dasmView source]->device()->debug()->breakpoint_find(address);
+			const debug_breakpoint *bp = [visibleView source]->device()->debug()->breakpoint_find(address);
 			if (bp != nullptr)
 			{
 				NSString *command;
@@ -336,11 +340,13 @@
 
 
 - (IBAction)debugRunToCursor:(id)sender {
-	device_t &device = *[dasmView source]->device();
-	if ([dasmView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
+	MAMEDisassemblyView *visibleView = [dasmScroll isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
+	NSNumber *num = [visibleView selectedAddress];
+
+	if (num)
 	{
-		NSNumber *num = [dasmView selectedAddress];
-		if (num)
+		device_t &device = *[visibleView source]->device();
+		if ([visibleView cursorVisible] && (machine->debugger().console().get_visible_cpu() == &device))
 		{
 			offs_t const address = [num unsignedIntValue];
 			NSString *command = [NSString stringWithFormat:@"go 0x%lX", (unsigned long)address];
@@ -585,13 +591,13 @@
 
 - (void)setDisasemblyView:(BOOL)value
 {
-	[dasmView setHidden:value];
+	[dasmScroll setHidden:value];
 	[srcdbgContainerView setHidden:!value];
 }
 
 - (BOOL) getDisasemblyView
 {
-	return [srcdbgContainerView isHidden];
+	return ![dasmScroll isHidden];
 }
 
 - (CGFloat)splitView:(NSSplitView *)sender constrainMinCoordinate:(CGFloat)min ofSubviewAt:(NSInteger)offs {
@@ -652,6 +658,7 @@
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
+	MAMEDisassemblyView *visibleView = [dasmScroll isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
 	SEL const action = [item action];
 	BOOL const inContextMenu = ([item menu] == [dasmView menu]);
 	BOOL const haveCursor = [dasmView cursorVisible];
@@ -660,11 +667,11 @@
 	const debug_breakpoint *breakpoint = nullptr;
 	if (haveCursor)
 	{
-		NSNumber *num = [dasmView selectedAddress];
+		NSNumber *num = [visibleView selectedAddress];
 		if (num)
 		{
 			offs_t const address = [num unsignedIntValue];
-			breakpoint = [dasmView source]->device()->debug()->breakpoint_find(address);
+			breakpoint = [visibleView source]->device()->debug()->breakpoint_find(address);
 		}
 	}
 
