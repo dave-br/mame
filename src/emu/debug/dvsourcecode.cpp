@@ -181,6 +181,7 @@ void debug_view_sourcecode::view_update()
 		{
 			print_line(row, " ", DCA_NORMAL);
 		}
+		m_total.y = 2;
 		return;
 	}
 
@@ -293,6 +294,7 @@ void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::so
 	{
 		print_line(row, " ", DCA_NORMAL);
 	}
+	m_total.y = 6;
 }
 
 
@@ -378,7 +380,7 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 		m_viewdata[row * m_visible.x + viewdata_col] =
 		{
 			(viewdata_col < line_str.size()) ? u8(line_str[viewdata_col]) : u8(' '),
-			DCA_DISABLED
+			u8(DCA_DISABLED | attrib)
 		};
 	}
 
