@@ -16,5 +16,5 @@
 - (id)initWithFrame:(NSRect)f machine:(running_machine &)m;
 - (void)setSourceIndex:(int)index;
 - (void)insertSubviewItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index;
-
+- (void)update;
 @end

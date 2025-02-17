@@ -12,6 +12,7 @@
 #import "debugconsole.h"
 #import "debugview.h"
 #import "disassemblyview.h"
+#import "srcdebugview.h"
 
 #include "debugger.h"
 #include "debug/debugcon.h"
@@ -24,9 +25,9 @@
 @implementation MAMEDisassemblyViewer
 
 - (id)initWithMachine:(running_machine &)m console:(MAMEDebugConsole *)c {
-	NSScrollView    *dasmScroll;
+	NSScrollView    *dasmScroll, *srcdbgScroll;
 	NSView          *expressionContainer;
-	NSPopUpButton   *actionButton;
+	NSPopUpButton   *actionButton, *sourceButton;
 	NSRect          expressionFrame;
 
 	if (!(self = [super initWithMachine:m title:@"Disassembly" console:c]))
@@ -75,8 +76,8 @@
 	[expressionField release];
 	[expressionContainer addSubview:subviewButton];
 	[subviewButton release];
-	[[window contentView] addSubview:expressionContainer];
-	[expressionContainer release];
+// 	[[window contentView] addSubview:expressionContainer];
+// 	[expressionContainer release];
 
 	// create the disassembly view
 	dasmView = [[MAMEDisassemblyView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
@@ -93,8 +94,8 @@
 	[dasmScroll setDrawsBackground:NO];
 	[dasmScroll setDocumentView:dasmView];
 	[dasmView release];
-	[[window contentView] addSubview:dasmScroll];
-	[dasmScroll release];
+// 	[[window contentView] addSubview:dasmScroll];
+// 	[dasmScroll release];
 
 	// create the action popup
 	actionButton = [[self class] newActionButtonWithFrame:NSMakeRect(0,
@@ -104,8 +105,8 @@
 	[actionButton setAutoresizingMask:(NSViewMaxXMargin | NSViewMinYMargin)];
 	[actionButton setFont:[NSFont systemFontOfSize:[defaultFont pointSize]]];
 	[dasmView insertActionItemsInMenu:[actionButton menu] atIndex:1];
-	[[window contentView] addSubview:actionButton];
-	[actionButton release];
+// 	[[window contentView] addSubview:actionButton];
+// 	[actionButton release];
 
 	// set default state
 	[dasmView selectSubviewForDevice:machine->debugger().console().get_visible_cpu()];
@@ -123,7 +124,59 @@
 													  borderType:[dasmScroll borderType]
 													 controlSize:NSControlSizeRegular
 												   scrollerStyle:NSScrollerStyleOverlay];
+
+	// create enclosing disasembly group
+	NSRect groupRect = NSUnionRect(NSUnionRect([expressionContainer frame], [dasmScroll frame]), [actionButton frame]);
+	dissasemblyGroupView = [[NSView alloc] initWithFrame:groupRect];
+	[dissasemblyGroupView addSubview:expressionContainer];
+	[dissasemblyGroupView addSubview:dasmScroll];
+	[dissasemblyGroupView addSubview:actionButton];
+	[dissasemblyGroupView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	[expressionContainer release];
+	[dasmScroll release];
+	[actionButton release];
+	[[window contentView] addSubview:dissasemblyGroupView];
+	[dissasemblyGroupView release];
+
 	[self cascadeWindowWithDesiredSize:desired forView:dasmScroll];
+
+	// create the source debug view
+	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78) machine:*machine];
+	[srcdbgView selectSubviewForDevice:machine->debugger().console().get_visible_cpu()];
+	[srcdbgView setExpression:@"curpc"];
+	[srcdbgView maximumFrameSize]; // called to correctly setup source
+	[srcdbgView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78)];
+	[srcdbgScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	[srcdbgScroll setHasHorizontalScroller:YES];
+	[srcdbgScroll setHasVerticalScroller:YES];
+	[srcdbgScroll setAutohidesScrollers:YES];
+	[srcdbgScroll setBorderType:NSBezelBorder];
+	[srcdbgScroll setDrawsBackground:NO];
+	[srcdbgScroll setDocumentView:srcdbgView];
+	[srcdbgView release];
+
+	// create the source popup button
+	sourceButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 78, 100, 19)];
+	[sourceButton setAutoresizingMask:(NSViewWidthSizable | NSViewMinXMargin | NSViewMinYMargin)];
+	[sourceButton setBezelStyle:NSBezelStyleShadowlessSquare];
+	[sourceButton setFocusRingType:NSFocusRingTypeNone];
+	[sourceButton setFont:defaultFont];
+	[sourceButton setTarget:self];
+	[sourceButton setAction:@selector(changeSubview:)];
+	[[sourceButton cell] setArrowPosition:NSPopUpArrowAtBottom];
+	[srcdbgView insertSubviewItemsInMenu:[sourceButton menu] atIndex:0];
+
+	// create source container to group together the popup and debug view
+	srcdbgGroupView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	[srcdbgGroupView addSubview:srcdbgScroll];
+	[srcdbgGroupView addSubview:sourceButton];
+	[srcdbgGroupView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+	[srcdbgScroll release];
+	[sourceButton release];
+	[srcdbgGroupView setHidden:YES];
+	[[window contentView] addSubview:srcdbgGroupView];
+	[srcdbgGroupView release];
 
 	// don't forget the result
 	return self;
@@ -135,8 +188,20 @@
 }
 
 
+- (void)setDisasemblyView:(BOOL)value
+{
+	[dissasemblyGroupView setHidden:value];
+	[srcdbgGroupView setHidden:!value];
+}
+
+
 - (id <MAMEDebugViewExpressionSupport>)documentView {
 	return dasmView;
+}
+
+
+- (IBAction)sourceDebugBarChanged:(id)sender {
+	[srcdbgView setSourceIndex:[sender tag]];
 }
 
 

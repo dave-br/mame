@@ -600,6 +600,11 @@
 	return ![dasmScroll isHidden];
 }
 
+- (void) setSourceButton:(int)index
+{
+	[sourceButton selectItemAtIndex:index];
+}
+
 - (CGFloat)splitView:(NSSplitView *)sender constrainMinCoordinate:(CGFloat)min ofSubviewAt:(NSInteger)offs {
 	return (min < 100) ? 100 : min;
 }

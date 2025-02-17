@@ -35,6 +35,7 @@
 - (id)initWithFrame:(NSRect)f type:(debug_view_type)t machine:(running_machine &)m wholeLineScroll:(BOOL)w;
 
 - (void)update;
+- (void)adjustSizeAndRecomputeVisible;
 
 - (NSSize)maximumFrameSize;
 
@@ -83,5 +84,6 @@
 
 - (void) setDisasemblyView:(BOOL)value;
 - (BOOL) getDisasemblyView;
+- (void) setSourceButton:(int)index;
 
 @end

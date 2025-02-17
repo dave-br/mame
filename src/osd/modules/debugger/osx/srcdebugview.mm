@@ -49,4 +49,14 @@
 }
 
 
+- (void)update {
+	NSWindow *window = [self window];
+	id delegate = [window delegate];
+
+	const debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
+
+	[super update];
+	[delegate setSourceButton:dv_source->cur_src_index()];
+}
+
 @end
