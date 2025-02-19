@@ -79,11 +79,3 @@
 - (void)setExpression:(NSString *)exp;
 
 @end
-
-@protocol MAMEDebugViewDisasemblyContainer <NSObject>
-
-- (void) setDisasemblyView:(BOOL)value;
-- (BOOL) getDisasemblyView;
-- (void) setSourceButton:(int)index;
-
-@end

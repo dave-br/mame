@@ -27,7 +27,7 @@
 - (id)initWithMachine:(running_machine &)m console:(MAMEDebugConsole *)c {
 	NSScrollView    *dasmScroll, *srcdbgScroll;
 	NSView          *expressionContainer;
-	NSPopUpButton   *actionButton, *sourceButton;
+	NSPopUpButton   *actionButton;
 	NSRect          expressionFrame;
 
 	if (!(self = [super initWithMachine:m title:@"Disassembly" console:c]))
@@ -195,8 +195,20 @@
 }
 
 
+- (BOOL) getDisasemblyView
+{
+	return ![dissasemblyGroupView isHidden];
+}
+
+
 - (id <MAMEDebugViewExpressionSupport>)documentView {
 	return dasmView;
+}
+
+
+- (void) setSourceButton:(int)index
+{
+	[sourceButton selectItemAtIndex:index];
 }
 
 

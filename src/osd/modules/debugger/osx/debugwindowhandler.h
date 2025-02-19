@@ -107,3 +107,4 @@ extern NSString *const MAMESaveDebuggerConfigurationNotification;
 - (void)restoreConfigurationFromNode:(util::xml::data_node const *)node;
 
 @end
+
