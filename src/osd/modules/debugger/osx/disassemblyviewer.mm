@@ -140,13 +140,18 @@
 
 	[self cascadeWindowWithDesiredSize:desired forView:dasmScroll];
 
+	NSLog( @"dasmScroll boounds %@", NSStringFromRect([dasmScroll bounds]));
+	NSLog( @"dissasemblyGroupView boounds %@", NSStringFromRect([dissasemblyGroupView bounds]));
+
+	NSRect bounds = [dissasemblyGroupView bounds];
+
 	// create the source debug view
-	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78) machine:*machine];
+	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height-22) machine:*machine];
 	[srcdbgView selectSubviewForDevice:machine->debugger().console().get_visible_cpu()];
 	[srcdbgView setExpression:@"curpc"];
 	[srcdbgView maximumFrameSize]; // called to correctly setup source
 	[srcdbgView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 100, 78)];
+	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height-22)];
 	[srcdbgScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[srcdbgScroll setHasHorizontalScroller:YES];
 	[srcdbgScroll setHasVerticalScroller:YES];
@@ -157,7 +162,7 @@
 	[srcdbgView release];
 
 	// create the source popup button
-	sourceButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 78, 100, 19)];
+	sourceButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(bounds.origin.x, bounds.origin.y+bounds.size.height-22, bounds.size.width, 19)];
 	[sourceButton setAutoresizingMask:(NSViewWidthSizable | NSViewMinXMargin | NSViewMinYMargin)];
 	[sourceButton setBezelStyle:NSBezelStyleShadowlessSquare];
 	[sourceButton setFocusRingType:NSFocusRingTypeNone];
@@ -168,7 +173,7 @@
 	[srcdbgView insertSubviewItemsInMenu:[sourceButton menu] atIndex:0];
 
 	// create source container to group together the popup and debug view
-	srcdbgGroupView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+	srcdbgGroupView = [[NSView alloc] initWithFrame:bounds];
 	[srcdbgGroupView addSubview:srcdbgScroll];
 	[srcdbgGroupView addSubview:sourceButton];
 	[srcdbgGroupView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
@@ -250,42 +255,49 @@
 
 
 - (IBAction)debugToggleBreakpoint:(id)sender {
-	if ([dasmView cursorVisible])
+	MAMEDisassemblyView *visibleView = [dissasemblyGroupView isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
+	NSNumber *num = [visibleView selectedAddress];
+
+	if (num)
 	{
-		device_t &device = *[dasmView source]->device();
-		NSNumber *num = [dasmView selectedAddress];
-		if (!num) return;
-
-		offs_t const address = [num unsignedIntValue];
-		const debug_breakpoint *bp = device.debug()->breakpoint_find(address);
-
-		// if it doesn't exist, add a new one
-		if (bp == nullptr)
+		if ([visibleView cursorVisible])
 		{
-			uint32_t const bpnum = device.debug()->breakpoint_set(address);
-			machine->debugger().console().printf("Breakpoint %X set\n", bpnum);
-		}
-		else
-		{
-			int const bpnum = bp->index();
-			device.debug()->breakpoint_clear(bpnum);
-			machine->debugger().console().printf("Breakpoint %X cleared\n", (uint32_t)bpnum);
-		}
+			device_t &device = *[visibleView source]->device();
 
-		// fail to do this and the display doesn't update
-		machine->debug_view().update_all();
-		machine->debugger().refresh_display();
+			offs_t const address = [num unsignedIntValue];
+			const debug_breakpoint *bp = device.debug()->breakpoint_find(address);
+
+			// if it doesn't exist, add a new one
+			if (bp == nullptr)
+			{
+				uint32_t const bpnum = device.debug()->breakpoint_set(address);
+				machine->debugger().console().printf("Breakpoint %X set\n", bpnum);
+			}
+			else
+			{
+				int const bpnum = bp->index();
+				device.debug()->breakpoint_clear(bpnum);
+				machine->debugger().console().printf("Breakpoint %X cleared\n", (uint32_t)bpnum);
+			}
+
+			// fail to do this and the display doesn't update
+			machine->debug_view().update_all();
+			machine->debugger().refresh_display();
+		}
 	}
 }
 
 
 - (IBAction)debugToggleBreakpointEnable:(id)sender {
-	if ([dasmView cursorVisible])
+	MAMEDisassemblyView *visibleView = [dissasemblyGroupView isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
+	NSNumber *num = [visibleView selectedAddress];
+
+	if (num)
 	{
-		device_t &device = *[dasmView source]->device();
-		NSNumber *num = [dasmView selectedAddress];
-		if (num)
+		if ([visibleView cursorVisible])
 		{
+			device_t &device = *[visibleView source]->device();
+
 			offs_t const address = [num unsignedIntValue];
 			const debug_breakpoint *bp = device.debug()->breakpoint_find(address);
 			if (bp != nullptr)
@@ -303,10 +315,12 @@
 
 
 - (IBAction)debugRunToCursor:(id)sender {
-	if ([dasmView cursorVisible])
+	MAMEDisassemblyView *visibleView = [dissasemblyGroupView isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
+	NSNumber *num = [visibleView selectedAddress];
+
+	if (num)
 	{
-		NSNumber *num = [dasmView selectedAddress];
-		if (num)
+		if ([dasmView cursorVisible])
 		{
 			[dasmView source]->device()->debug()->go([num unsignedIntValue]);
 		}
@@ -339,17 +353,18 @@
 
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
+	MAMEDisassemblyView *visibleView = [dissasemblyGroupView isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
 	SEL const action = [item action];
 	BOOL const inContextMenu = ([item menu] == [dasmView menu]);
-	BOOL const haveCursor = [dasmView cursorVisible];
+	BOOL const haveCursor = [visibleView cursorVisible];
 
 	const debug_breakpoint *breakpoint = nullptr;
 	if (haveCursor)
 	{
-		NSNumber *num = [dasmView selectedAddress];
+		NSNumber *num = [visibleView selectedAddress];
 		if (num)
 		{
-			breakpoint = [dasmView source]->device()->debug()->breakpoint_find([num unsignedIntValue]);
+			breakpoint = [visibleView source]->device()->debug()->breakpoint_find([num unsignedIntValue]);
 		}
 	}
 
