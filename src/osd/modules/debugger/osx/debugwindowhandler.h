@@ -106,5 +106,14 @@ extern NSString *const MAMESaveDebuggerConfigurationNotification;
 - (void)saveConfigurationToNode:(util::xml::data_node *)node;
 - (void)restoreConfigurationFromNode:(util::xml::data_node const *)node;
 
+
 @end
 
+
+@protocol MAMEDebugViewDisasemblyContainer <NSObject>
+
+- (void) setDisasemblyView:(BOOL)value;
+- (BOOL) getDisasemblyView;
+- (void) setSourceButton:(int)index;
+
+@end

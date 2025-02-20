@@ -2,15 +2,16 @@
 // copyright-holders:tim lindner
 //============================================================
 //
-//  srcdebugview.m - MacOS X Cocoa source code debug window handling
+//  srcdebugview.m - MacOS X Cocoa source code debug view handling
 //
 //============================================================
 
 #include "emu.h"
+
+#import "debugwindowhandler.h"
 #import "srcdebugview.h"
 
 #include "debug/debugvw.h"
-
 #include "util/xmlfile.h"
 
 

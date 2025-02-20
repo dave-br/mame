@@ -26,15 +26,6 @@
 #import <Cocoa/Cocoa.h>
 
 
-@protocol MAMEDebugViewDisasemblyContainer <NSObject>
-
-- (void) setDisasemblyView:(BOOL)value;
-- (BOOL) getDisasemblyView;
-- (void) setSourceButton:(int)index;
-
-@end
-
-
 #endif // __OBJC__
 
 #endif // MAME_OSD_DEBUGGER_OSX_DEBUGOSX_H

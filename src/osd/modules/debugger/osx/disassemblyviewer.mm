@@ -76,8 +76,6 @@
 	[expressionField release];
 	[expressionContainer addSubview:subviewButton];
 	[subviewButton release];
-// 	[[window contentView] addSubview:expressionContainer];
-// 	[expressionContainer release];
 
 	// create the disassembly view
 	dasmView = [[MAMEDisassemblyView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100) machine:*machine];
@@ -94,8 +92,6 @@
 	[dasmScroll setDrawsBackground:NO];
 	[dasmScroll setDocumentView:dasmView];
 	[dasmView release];
-// 	[[window contentView] addSubview:dasmScroll];
-// 	[dasmScroll release];
 
 	// create the action popup
 	actionButton = [[self class] newActionButtonWithFrame:NSMakeRect(0,
@@ -105,8 +101,6 @@
 	[actionButton setAutoresizingMask:(NSViewMaxXMargin | NSViewMinYMargin)];
 	[actionButton setFont:[NSFont systemFontOfSize:[defaultFont pointSize]]];
 	[dasmView insertActionItemsInMenu:[actionButton menu] atIndex:1];
-// 	[[window contentView] addSubview:actionButton];
-// 	[actionButton release];
 
 	// set default state
 	[dasmView selectSubviewForDevice:machine->debugger().console().get_visible_cpu()];
@@ -139,9 +133,6 @@
 	[dissasemblyGroupView release];
 
 	[self cascadeWindowWithDesiredSize:desired forView:dasmScroll];
-
-	NSLog( @"dasmScroll boounds %@", NSStringFromRect([dasmScroll bounds]));
-	NSLog( @"dissasemblyGroupView boounds %@", NSStringFromRect([dissasemblyGroupView bounds]));
 
 	NSRect bounds = [dissasemblyGroupView bounds];
 
@@ -193,15 +184,13 @@
 }
 
 
-- (void)setDisasemblyView:(BOOL)value
-{
+- (void)setDisasemblyView:(BOOL)value {
 	[dissasemblyGroupView setHidden:value];
 	[srcdbgGroupView setHidden:!value];
 }
 
 
-- (BOOL) getDisasemblyView
-{
+- (BOOL) getDisasemblyView {
 	return ![dissasemblyGroupView isHidden];
 }
 
@@ -211,8 +200,7 @@
 }
 
 
-- (void) setSourceButton:(int)index
-{
+- (void) setSourceButton:(int)index {
 	[sourceButton selectItemAtIndex:index];
 }
 

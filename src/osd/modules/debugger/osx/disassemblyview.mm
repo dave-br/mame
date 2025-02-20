@@ -7,6 +7,8 @@
 //============================================================
 
 #include "emu.h"
+
+#import "debugwindowhandler.h"
 #import "disassemblyview.h"
 
 #include "debug/debugvw.h"

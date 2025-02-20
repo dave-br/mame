@@ -2,7 +2,7 @@
 // copyright-holders:tim lindner
 //============================================================
 //
-//  srcdebugview.h - MacOS X Cocoa source code debug window handling
+//  srcdebugview.h - MacOS X Cocoa source code debug view handling
 //
 //============================================================
 

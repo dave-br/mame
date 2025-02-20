@@ -247,6 +247,7 @@
 	return self;
 }
 
+
 - (void)dealloc {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 
@@ -258,10 +259,11 @@
 	[super dealloc];
 }
 
-- (BOOL)sourceFrameActive
-{
+
+- (BOOL)sourceFrameActive {
 	return ![dasmScroll isHidden];
 }
+
 
 - (void)setCPU:(device_t *)device {
 	[regView selectSubviewForDevice:device];
@@ -589,21 +591,21 @@
 }
 
 
-- (void)setDisasemblyView:(BOOL)value
-{
+- (void)setDisasemblyView:(BOOL)value {
 	[dasmScroll setHidden:value];
 	[srcdbgContainerView setHidden:!value];
 }
 
-- (BOOL) getDisasemblyView
-{
+
+- (BOOL) getDisasemblyView {
 	return ![dasmScroll isHidden];
 }
 
-- (void) setSourceButton:(int)index
-{
+
+- (void) setSourceButton:(int)index {
 	[sourceButton selectItemAtIndex:index];
 }
+
 
 - (CGFloat)splitView:(NSSplitView *)sender constrainMinCoordinate:(CGFloat)min ofSubviewAt:(NSInteger)offs {
 	return (min < 100) ? 100 : min;
@@ -658,9 +660,11 @@
 	[[[sender subviews] objectAtIndex:1] setFrame:second];
 }
 
+
 - (IBAction)sourceDebugBarChanged:(id)sender {
 	[srcdbgView setSourceIndex:[sender tag]];
 }
+
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
 	MAMEDisassemblyView *visibleView = [dasmScroll isHidden] ? (MAMEDisassemblyView *)srcdbgView : dasmView;
