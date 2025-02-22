@@ -137,12 +137,18 @@
 	NSRect bounds = [dissasemblyGroupView bounds];
 
 	// create the source debug view
-	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height-22) machine:*machine];
+	srcdbgView = [[MAMESrcDebugView alloc] initWithFrame:NSMakeRect(bounds.origin.x,
+																	bounds.origin.y,
+																	bounds.size.width,
+																	bounds.size.height-22) machine:*machine];
 	[srcdbgView selectSubviewForDevice:machine->debugger().console().get_visible_cpu()];
 	[srcdbgView setExpression:@"curpc"];
 	[srcdbgView maximumFrameSize]; // called to correctly setup source
 	[srcdbgView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
-	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height-22)];
+	srcdbgScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(bounds.origin.x,
+																  bounds.origin.y,
+																  bounds.size.width,
+																  bounds.size.height-22)];
 	[srcdbgScroll setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[srcdbgScroll setHasHorizontalScroller:YES];
 	[srcdbgScroll setHasVerticalScroller:YES];
@@ -153,8 +159,11 @@
 	[srcdbgView release];
 
 	// create the source popup button
-	sourceButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(bounds.origin.x, bounds.origin.y+bounds.size.height-22, bounds.size.width, 19)];
-	[sourceButton setAutoresizingMask:(NSViewWidthSizable | NSViewMinXMargin | NSViewMinYMargin)];
+	sourceButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(bounds.origin.x+23,
+																   bounds.origin.y+bounds.size.height-22,
+																   bounds.size.width-23,
+																   19)];
+	[sourceButton setAutoresizingMask:(NSViewWidthSizable | NSViewMaxXMargin | NSViewMinYMargin)];
 	[sourceButton setBezelStyle:NSBezelStyleShadowlessSquare];
 	[sourceButton setFocusRingType:NSFocusRingTypeNone];
 	[sourceButton setFont:defaultFont];
@@ -163,13 +172,24 @@
 	[[sourceButton cell] setArrowPosition:NSPopUpArrowAtBottom];
 	[srcdbgView insertSubviewItemsInMenu:[sourceButton menu] atIndex:0];
 
+	// create action button for source group
+	actionButton = [[self class] newActionButtonWithFrame:NSMakeRect(bounds.origin.x,
+																	 bounds.origin.y+bounds.size.height-22,
+																	 22,
+																	 22)];
+	[actionButton setAutoresizingMask:(NSViewMaxXMargin | NSViewMinYMargin)];
+	[actionButton setFont:[NSFont systemFontOfSize:[defaultFont pointSize]]];
+	[srcdbgView insertActionItemsInMenu:[actionButton menu] atIndex:1];
+
 	// create source container to group together the popup and debug view
 	srcdbgGroupView = [[NSView alloc] initWithFrame:bounds];
 	[srcdbgGroupView addSubview:srcdbgScroll];
 	[srcdbgGroupView addSubview:sourceButton];
+	[srcdbgGroupView addSubview:actionButton];
 	[srcdbgGroupView setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
 	[srcdbgScroll release];
 	[sourceButton release];
+	[actionButton release];
 	[srcdbgGroupView setHidden:YES];
 	[[window contentView] addSubview:srcdbgGroupView];
 	[srcdbgGroupView release];
@@ -358,7 +378,6 @@
 
 	if (action == @selector(debugToggleBreakpoint:))
 	{
-		NSLog( @"dissesembly validate menu item debugToggleBreakpoint");
 		if (haveCursor)
 		{
 			if (breakpoint != nullptr)
