@@ -1,12 +1,14 @@
 // license:BSD-3-Clause
-// copyright-holders: Angelo Salese
+// copyright-holders: Angelo Salese, Vas Crabb, Roberto Fresca
 /**************************************************************************************************
 
 Chang Yu Electronic (CYE) misc gambling games
 
 TODO:
 - hookup UM5100, merge from pc/filetto.cpp;
-- both games should be working at this point, verify and promote;
+- DIPs;
+- Both games have card GFXs, verify existance of a stealth mode for enabling them;
+- changyu: verify contents of the unsorted rom space;
 
 ===================================================================================================
 
@@ -189,12 +191,14 @@ void changyu_state::videoram_w(offs_t offset, u8 data)
 
 void changyu2_state::mcu_cmd_w(u8 data)
 {
+	osd_printf_error("set cmd %02x at %s\n", data, machine().scheduler().time().to_string());
 	machine().scheduler().perfect_quantum(attotime::from_usec(50)); // enough time for the MCU to take the interrupt about to be triggered
 	machine().scheduler().synchronize(timer_expired_delegate(FUNC(changyu2_state::set_mcu_cmd), this), s32(u32(data)));
 }
 
 void changyu2_state::mcu_ctrl_w(u8 data)
 {
+	osd_printf_error("set ctrl %02x at %s\n", data, machine().scheduler().time().to_string());
 	// other bits unknown
 	m_hopper->motor_w(BIT(data, 4));
 	m_mcu->set_input_line(MCS51_INT0_LINE, BIT(data, 7) ? CLEAR_LINE : ASSERT_LINE);
@@ -208,6 +212,7 @@ u8 changyu2_state::mcu_status_r()
 
 u8 changyu2_state::mcu_cmd_r()
 {
+	osd_printf_error("read cmd %02x at %s\n", m_mcu_cmd, machine().scheduler().time().to_string());
 	return m_mcu_cmd;
 }
 
@@ -480,6 +485,7 @@ void changyu2_state::changyu2(machine_config &config)
 	auto &mcu(I87C51(config.replace(), m_mcu, XTAL(8'000'000)));
 	mcu.set_addrmap(AS_IO, &changyu2_state::ext2_map);
 	mcu.port_in_cb<0>().set(FUNC(changyu2_state::mcu_p1_r));
+	mcu.port_out_cb<0>().set([] (u8 data) { osd_printf_error("MCU P1 %02x\n", data); });
 
 	GENERIC_LATCH_8(config, m_mcu_response_latch);
 
@@ -559,3 +565,4 @@ ROM_END
 // No copyright for both, are these really bootlegs?
 GAME( 1989, changyu,  0, changyu,  changyu, changyu_state,  empty_init, ROT0, "Chang Yu Electronic", "Mayo no 21", MACHINE_NOT_WORKING | MACHINE_NO_SOUND ) // Wing Co. in GFX1, year taken from start of maincpu ROM
 GAME( 1991?, changyu2, 0, changyu2, changyu2,changyu2_state, empty_init, ROT0, "Chang Yu Electronic", "999", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // Wing Co. in GFX1, year from a CYE flyer, cfr. pics in PR #13234
+// 皇冠迷13 likely running on this HW https://youtu.be/K3dCDVs9XCQ

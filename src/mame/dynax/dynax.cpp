@@ -1944,7 +1944,7 @@ static INPUT_PORTS_START( hjingi )
 //  PORT_DIPSETTING(    0x00, DEF_STR( ) )
 	PORT_DIPNAME( 0x08, 0x08, "Payout Variation" )           PORT_DIPLOCATION("DIPSW 2:4")        // 配当の波
 	PORT_DIPSETTING(    0x00, "Small" )                                                           // 小さい
-	PORT_DIPSETTING(    0x08, "Big" )                                                             // 大きい
+	PORT_DIPSETTING(    0x08, "Large" )                                                           // 大きい
 	PORT_DIPNAME( 0x10, 0x10, "Double-Up Game Payout Rate" ) PORT_DIPLOCATION("DIPSW 2:5")        // ＷＵＰゲーム配当率
 	PORT_DIPSETTING(    0x00, DEF_STR(Low) )                                                      // 低い
 	PORT_DIPSETTING(    0x10, DEF_STR(High) )                                                     // 高い
@@ -3035,7 +3035,7 @@ static INPUT_PORTS_START( mjelct3 )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 
 	PORT_START("DSW2")  /* 7c22 (select = 80) */
-	MAHJONG_YAKUMAN_BONUS(0, "SW2:1,2,3")
+	MAHJONG_YAKUMAN_BONUS(0, 0x04, "SW2:1,2,3")
 	PORT_DIPNAME( 0x08, 0x08, "Yakuman Bonuses Per Cycle" )    PORT_DIPLOCATION("SW2:4")
 	PORT_DIPSETTING(    0x08, "1" )
 	PORT_DIPSETTING(    0x00, "2" )
@@ -3162,7 +3162,7 @@ static INPUT_PORTS_START( mjelctrn )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 
 	PORT_START("DSW2")  /* 7c22 (select = 80) */
-	MAHJONG_YAKUMAN_BONUS(0, "SW2:1,2,3")
+	MAHJONG_YAKUMAN_BONUS(0, 0x04, "SW2:1,2,3")
 	PORT_DIPNAME( 0x08, 0x08, "Yakuman Bonuses Per Cycle" )    PORT_DIPLOCATION("SW2:4")
 	PORT_DIPSETTING(    0x08, "1" )
 	PORT_DIPSETTING(    0x00, "2" )
@@ -3254,7 +3254,7 @@ static INPUT_PORTS_START( majxtal7 )
 	PORT_DIPSETTING(    0x00, DEF_STR(On) )
 
 	PORT_START("DSW2") /* select = 80 */
-	MAHJONG_YAKUMAN_BONUS(0, "DIP3:1,2,3")
+	MAHJONG_YAKUMAN_BONUS(0, 0x04, "DIP3:1,2,3")
 	PORT_DIPNAME( 0x08, 0x08, "Yakuman Bonuses Per Cycle" )    PORT_DIPLOCATION("DIP3:4")
 	PORT_DIPSETTING(    0x08, "1" )
 	PORT_DIPSETTING(    0x00, "2" )
@@ -3428,7 +3428,7 @@ static INPUT_PORTS_START( tenkai )
 	PORT_DIPSETTING(    0x08, "2" )                                                               // レート　２
 	PORT_DIPSETTING(    0x04, "3" )                                                               // レート　３
 	PORT_DIPSETTING(    0x00, "5" )                                                               // レート　５
-	MAHJONG_YAKUMAN_BONUS(4, "SW 2:5,6,7")                                                        // 役満ボーナスの設定周期
+	MAHJONG_YAKUMAN_BONUS(4, 0x04, "SW 2:5,6,7")                                                  // 役満ボーナスの設定周期
 	PORT_DIPNAME( 0x80, 0x00, "Yakuman Bonuses Per Cycle" )     PORT_DIPLOCATION("SW 2:8")        // 役満ボーナスの回数設定周期毎に
 	PORT_DIPSETTING(    0x00, "1" )                                                               // １回
 	PORT_DIPSETTING(    0x80, "2" )                                                               // ２回
@@ -3599,7 +3599,7 @@ static INPUT_PORTS_START( mjreach )
 	PORT_DIPSETTING(    0x08, "2" )                                                                // レート２
 	PORT_DIPSETTING(    0x04, "3" )                                                                // レート３
 	PORT_DIPSETTING(    0x00, "5" )                                                                // レート５
-	MAHJONG_YAKUMAN_BONUS(4, "DIP-SW2:5,6,7")                                                      // 役満ボーナスチャンスの設定周期
+	MAHJONG_YAKUMAN_BONUS(4, 0x04, "DIP-SW2:5,6,7")                                                // 役満ボーナスチャンスの設定周期
 	PORT_DIPNAME( 0x80, 0x00, "Yakuman Bonuses Per Cycle" )     PORT_DIPLOCATION("DIP-SW2:8")      // 役満ボーナスの回数設定周期毎に
 	PORT_DIPSETTING(    0x00, "1" )                                                                // １回
 	PORT_DIPSETTING(    0x80, "2" )                                                                // ２回
@@ -3714,7 +3714,7 @@ static INPUT_PORTS_START( gekisha )
 	PORT_DIPSETTING(    0x00, "Active High" )
 
 	PORT_START("DSW3")  // $7c22
-	MAHJONG_YAKUMAN_BONUS(0, "SW3:1,2,3") // 役満ボーナスの設定
+	MAHJONG_YAKUMAN_BONUS(0, 0x04, "SW3:1,2,3") // 役満ボーナスの設定
 	PORT_DIPNAME( 0x08, 0x08, "Yakuman Bonuses Per Cycle" ) PORT_DIPLOCATION("SW3:4")// 役満ボーナスの回数設定周期毎に
 	PORT_DIPSETTING(    0x08, "1" ) // １回
 	PORT_DIPSETTING(    0x00, "2" ) // ２回
@@ -5927,14 +5927,29 @@ Z84C015 - Toshiba TMPZ84C015BF-6 Z80 compatible CPU
 ROM_START( mjelctrb )
 	ROM_REGION( 0x50000, "maincpu", 0 ) // Z80 Code
 	ROM_LOAD( "prog.u27", 0x00000, 0x20000, CRC(688990ca) SHA1(34825cee8f76de93f12ccf2a1021f9c5369da46a) )
-	ROM_RELOAD(          0x28000, 0x08000 )
-	ROM_CONTINUE(        0x20000, 0x08000 )
-	ROM_CONTINUE(        0x18000, 0x08000 )
-	ROM_CONTINUE(        0x10000, 0x08000 )
+	ROM_RELOAD(           0x28000, 0x08000 )
+	ROM_CONTINUE(         0x20000, 0x08000 )
+	ROM_CONTINUE(         0x18000, 0x08000 )
+	ROM_CONTINUE(         0x10000, 0x08000 )
 
 	ROM_REGION( 0x200000, "blitter", 0 )   // blitter data
 	ROM_LOAD( "eb-01.rom", 0x000000, 0x100000, CRC(e5c41448) SHA1(b8322e32b0cb3d771316c9c4f7be91de6e422a24) )
 	ROM_LOAD( "eb-02.rom", 0x100000, 0x080000, CRC(e1f1b431) SHA1(04a612aff4c30cb8ea741f228bfa7e4289acfee8) )
+ROM_END
+
+// bootleg PCB with TMPZ84C015 with flying wire to the program ROM, AL9106 custom, GM68B45S, YM2149F, CCX413-2, 4 banks of 8 DIP switches
+ROM_START( mjelct3bl )
+	ROM_REGION( 0x50000, "maincpu", 0 ) // Z80 Code
+	ROM_LOAD( "rom.u3", 0x00000, 0x20000, CRC(2cc0bbd8) SHA1(0653de340d470d209649b82b1844c3c3da5c545a) )
+	ROM_CONTINUE(       0x00000, 0x20000 )
+	ROM_RELOAD(         0x10000, 0x08000 )
+	ROM_CONTINUE(       0x28000, 0x08000 )
+	ROM_CONTINUE(       0x20000, 0x08000 )
+	ROM_CONTINUE(       0x18000, 0x08000 )
+
+	ROM_REGION( 0x200000, "blitter", 0 )   // blitter data, not dumped for this set
+	ROM_LOAD( "e1.u82", 0x000000, 0x100000, BAD_DUMP CRC(e5c41448) SHA1(b8322e32b0cb3d771316c9c4f7be91de6e422a24) )
+	ROM_LOAD( "e2.u83", 0x100000, 0x080000, BAD_DUMP CRC(e1f1b431) SHA1(04a612aff4c30cb8ea741f228bfa7e4289acfee8) )
 ROM_END
 
 /***************************************************************************
@@ -7067,6 +7082,7 @@ GAME( 1989, mjembase,   mjelctrn, mjembase,   mjembase, dynax_adpcm_state, init_
 GAME( 1990, mjelct3,    mjelctrn, mjelctrn,   mjelct3,  dynax_adpcm_state, init_mjelct3,  ROT180, "Dynax",                     "Mahjong Electron Base (parts 2 & 3, Japan set 1)",              MACHINE_SUPPORTS_SAVE )
 GAME( 1990, mjelct3a,   mjelctrn, mjelctrn,   mjelct3,  dynax_adpcm_state, init_mjelct3a, ROT180, "Dynax",                     "Mahjong Electron Base (parts 2 & 3, Japan set 2)",              MACHINE_SUPPORTS_SAVE )
 GAME( 1993, mjelctrb,   mjelctrn, mjelctrn,   mjelct3,  dynax_adpcm_state, init_mjelct3,  ROT180, "bootleg",                   "Mahjong Electron Base (parts 2 & 4, Japan bootleg)",            MACHINE_SUPPORTS_SAVE )
+GAME( 1993, mjelct3bl,  mjelctrn, mjelctrn,   mjelct3,  dynax_adpcm_state, init_mjelct3,  ROT180, "bootleg",                   "Mahjong Electron Base (parts 2 & 3, Japan bootleg)",            MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )
 GAME( 1990, majxtal7,   7jigen,   neruton,    majxtal7, dynax_adpcm_state, init_mjelct3,  ROT180, "Dynax",                     "Mahjong X-Tal 7 - Crystal Mahjong / Mahjong Diamond 7 (Japan)", MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE ) // reuses a subset of 7jigen assets
 GAME( 1990, neruton,    0,        neruton,    neruton,  dynax_adpcm_state, init_mjelct3,  ROT180, "Dynax / Yukiyoshi Tokoro",  "Mahjong Neruton Haikujiradan (Japan, Rev. B?)",                 MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE )
 GAME( 1990, nerutona,   neruton,  neruton,    nerutona, dynax_adpcm_state, init_mjelct3,  ROT180, "Dynax / Yukiyoshi Tokoro",  "Mahjong Neruton Haikujiradan (Japan, Rev. A?)",                 MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE )
