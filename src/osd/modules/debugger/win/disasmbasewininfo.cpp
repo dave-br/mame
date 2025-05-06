@@ -23,7 +23,7 @@
 namespace osd::debugger::win {
 
 disasmbasewin_info::disasmbasewin_info(debugger_windows_interface &debugger, bool is_main_console, LPCSTR title, WNDPROC handler) :
-	editwin_info(debugger, is_main_console, title, handler)
+	editwin_info(debugger, is_main_console, VIEW_IDX_DISASM, title, handler)
 {
 	if (!window())
 		return;
