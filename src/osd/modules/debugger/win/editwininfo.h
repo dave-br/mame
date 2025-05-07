@@ -55,7 +55,7 @@ private:
 	static LRESULT CALLBACK static_edit_proc(HWND wnd, UINT message, WPARAM wparam, LPARAM lparam);
 
 	HWND                    m_editwnd;
-	int	                    m_viewidx;
+	int                     m_viewidx;
 	std::string             m_edit_defstr;
 	WNDPROC                 m_original_editproc;
 	history_deque           m_history;
