@@ -257,12 +257,20 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 
 		// adjust the min/max sizes for the window style
 		bounds.top = bounds.left = 0;
-		bounds.right = bounds.bottom = EDGE_WIDTH + m_views[VIEW_IDX_STATE]->maxwidth() + (2 * EDGE_WIDTH) + 100 + EDGE_WIDTH;
+		bounds.right = bounds.bottom =
+			EDGE_WIDTH + m_views[VIEW_IDX_STATE]->maxwidth() +
+			(2 * EDGE_WIDTH) + 100 + EDGE_WIDTH;
 		AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
 		set_minwidth(bounds.right - bounds.left);
 
 		bounds.top = bounds.left = 0;
-		bounds.right = bounds.bottom = EDGE_WIDTH + m_views[VIEW_IDX_STATE]->maxwidth() + (2 * EDGE_WIDTH) + std::max(m_views[VIEW_IDX_DISASM]->maxwidth(), m_views[VIEW_IDX_CONSOLE]->maxwidth()) + EDGE_WIDTH;
+		bounds.right = bounds.bottom =
+			EDGE_WIDTH + m_views[VIEW_IDX_STATE]->maxwidth() +
+			(2 * EDGE_WIDTH) +
+			std::max(
+				m_views[VIEW_IDX_DISASM]->maxwidth(),
+				m_views[VIEW_IDX_CONSOLE]->maxwidth()) +
+			EDGE_WIDTH;
 		AdjustWindowRectEx(&bounds, DEBUG_WINDOW_STYLE, FALSE, DEBUG_WINDOW_STYLE_EX);
 		set_maxwidth(bounds.right - bounds.left);
 

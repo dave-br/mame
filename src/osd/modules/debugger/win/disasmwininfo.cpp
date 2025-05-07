@@ -152,7 +152,8 @@ void disasmwin_info::update_caption()
 
 void disasmwin_info::restore_configuration_from_node(util::xml::data_node const &node)
 {
-	m_views[VIEW_IDX_DISASM]->set_source_index(node.get_attribute_int(ATTR_WINDOW_DISASSEMBLY_CPU, m_views[VIEW_IDX_DISASM]->source_index()));
+	m_views[VIEW_IDX_DISASM]->set_source_index(
+		node.get_attribute_int(ATTR_WINDOW_DISASSEMBLY_CPU, m_views[VIEW_IDX_DISASM]->source_index()));
 	int const cursource = m_views[VIEW_IDX_DISASM]->source_index();
 	if (0 <= cursource)
 		SendMessage(m_combownd, CB_SETCURSEL, cursource, 0);
@@ -175,7 +176,9 @@ void disasmwin_info::save_configuration_to_node(util::xml::data_node &node)
 
 	node.set_attribute_int(ATTR_WINDOW_TYPE, WINDOW_TYPE_DISASSEMBLY_VIEWER);
 	node.set_attribute_int(ATTR_WINDOW_DISASSEMBLY_CPU, m_views[VIEW_IDX_DISASM]->source_index());
-	node.add_child(NODE_WINDOW_EXPRESSION, downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get())->expression());
+	node.add_child(
+		NODE_WINDOW_EXPRESSION,
+		downcast<disasmview_info *>(m_views[VIEW_IDX_DISASM].get())->expression());
 }
 
 } // namespace osd::debugger::win
