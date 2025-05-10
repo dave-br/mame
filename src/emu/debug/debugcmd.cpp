@@ -3916,7 +3916,7 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 	if (!m_console.validate_cpu_parameter(cpuname, cpu))
 	{
 		if (!params.empty())
-			return;		// Explicitly specified cpu is invalid
+			return;     // Explicitly specified cpu is invalid
 
 		// Somehow cpu "0" is invalid, so just stick with global symbol table
 		symtable = &m_machine.debugger().cpu().global_symtable();
