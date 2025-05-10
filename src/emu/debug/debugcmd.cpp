@@ -3909,26 +3909,28 @@ void debugger_commands::execute_memdump(const std::vector<std::string_view> &par
 
 void debugger_commands::execute_symlist(const std::vector<std::string_view> &params)
 {
-	symbol_table *symtable;
+	// Default to CPU "0" if none specified
+	const char * cpuname = (params.empty()) ? "0" : params[0].cbegin();
 	device_t *cpu = nullptr;
-
-	if (!params.empty())
+	symbol_table *symtable;
+	if (!m_console.validate_cpu_parameter(cpuname, cpu))
 	{
-		// validate parameters
-		if (!m_console.validate_cpu_parameter(params[0], cpu))
-			return;
-		symtable = &cpu->debug()->symtable();
+		if (!params.empty())
+			return;		// Explicitly specified cpu is invalid
+
+		// Somehow cpu "0" is invalid, so just stick with global symbol table
+		symtable = &m_machine.debugger().cpu().global_symtable();
 	}
 	else
 	{
-		symtable = &m_machine.debugger().cpu().global_symtable();
+		symtable = &cpu->debug()->symtable();
 	}
 
 	// Traverse symbol_table parent chain, printing each table's symbols in its own block
 	for (; symtable != nullptr; symtable = symtable->parent())
 	{
-		// Emit globals iff user requested them (as signified by cpu == nullptr)
-		if ((symtable->type() == symbol_table::BUILTIN_GLOBALS) != (cpu == nullptr))
+		// Skip globals if user explicitly requested CPU
+		if (symtable->type() == symbol_table::BUILTIN_GLOBALS && !params.empty())
 			continue;
 
 		if (symtable->entries().size() == 0)
@@ -3939,17 +3941,11 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		// Print heading for table
 		switch (symtable->type())
 		{
-		case symbol_table::SRCDBG_LOCALS:
-			m_console.printf("\nSource-level local variables:\n");
-			break;
-		case symbol_table::SRCDBG_GLOBALS:
-			m_console.printf("\nSource-level global variables:\n");
-			break;
 		case symbol_table::CPU_STATE:
-			m_console.printf("\nCPU '%s' symbols:\n", cpu->tag());
+			m_console.printf("\n**** CPU '%s' symbols ****\n", cpu->tag());
 			break;
 		case symbol_table::BUILTIN_GLOBALS:
-			m_console.printf("\nGlobal symbols:\n");
+			m_console.printf("\n**** Global symbols ****\n");
 			break;
 		default:
 			assert (!"Unrecognized symbol table type");
@@ -3981,6 +3977,12 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 				m_console.printf("  (read-only)");
 			m_console.printf("\n");
 		}
+	}
+	if (params.empty())
+	{
+		m_console.printf(
+			"\nTo view the symbols for a particular CPU, try symlist <cpu>,\n"
+			"where <cpu> is the ID number or tag for a CPU.\n");
 	}
 }
 
