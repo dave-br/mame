@@ -107,6 +107,8 @@ protected:
 		ID_SHOW_RAW,
 		ID_SHOW_ENCRYPTED,
 		ID_SHOW_COMMENTS,
+		ID_SHOW_SOURCE,
+		ID_SHOW_DISASM,
 
 		ID_SHOW_BREAKPOINTS,
 		ID_SHOW_WATCHPOINTS,
@@ -136,11 +138,17 @@ protected:
 	virtual void update_menu() { }
 	virtual bool handle_command(WPARAM wparam, LPARAM lparam);
 	virtual void draw_contents(HDC dc);
+	virtual bool source_stepping_active() { return false; }
 	void draw_border(HDC dc, RECT &bounds);
 	void draw_border(HDC dc, HWND child);
 
 	virtual void save_configuration_to_node(util::xml::data_node &node);
 
+
+	// TODO: This duplicates consolewin_info::MAX_VIEWS
+	// I removed it in commit c25a4b8 to avoid the duplication,
+	// but it was then added back again in commit 0bdb4f0.  Would
+	// like to understand why...
 	std::unique_ptr<debugview_info>    m_views[MAX_VIEWS];
 
 private:
