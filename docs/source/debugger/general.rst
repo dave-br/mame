@@ -104,8 +104,8 @@ Lists registered symbols and their values.  If **<cpu>** is not
 specified, symbols in the global symbol table and the primary
 CPU are displayed; otherwise,
 symbols specific to the device **<cpu>** are displayed. 
-If :ref:`Source-Level Debugging <srcdbg>` is enabled on the specified
-**<cpu>** (or on the primary CPU if **<cpu>** is not specified),
+If :ref:`Source-Level Debugging <srcdbg>` is enabled, and **<cpu>**
+is the primary CPU (or **<cpu>** is not specified),
 then :ref:`source-level symbols <srcdbg_symbols>` are listed as well.
 Symbols are listed alphabetically.  Read-only symbols are noted.  See
 :ref:`debugger-devicespec` for details on how to specify a CPU.
