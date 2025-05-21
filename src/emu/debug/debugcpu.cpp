@@ -560,7 +560,9 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			// Add symbols from source-level debugging information file
-			if (m_device.machine().debugger().srcdbg_provider() != nullptr)
+			// For now, we only support source-level debugging on the main cpu
+			if (strcmp(m_device.basetag(), "maincpu") == 0 &&
+				(m_device.machine().debugger().srcdbg_provider() != nullptr))
 			{
 				srcdbg_provider_base & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
 				srcdbg_provider.complete_local_relative_initialization();

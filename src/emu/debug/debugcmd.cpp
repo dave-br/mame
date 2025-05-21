@@ -4009,10 +4009,10 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 			m_console.printf("\n**** Global symbols ****\n");
 			break;
 		case symbol_table::SRCDBG_LOCALS:
-			m_console.printf("\nSource-level local variables:\n");
+			m_console.printf("\n**** Source-level local variables ****\n");
 			break;
 		case symbol_table::SRCDBG_GLOBALS:
-			m_console.printf("\nSource-level global variables:\n");
+			m_console.printf("\n**** Source-level global variables ****\n");
 			break;
 		default:
 			assert (!"Unrecognized symbol table type");
