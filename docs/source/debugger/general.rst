@@ -113,7 +113,8 @@ Symbols are listed alphabetically.  Read-only symbols are noted.  See
 Examples:
 
 ``symlist``
-    Displays the global symbol table, and the primary CPU's symbol table.
+    Displays the global symbol table, the primary CPU's symbol table,
+    and, if enabled, source-level symbols.
 ``symlist 2``
     Displays the symbols for the third CPU in the system (zero-based
     index).
