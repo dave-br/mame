@@ -3920,6 +3920,8 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 	else if (!m_console.validate_cpu_parameter(params[0], cpu))
 		return;
 
+	// TODO: Should be able to assert cpu is non-null right?
+	
 	// unknown tag if CPU is invalid
 	const char *cpu_tag = cpu ? cpu->tag() : ":?";
 
@@ -3938,7 +3940,7 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		case symbol_table::CPU_STATE:
 			m_console.printf("\n**** CPU '%s' symbols ****\n", cpu_tag);
 			break;
-		case symbol_table::BUILTIN_GLOBALS:
+		case symbol_table::DEBUGGER_GLOBALS:
 			m_console.printf("\n**** Global symbols ****\n");
 			break;
 		default:
