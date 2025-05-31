@@ -191,7 +191,7 @@ std::error_condition osd_file::open(std::string const &path, uint32_t openflags,
 	{
 		disposition = OPEN_EXISTING;
 		access = GENERIC_READ;
-		sharemode = FILE_SHARE_READ;
+		sharemode = FILE_SHARE_READ /* | FILE_SHARE_WRITE | FILE_SHARE_DELETE */;
 	}
 	else
 	{
