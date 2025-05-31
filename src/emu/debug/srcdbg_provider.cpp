@@ -17,6 +17,16 @@
 #include "srcdbg_api.h"
 
 #include "emuopts.h"
+#include "fileio.h"
+// #include "path.h"
+
+
+/*
+
+public: std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info
+
+helper: std::unique_ptr<srcdbg_provider_base> create_debug_info(path it)
+*/
 
 
 // Create and initialize debug info provider of the correct type by reading
@@ -25,15 +35,28 @@
 // static
 std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine)
 {
-	const char * di_path = machine.options().srcdbg_info();
-	if (di_path[0] == 0)
+	const char * di_paths = machine.options().srcdbg_info();
+	if (di_paths[0] == 0)
+	{
+		return nullptr;
+	}
+
+	path_iterator path_it(di_paths);
+	return create_debug_info(machine, path_it);
+}
+
+
+std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine, path_iterator &path_it)
+{
+	std::string di_path;
+	if (!path_it.next(di_path))
 	{
 		return nullptr;
 	}
 
 	std::string error;
 	srcdbg_format format;
-	if (!srcdbg_format_header_read(di_path, format, error))
+	if (!srcdbg_format_header_read(di_path.c_str(), format, error))
 	{
 		throw emu_fatalerror("Error reading source-level debugging information file\n%s\n\n%s", di_path, error.c_str());
 	}
@@ -44,7 +67,7 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 	{
 		std::unique_ptr<srcdbg_provider_simple> ret = std::make_unique<srcdbg_provider_simple>(machine);
 		srcdbg_import importer(*ret);
-		if (!srcdbg_format_simp_read(di_path, importer, error))
+		if (!srcdbg_format_simp_read(di_path.c_str(), importer, error))
 		{
 			if (!error.empty())
 			{
@@ -52,6 +75,7 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 			}
 			return nullptr;
 		}
+		ret->m_next = create_debug_info(machine, path_it);
 		return ret;
 	}
 

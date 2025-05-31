@@ -214,8 +214,16 @@ public:
 	virtual void set_offset(s32 offset) = 0;
 
 private:
+	// Helper called by the public create_debug_info to create potentially
+	// many srcdbg_provider_base instances, based on how many MDI files
+	// are specified by the user
+	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine, path_iterator &path_it);
+
 	// Returns address offset currently in use.  Used internally when populating symbol tables
 	virtual s32 get_offset() const = 0;
+
+protected:
+	std::unique_ptr<srcdbg_provider_base> m_next;
 };
 
 

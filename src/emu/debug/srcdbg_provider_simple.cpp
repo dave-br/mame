@@ -346,6 +346,11 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 	}
 
 	m_local_relative_symbols_internal.clear();
+
+	if (m_next != nullptr)
+	{
+		m_next->complete_local_relative_initialization();
+	}
 }
 
 
@@ -407,15 +412,24 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 		if (match_lists[list_idx]->size() > 1)
 		{
 			// Error: file_path ambiguous
-			return std::optional<u32>();
+			if (m_next == nullptr)
+			{
+				return std::optional<u32>();
+			}
+			return m_next->file_path_to_index(file_path);
 		}
 	}
 
 	// Error: file_path not found
-	return std::optional<u32>();
+	if (m_next == nullptr)
+	{
+		return std::optional<u32>();
+	}
+	return m_next->file_path_to_index(file_path);
 }
 
 
+// TODO: INTENTIONALLY NOT CALLING NEXT
 // Given a source file & line number, return all address ranges attributable to that line
 void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
@@ -483,5 +497,9 @@ bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & l
 		return true;
 	}
 
-	return false;
+	if (m_next == nullptr)
+	{
+		return false;
+	}
+	return m_next->address_to_file_line(address, loc);
 }

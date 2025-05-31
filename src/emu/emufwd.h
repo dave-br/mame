@@ -147,6 +147,7 @@ class emu_options;
 
 // declared in fileio.h
 class emu_file;
+class path_iterator;
 
 // declared in http.h
 class http_manager;
