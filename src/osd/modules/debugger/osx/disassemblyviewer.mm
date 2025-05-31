@@ -224,6 +224,9 @@
 	[sourceButton selectItemAtIndex:index];
 }
 
+- (void) populateSourceButton {
+	[srcdbgView insertSubviewItemsInMenu:[sourceButton menu] atIndex:0];
+}
 
 - (IBAction)sourceDebugBarChanged:(id)sender {
 	[srcdbgView setSourceIndex:[sender tag]];

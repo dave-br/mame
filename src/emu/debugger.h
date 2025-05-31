@@ -36,16 +36,16 @@ public:
 	debugger_commands &commands() const { return *m_commands; }
 	debugger_cpu &cpu() const { return *m_cpu; }
 	debugger_console &console() const { return *m_console; }
-	srcdbg_provider_base * srcdbg_provider() const { return m_debug_info.get(); }     // Note: can be null!
+	srcdbg_info * get_srcdbg_info() const { return m_debug_info.get(); }     // Note: can be null!
 
 private:
-	std::unique_ptr<srcdbg_provider_base> load_debug_info(running_machine &machine);
+	std::unique_ptr<srcdbg_info> load_debug_info(running_machine &machine);
 	running_machine &   m_machine;
 
 	std::unique_ptr<debugger_commands> m_commands;
 	std::unique_ptr<debugger_cpu> m_cpu;
 	std::unique_ptr<debugger_console> m_console;
-	std::unique_ptr<srcdbg_provider_base> m_debug_info;
+	std::unique_ptr<srcdbg_info> m_debug_info;
 };
 
 

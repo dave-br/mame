@@ -34,6 +34,7 @@
 - (BOOL) getDisasemblyView;
 
 - (void) setSourceButton:(int)index;
+- (void) populateSourceButton;
 - (IBAction)sourceDebugBarChanged:(id)sender;
 - (IBAction)debugToggleBreakpoint:(id)sender;
 - (IBAction)debugToggleBreakpointEnable:(id)sender;

@@ -38,8 +38,8 @@ osd_window::osd_window(
 	m_title(
 			util::string_format(
 				(video_config.numscreens > 1)
-					? "%3$s [%4$s] screen %5$d - %1$s %2$s (%6$s%7$sP%8$d) - UNOFFICIAL (srcdbg preview)"
-					: "%3$s [%4$s] - %1$s %2$s (%6$s%7$sP%8$d) - UNOFFICIAL (srcdbg preview)",
+					? "%3$s [%4$s] screen %5$d - %1$s %2$s (%6$s%7$sP%8$d) - UNOFFICIAL (srcdbg preview R2)"
+					: "%3$s [%4$s] - %1$s %2$s (%6$s%7$sP%8$d) - UNOFFICIAL (srcdbg preview R2)",
 				emulator_info::get_appname(),
 				emulator_info::get_bare_build_version(),
 				machine.system().type.fullname(),

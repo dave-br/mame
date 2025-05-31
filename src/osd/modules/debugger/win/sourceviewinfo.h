@@ -34,6 +34,8 @@ protected:
 	virtual void update() override;
 
 private:
+	void populate_source_file_combo();
+
 	// TODO: Keeping my own copy of this HWND and making update() virtual seems
 	// inconsistent with rest of dbg arch.  Is there a more appropriate way to
 	// update its selection whenever the PC changes?

@@ -26,14 +26,19 @@
 
 - (void)insertSubviewItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
 	const debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
-	const srcdbg_provider_base *debug_info = dv_source->srcdbg_provider();
+	const srcdbg_info *debug_info = dv_source->get_srcdbg_info();
 
 	if (debug_info)
 	{
 		std::size_t num_files = debug_info->num_files();
 		for (std::size_t i = 0; i < num_files; i++)
 		{
-			const char * entry_text = debug_info->file_index_to_path(i).built();
+			const srcdbg_provider_base::source_file_path * path;
+			if (!debug_info->file_index_to_path(i, &path))
+			{
+				return;
+			}
+			const char * entry_text = path->built();
 			NSString *title = [NSString stringWithUTF8String:entry_text];
 			[[menu insertItemWithTitle:title
 								action:@selector(sourceDebugBarChanged:)
@@ -54,7 +59,11 @@
 	NSWindow *window = [self window];
 	id delegate = [window delegate];
 
-	const debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
+	debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
+	if (dv_source->update_gui_needs_full_refresh())
+	{
+		[delegate populateSourceButton];
+	}
 
 	[super update];
 	[delegate setSourceButton:dv_source->cur_src_index()];

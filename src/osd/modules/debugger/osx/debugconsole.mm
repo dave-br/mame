@@ -607,6 +607,11 @@
 }
 
 
+- (void) populateSourceButton {
+	[srcdbgView insertSubviewItemsInMenu:[sourceButton menu] atIndex:0];
+}
+
+
 - (CGFloat)splitView:(NSSplitView *)sender constrainMinCoordinate:(CGFloat)min ofSubviewAt:(NSInteger)offs {
 	return (min < 100) ? 100 : min;
 }

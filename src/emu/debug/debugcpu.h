@@ -166,7 +166,7 @@ public:
 	void compute_debug_flags();
 
 	// source-level debugging
-	void update_symbols_from_srcdbg(const srcdbg_provider_base & srcdbg_provider);
+	void update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info);
 
 private:
 	void halt_on_next_instruction_impl(util::format_argument_pack<char> &&args);

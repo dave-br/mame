@@ -164,21 +164,14 @@ public:
 	// Base implementation
 	// ------------------------------------------------------------------------
 
-	// Called on startup to load the source-debugging information file and return
-	// an instance of a subclass of this abstract base class
-	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine);
 
+	// Helper called by the public create_debug_info to create potentially
+	// many srcdbg_provider_base instances, based on how many MDI files
+	// are specified by the user
+	static srcdbg_provider_base * create_debug_info(running_machine &machine, const std::string & di_path);
+
+	srcdbg_provider_base();
 	virtual ~srcdbg_provider_base() {};
-
-	// Return symbol_table objects for globals and locals present in the source-level
-	// debugging information file.
-	virtual void get_srcdbg_symbols(
-		symbol_table ** symtable_srcdbg_globals,
-		symbol_table ** symtable_srcdbg_locals,
-		symbol_table * parent,
-		device_t * device,
-		const device_state_interface * state) const;
-
 
 	// ------------------------------------------------------------------------
 	// Interface implemented by derived classes
@@ -192,7 +185,7 @@ public:
 	virtual u32 num_files() const = 0;
 
 	// Returns the source_file_path corresponding to the specified 0-based file index
-	virtual const source_file_path & file_index_to_path(u32 file_index) const = 0;
+	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const = 0;
 
 	// Returns the 0-based file index corresponding to the specified source file path
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const = 0;
@@ -205,17 +198,14 @@ public:
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
 	// Return lists of various types of symbols
-	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
-	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
-	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
+	const std::vector<global_fixed_symbol> & global_fixed_symbols() const { return m_global_fixed_symbols; }
+	const std::vector<local_fixed_symbol> & local_fixed_symbols() const { return m_local_fixed_symbols; }
+	const std::vector<local_relative_symbol> & local_relative_symbols() const { return m_local_relative_symbols; }
 
-	// Called to process command-line option or user-invoked command to change the
-	// address offset for line numbers and symbols
-	virtual void set_offset(s32 offset) = 0;
-
-private:
-	// Returns address offset currently in use.  Used internally when populating symbol tables
-	virtual s32 get_offset() const = 0;
+protected:
+	std::vector<global_fixed_symbol>            m_global_fixed_symbols;
+	std::vector<local_fixed_symbol>             m_local_fixed_symbols;
+	std::vector<local_relative_symbol>          m_local_relative_symbols;
 };
 
 

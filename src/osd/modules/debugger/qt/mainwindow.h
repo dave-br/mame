@@ -160,12 +160,14 @@ public:
 	QSize minimumSizeHint() const { return QSize(150, 150); }
 	QSize sizeHint() const { return QSize(150, 200); }
 
-	void updateComboSelection();
+	void update();
 
 private slots:
 	void srcfileChanged(int index);
 
 private:
+	void populateSrcdbgCombo();
+
 	running_machine &m_machine;
 
 	QComboBox *m_srcdbgCombo;

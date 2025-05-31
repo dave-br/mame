@@ -76,5 +76,6 @@
 - (void)setDisasemblyView:(BOOL)value;
 - (BOOL) getDisasemblyView;
 - (void) setSourceButton:(int)index;
+- (void) populateSourceButton;
 
 @end

@@ -448,7 +448,7 @@ public:
 	const char *debug_script() const { return value(OPTION_DEBUGSCRIPT); }
 	bool update_in_pause() const { return bool_value(OPTION_UPDATEINPAUSE); }
 	bool debuglog() const { return bool_value(OPTION_DEBUGLOG); }
-	const char *srcdbg_info() const { return value(OPTION_SRCDBGINFO); }
+	const char *srcdbginfo() const { return value(OPTION_SRCDBGINFO); }
 	const char *srcdbg_search_path() const { return value(OPTION_SRCDBGSEARCHPATH); }
 	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
 	int srcdbg_offset() const { return int_value(OPTION_SRCDBGOFFSET); }

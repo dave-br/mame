@@ -11,6 +11,7 @@
 #include "emu.h"
 #include "dvsourcecode.h"
 #include "debugger.h"
+#include "srcdbg_info.h"
 #include "srcdbg_provider.h"
 #include "emuopts.h"
 
@@ -76,13 +77,14 @@ const std::error_condition & debug_view_sourcecode::line_indexed_file::open(cons
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
 	debug_view_disasm(machine, osdupdate, osdprivate, true /* source_code_debugging */),
 	m_state(nullptr),
-	m_srcdbg_provider(machine.debugger().srcdbg_provider()),
+	m_srcdbg_info(machine.debugger().get_srcdbg_info()),
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
-	m_line_for_cur_pc()
+	m_line_for_cur_pc(),
+	m_gui_needs_full_refresh(true)
 {
-	if (m_srcdbg_provider != nullptr)
+	if (m_srcdbg_info != nullptr)
 	{
 		m_supports_cursor = true;
 	}
@@ -104,7 +106,7 @@ debug_view_sourcecode::~debug_view_sourcecode()
 
 std::optional<offs_t> debug_view_sourcecode::selected_address()
 {
-	if (m_srcdbg_provider == nullptr)
+	if (m_srcdbg_info == nullptr)
 	{
 		return std::optional<offs_t>();
 	}
@@ -113,7 +115,7 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 	u32 line = m_cursor.y + 1;
 
 	std::vector<srcdbg_provider_base::address_range> ranges;
-	m_srcdbg_provider->file_line_to_address_ranges(m_cur_src_index, line, ranges);
+	m_srcdbg_info->file_line_to_address_ranges(m_cur_src_index, line, ranges);
 
 	if (ranges.size() == 0)
 	{
@@ -131,13 +133,18 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 
 void debug_view_sourcecode::update_opened_file()
 {
-	assert(m_srcdbg_provider != nullptr);
+	assert(m_srcdbg_info != nullptr);
 	if (m_cur_src_index == m_displayed_src_index)
 	{
 		return;
 	}
 
-	const char * local_path = m_srcdbg_provider->file_index_to_path(m_cur_src_index).local();
+	const srcdbg_provider_base::source_file_path * path;
+	if (!m_srcdbg_info->file_index_to_path(m_cur_src_index, &path))
+	{
+		return;
+	}
+	const char * local_path = path->local();
 	if (local_path == nullptr)
 	{
 		return;
@@ -173,7 +180,7 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 void debug_view_sourcecode::view_update()
 {
 	// Show explanatory text if source-level debugging is not active
-	if (m_srcdbg_provider == nullptr)
+	if (m_srcdbg_info == nullptr)
 	{
 		print_line(0, "Source-level debugging is not active", DCA_CHANGED);
 		print_line(1, "Specify option '" OPTION_SRCDBGINFO "' to enable", DCA_NORMAL);
@@ -193,11 +200,26 @@ void debug_view_sourcecode::view_update()
 		pc_changed = update_previous_pc(pc);
 	}
 
+	bool do_flush_osd_updates = false;
+
+	if (m_srcdbg_info && m_srcdbg_info->update_view_needs_full_refresh())
+	{
+		// The update actually did something, so reset state given that the list
+		// of enabled providers has changed.
+		m_cur_src_index = 0;
+		m_displayed_src_index = -1;
+		m_displayed_src_file = std::make_unique<line_indexed_file>();
+		m_line_for_cur_pc = std::optional<u32>();
+		pc_changed = true;
+		m_gui_needs_full_refresh = true;
+		do_flush_osd_updates = true;
+	}
+
 	// If pc has changed, find its file & line number if possible
 	if (pc_changed)
 	{
 		file_line loc;
-		if (m_srcdbg_provider->address_to_file_line(pc, loc))
+		if (m_srcdbg_info->address_to_file_line(pc, loc))
 		{
 			m_cur_src_index = loc.file_index();
 			m_line_for_cur_pc = loc.line_number();
@@ -208,15 +230,32 @@ void debug_view_sourcecode::view_update()
 		}
 	}
 
+	viewdata_text_update(pc_changed, pc);
+
+	if (do_flush_osd_updates)
+	{
+		flush_osd_updates();
+	}
+}
+
+
+void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
+{
 	// Ensure the correct file is open.  First time view is displayed, this opens
 	// the top of file index 0
 	update_opened_file();
 
 	// Verify the open succeeded
-	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider->file_index_to_path(m_cur_src_index);
-	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
+	const srcdbg_provider_base::source_file_path * path;
+	if (!m_srcdbg_info->file_index_to_path(m_cur_src_index, &path))
 	{
-		print_file_open_error(path);
+		// TODO: ERROR
+		return;
+	}
+
+	if (path->local() == nullptr || m_displayed_src_file->last_open_error())
+	{
+		print_file_open_error(*path);
 		return;
 	}
 
@@ -305,9 +344,9 @@ void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::so
 
 bool debug_view_sourcecode::exists_bp_for_line(u16 src_index, u32 line)
 {
-	assert(m_srcdbg_provider != nullptr);
+	assert(m_srcdbg_info != nullptr);
 	std::vector<srcdbg_provider_base::address_range> ranges;
-	m_srcdbg_provider->file_line_to_address_ranges(m_cur_src_index, line, ranges);
+	m_srcdbg_info->file_line_to_address_ranges(m_cur_src_index, line, ranges);
 	const device_debug * debug = source()->device()->debug();
 	for (offs_t i = 0; i < ranges.size(); i++)
 	{
@@ -409,9 +448,9 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 
 void debug_view_sourcecode::set_src_index(u16 new_src_index)
 {
-	if (m_srcdbg_provider == nullptr ||
+	if (m_srcdbg_info == nullptr ||
 		m_cur_src_index == new_src_index ||
-		new_src_index >= m_srcdbg_provider->num_files())
+		new_src_index >= m_srcdbg_info->num_files())
 	{
 		return;
 	}
@@ -421,4 +460,11 @@ void debug_view_sourcecode::set_src_index(u16 new_src_index)
 	m_update_pending = true;
 	// No need to call view_notify()
 	end_update();
+}
+
+bool debug_view_sourcecode::update_gui_needs_full_refresh()
+{
+	bool ret = m_gui_needs_full_refresh;
+	m_gui_needs_full_refresh = false;
+	return ret;
 }
