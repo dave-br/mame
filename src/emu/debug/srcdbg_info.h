@@ -26,6 +26,7 @@ public:
 		const srcdbg_provider_base * c_provider() const { return m_provider.get(); }
 		srcdbg_provider_base * provider() { return m_provider.get(); }
 		bool enabled() const { return m_enabled; }
+		void set_enabled(bool enabled) { m_enabled = enabled; }
 
 	private:
 		std::string m_name;
@@ -66,6 +67,8 @@ public:
 	// own offset and remove from base class
 	void set_offset(s32 offset) { m_offset = offset; }
 	// virtual s32 get_offset() const override { return m_offset; }
+
+	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
 
 private:
 	// agg file index to provider index + local file index

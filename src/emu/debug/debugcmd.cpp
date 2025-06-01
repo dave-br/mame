@@ -19,6 +19,7 @@
 #include "express.h"
 #include "points.h"
 #include "srcdbg_provider.h"
+#include "srcdbg_info.h"
 
 #include "debugger.h"
 #include "emuopts.h"
@@ -226,6 +227,9 @@ debugger_commands::debugger_commands(running_machine& machine, debugger_cpu& cpu
 	m_console.register_command("cpulist",   CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_cpulist, this, _1));
 	m_console.register_command("time",      CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_time, this, _1));
 	m_console.register_command("sdoffset",  CMDFLAG_NONE, 1, 1, std::bind(&debugger_commands::execute_srcdbg_set_offset, this, _1));
+	m_console.register_command("sdlist",    CMDFLAG_NONE, 0, 0, std::bind(&debugger_commands::execute_srcdbg_provider_list, this, _1));
+	m_console.register_command("sdenable",  CMDFLAG_NONE, 1, 1, std::bind(&debugger_commands::execute_srcdbg_provider_disenable, this, true, _1));
+	m_console.register_command("sddisable", CMDFLAG_NONE, 1, 1, std::bind(&debugger_commands::execute_srcdbg_provider_disenable, this, false, _1));
 
 	m_console.register_command("comadd",    CMDFLAG_NONE, 1, 2, std::bind(&debugger_commands::execute_comment_add, this, _1));
 	m_console.register_command("//",        CMDFLAG_NONE, 1, 2, std::bind(&debugger_commands::execute_comment_add, this, _1));
@@ -1285,7 +1289,7 @@ void debugger_commands::execute_time(const std::vector<std::string_view> &params
 
 void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_view> &params)
 {
-	srcdbg_provider_base * srcdbg = m_machine.debugger().srcdbg_provider();
+	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_provider();
 	if (srcdbg == nullptr)
 	{
 		m_console.printf("Error : source-level debugging is not enabled\n");
@@ -1301,6 +1305,55 @@ void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_
 	m_console.printf("Offset successfully applied\n");
 }
 
+void debugger_commands::execute_srcdbg_provider_list(const std::vector<std::string_view> &)
+{
+	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_provider();
+	if (srcdbg == nullptr)
+	{
+		m_console.printf("Error : source-level debugging is not enabled\n");
+		return;
+	}
+
+	auto providers = srcdbg->providers();
+	for (offs_t provider_idx = 0; provider_idx < providers.size(); provider_idx++)
+	{
+		srcdbg_info::srcdbg_provider_entry & sp = providers[provider_idx];
+		m_console.printf("%c%4X : %s\n", sp.enabled() ? ' ' : 'D', provider_idx, sp.name());
+	}
+}
+
+void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std::vector<std::string_view> &params)
+{
+	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_provider();
+	if (srcdbg == nullptr)
+	{
+		m_console.printf("Error : source-level debugging is not enabled\n");
+		return;
+	}
+
+	u64 index;
+	if (!m_console.validate_number_parameter(params[0], index))
+		return;
+
+	auto providers = srcdbg->providers();
+	if (index >= providers.size())
+	{
+		m_console.printf("Invalid source-debugging info number: %X\n", index);
+		m_console.printf("Run sdlist for a list of valid source-debugging info numbers.\n");
+		return;
+	}
+
+	srcdbg_info::srcdbg_provider_entry & sp = providers[index];
+	if (sp.enabled() == enable)
+	{
+		m_console.printf("Source-debugging info %X is already %s\n", index, enable ? "enabled" : "disalbed");
+		return;
+	}
+
+	sp.set_enabled(enable);
+	m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disalbed");
+	// TODO: Refresh?
+}
 
 /*-------------------------------------------------
     execute_comment - add a comment to a line
