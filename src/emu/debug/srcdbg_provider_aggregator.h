@@ -24,22 +24,20 @@ public:
 
 	// robin all, change params so caller creates the tables,
 	// and callees just populate them
-	virtual void get_srcdbg_symbols(
-		symbol_table ** symtable_srcdbg_globals,
-		symbol_table ** symtable_srcdbg_locals,
-		symbol_table * parent,
-		device_t * device,
+	void get_srcdbg_symbols(
+		symbol_table * symtable_srcdbg_globals,
+		symbol_table * symtable_srcdbg_locals,
 		const device_state_interface * state) const;
 
 	// robin all
 	virtual void complete_local_relative_initialization() override;
 
 	// Sum
-	virtual u32 num_files() const override { return m_source_file_paths.size(); }
+	virtual u32 num_files() const override;
 
 	// use num_files successively to determine which provider owns
 	// this, use remainder on that provider
-	virtual const source_file_path & file_index_to_path(u32 file_index) const override { return m_source_file_paths[file_index]; };
+	virtual const source_file_path & file_index_to_path(u32 file_index) const override;
 
 	// robin to first successful
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
@@ -52,11 +50,12 @@ public:
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const override;
 
 	// own offset and remove from base class
-	virtual void set_offset(s32 offset) override { m_offset = offset; }
+	void set_offset(s32 offset) { m_offset = offset; }
 	// virtual s32 get_offset() const override { return m_offset; }
 
 private:
 	std::vector<srcdbg_provider_base> m_providers;
+	s32                               m_offset;
 };
 
 

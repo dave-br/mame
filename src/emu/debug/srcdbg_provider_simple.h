@@ -85,7 +85,7 @@ private:
 	std::vector<local_fixed_symbol>             m_local_fixed_symbols;
 	std::vector<local_relative_symbol_internal> m_local_relative_symbols_internal;
 	std::vector<local_relative_symbol>          m_local_relative_symbols;
-	s32                                         m_offset;
+	// s32                                         m_offset;
 };
 
 

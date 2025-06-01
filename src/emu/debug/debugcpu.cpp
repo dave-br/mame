@@ -647,18 +647,32 @@ device_debug::~device_debug()
 //  level debugging symbols when the offset changes
 //-------------------------------------------------
 
-void device_debug::update_symbols_from_srcdbg(const srcdbg_provider_base & srcdbg_provider)
+void device_debug::update_symbols_from_srcdbg(const srcdbg_provider_aggregator & srcdbg_provider)
 {
 	m_symtable_srcdbg_globals.reset();
 	m_symtable_srcdbg_locals.reset();
-
+	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(
+		m_symtable_device->machine(),
+		symbol_table::SRCDBG_GLOBALS,
+		m_symtable_device.get(),
+		&m_device);
+	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(
+		m_symtable_device->machine(),
+		symbol_table::SRCDBG_LOCALS,
+		m_symtable_srcdbg_globals,
+		&m_device);
 	// Establish the following symbol table parent chain:
 	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
-	symbol_table * new_symtable_srcdbg_globals = nullptr;
-	symbol_table * new_symtable_srcdbg_locals = nullptr;
-	srcdbg_provider.get_srcdbg_symbols(&new_symtable_srcdbg_globals, &new_symtable_srcdbg_locals, m_symtable_device.get(), &m_device, m_state);
-	m_symtable_srcdbg_globals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_globals);
-	m_symtable_srcdbg_locals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_locals);
+	// symbol_table * new_symtable_srcdbg_globals = nullptr;
+	// symbol_table * new_symtable_srcdbg_locals = nullptr;
+	srcdbg_provider.get_srcdbg_symbols(
+		m_symtable_srcdbg_globals,
+		m_symtable_srcdbg_locals,
+		m_symtable_device.get(),
+		&m_device,
+		m_state);
+	// m_symtable_srcdbg_globals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_globals);
+	// m_symtable_srcdbg_locals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_locals);
 	m_symtable = m_symtable_srcdbg_locals.get();
 }
 

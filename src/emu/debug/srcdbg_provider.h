@@ -172,12 +172,12 @@ public:
 
 	// Return symbol_table objects for globals and locals present in the source-level
 	// debugging information file.
-	virtual void get_srcdbg_symbols(
-		symbol_table ** symtable_srcdbg_globals,
-		symbol_table ** symtable_srcdbg_locals,
-		symbol_table * parent,
-		device_t * device,
-		const device_state_interface * state) const;
+	// virtual void get_srcdbg_symbols(
+	// 	symbol_table ** symtable_srcdbg_globals,
+	// 	symbol_table ** symtable_srcdbg_locals,
+	// 	symbol_table * parent,
+	// 	device_t * device,
+	// 	const device_state_interface * state) const;
 
 
 	// ------------------------------------------------------------------------
@@ -205,13 +205,13 @@ public:
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
 	// Return lists of various types of symbols
-	// virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
-	// virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
-	// virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
+	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
+	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
+	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
 
 	// Called to process command-line option or user-invoked command to change the
 	// address offset for line numbers and symbols
-	virtual void set_offset(s32 offset) = 0;
+	// virtual void set_offset(s32 offset) = 0;
 
 private:
 	// Helper called by the public create_debug_info to create potentially
@@ -220,7 +220,7 @@ private:
 	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine, path_iterator &path_it);
 
 	// Returns address offset currently in use.  Used internally when populating symbol tables
-	virtual s32 get_offset() const = 0;
+	// virtual s32 get_offset() const = 0;
 
 protected:
 	std::unique_ptr<srcdbg_provider_base> m_next;
