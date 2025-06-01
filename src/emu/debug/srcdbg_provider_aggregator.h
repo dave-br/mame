@@ -19,6 +19,20 @@
 class srcdbg_provider_aggregator : public srcdbg_provider_base
 {
 public:
+	class srcdbg_provider_entry
+	{
+	public:
+		const std::string & name() const { return m_name; }
+		const srcdbg_provider_base * c_provider() const { return m_provider.get(); }
+		srcdbg_provider_base * provider() { return m_provider.get(); }
+		bool enabled() const { return m_enabled; }
+
+	private:
+		std::string m_name;
+		std::unique_ptr<srcdbg_provider_base> m_provider;
+		bool m_enabled;
+	};
+
 	srcdbg_provider_aggregator(const running_machine& machine);
 	~srcdbg_provider_aggregator() { }
 
@@ -54,7 +68,12 @@ public:
 	// virtual s32 get_offset() const override { return m_offset; }
 
 private:
-	std::vector<srcdbg_provider_base> m_providers;
+	// agg file index to provider index + local file index
+	std::vector<std::pair<std::size_t, u32>> m_agg_file_to_provider_file;
+	
+	// provider index + local file inex to agg file index
+	std::vector<std::vector<u32>> m_provider_file_to_agg_file;
+	std::vector<srcdbg_provider_entry> m_providers;
 	s32                               m_offset;
 };
 

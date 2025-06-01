@@ -27,10 +27,16 @@ void srcdbg_provider_aggregator::get_srcdbg_symbols(
 		symbol_table * symtable_srcdbg_locals,
 		const device_state_interface * state) const
 {
-	for (const srcdbg_provider_base & sp : m_providers)
+	for (const srcdbg_provider_entry & sp : m_providers)
 	{
+		if (!sp.enabled())
+		{
+			continue;
+		}
+
 		// Global fixed symbols
-		const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = sp.global_fixed_symbols();
+		const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
+			sp.c_provider()->global_fixed_symbols();
 		// *symtable_srcdbg_globals = new symbol_table(parent->machine(), symbol_table::SRCDBG_GLOBALS, parent, device);
 		for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
 		{
@@ -49,7 +55,8 @@ void srcdbg_provider_aggregator::get_srcdbg_symbols(
 		auto pc_getter_binding = std::bind(&device_state_entry::value, state->state_find_entry(STATE_GENPC));
 
 		// Local fixed symbols
-		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = sp.local_fixed_symbols();
+		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
+			sp.c_provider()->local_fixed_symbols();
 		// *symtable_srcdbg_locals = new symbol_table(parent->machine(), symbol_table::SRCDBG_LOCALS, *symtable_srcdbg_globals, device);
 		for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
 		{
@@ -68,72 +75,90 @@ void srcdbg_provider_aggregator::get_srcdbg_symbols(
 	// robin all
 void srcdbg_provider_aggregator::complete_local_relative_initialization()
 {
-	for (srcdbg_provider_base & sp : m_providers)
+	for (srcdbg_provider_entry & sp : m_providers)
 	{
-		sp.complete_local_relative_initialization();
+		if (!sp.enabled())
+		{
+			continue;
+		}
+
+		sp.provider()->complete_local_relative_initialization();
 	}
 }
 
-	// Sum
 u32 srcdbg_provider_aggregator::num_files() const
 {
-	u32 ret = 0;
-	for (const srcdbg_provider_base & sp : m_providers)
-	{
-		ret += sp.num_files();
-	}
-	return ret;
+	return m_agg_file_to_provider_file.size();
 }
 
-	// use num_files successively to determine which provider owns
-	// this, use remainder on that provider
+
 const srcdbg_provider_base::source_file_path & srcdbg_provider_aggregator::file_index_to_path(u32 file_index) const
 {
-	for (const srcdbg_provider_base & sp : m_providers)
-	{
-		if (file_index < sp.num_files())
-		{
-			return sp.file_index_to_path(sp.num_files() - file_index);
-		}
-		file_index -= sp.num_files();
-	}
+	std::pair provider_file = m_agg_file_to_provider_file[file_index];
+	return m_providers[provider_file.first].c_provider()->file_index_to_path(provider_file.second);
 }
 
-	// robin to first successful
 std::optional<u32> srcdbg_provider_aggregator::file_path_to_index(const char * file_path) const
 {
-	for (const srcdbg_provider_base & sp : m_providers)
+	// Ask all enabled providers for the answer without short-circuiting, so we
+	// can detect if > 1 provider found a match (in which case file_path is
+	// ambiguous, and an empty optional should be returned)
+	std::optional<std::pair<offs_t, u32>> found_index;
+	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
 	{
-		std::optional<u32> ret = sp.file_path_to_index(file_path);
-		if (ret.has_value())
+		const srcdbg_provider_entry & sp = m_providers[provider_idx];
+		if (!sp.enabled())
 		{
-			return ret;
+			continue;
+		}
+
+		std::optional<u32> file_idx = sp.c_provider()->file_path_to_index(file_path);
+		if (file_idx.has_value())
+		{
+			if (found_index.has_value())
+			{
+				// Two providers found a match, so input string is ambiguous
+				return std::optional<u32>();
+			}
+			found_index = std::pair(provider_idx, file_idx.value());
 		}
 	}
-	return std::optional<u32>();
+
+	if (!found_index.has_value())
+	{
+		return std::optional<u32>();
+	}
+
+	// Convert from provider's index space to coalesced index space
+	return m_provider_file_to_agg_file[found_index.value().first][found_index.value().second];
 }
 
 	// use num_files successively to determine which provider owns
 	// this, use remainder on that provider
 void srcdbg_provider_aggregator::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
-	for (const srcdbg_provider_base & sp : m_providers)
-	{
-		if (file_index < sp.num_files())
-		{
-			return sp.file_line_to_address_ranges(file_index, line_number, ranges);
-		}
-		file_index -= sp.num_files();
-	}
+	std::pair provider_file = m_agg_file_to_provider_file[file_index];
+	return m_providers[provider_file.first].c_provider()->
+		file_line_to_address_ranges(provider_file.second, line_number, ranges);
 }
 
 	// robin to first successful
 bool srcdbg_provider_aggregator::address_to_file_line (offs_t address, file_line & loc) const
 {
-	for (const srcdbg_provider_base & sp : m_providers)
+	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
 	{
-		if (sp.address_to_file_line(address, loc))
+		const srcdbg_provider_entry & sp = m_providers[provider_idx];
+		if (!sp.enabled())
 		{
+			continue;
+		}
+
+		if (sp.c_provider()->address_to_file_line(address, loc))
+		{
+			// Convert from provider index space into coalesced index space
+			loc.set(
+				m_provider_file_to_agg_file[provider_idx][loc.file_index()],
+				loc.line_number());
 			return true;
 		}
 	}
