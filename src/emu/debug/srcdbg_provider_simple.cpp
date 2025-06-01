@@ -346,11 +346,6 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 	}
 
 	m_local_relative_symbols_internal.clear();
-
-	if (m_next != nullptr)
-	{
-		m_next->complete_local_relative_initialization();
-	}
 }
 
 
@@ -412,20 +407,12 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 		if (match_lists[list_idx]->size() > 1)
 		{
 			// Error: file_path ambiguous
-			if (m_next == nullptr)
-			{
-				return std::optional<u32>();
-			}
-			return m_next->file_path_to_index(file_path);
+			return std::optional<u32>();
 		}
 	}
 
 	// Error: file_path not found
-	if (m_next == nullptr)
-	{
-		return std::optional<u32>();
-	}
-	return m_next->file_path_to_index(file_path);
+	return std::optional<u32>();
 }
 
 
@@ -497,9 +484,5 @@ bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & l
 		return true;
 	}
 
-	if (m_next == nullptr)
-	{
-		return false;
-	}
-	return m_next->address_to_file_line(address, loc);
+	return false;
 }

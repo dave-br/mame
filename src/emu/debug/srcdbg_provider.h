@@ -221,9 +221,6 @@ private:
 
 	// Returns address offset currently in use.  Used internally when populating symbol tables
 	// virtual s32 get_offset() const = 0;
-
-protected:
-	std::unique_ptr<srcdbg_provider_base> m_next;
 };
 
 
