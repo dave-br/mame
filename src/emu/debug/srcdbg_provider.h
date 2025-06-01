@@ -205,9 +205,9 @@ public:
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
 	// Return lists of various types of symbols
-	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
-	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
-	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
+	// virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const = 0;
+	// virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const = 0;
+	// virtual const std::vector<local_relative_symbol> & local_relative_symbols() const = 0;
 
 	// Called to process command-line option or user-invoked command to change the
 	// address offset for line numbers and symbols
