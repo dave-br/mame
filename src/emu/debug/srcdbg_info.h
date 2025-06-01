@@ -22,6 +22,13 @@ public:
 	class srcdbg_provider_entry
 	{
 	public:
+		srcdbg_provider_entry(/* std::string name,*/ std::unique_ptr<srcdbg_provider_base> provider)
+			: m_name( /*name */)
+			, m_provider(std::move(provider))
+			, m_enabled(true)
+		{
+		}
+
 		const std::string & name() const { return m_name; }
 		const srcdbg_provider_base * c_provider() const { return m_provider.get(); }
 		srcdbg_provider_base * provider() { return m_provider.get(); }
@@ -34,6 +41,7 @@ public:
 		bool m_enabled;
 	};
 
+	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
 	srcdbg_info(const running_machine& machine);
 	~srcdbg_info() { }
 

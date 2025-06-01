@@ -33,27 +33,8 @@ helper: std::unique_ptr<srcdbg_provider_base> create_debug_info(path it)
 // the debug info file
 //
 // static
-std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine)
+std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine, const std::string & di_path)
 {
-	const char * di_paths = machine.options().srcdbg_info();
-	if (di_paths[0] == 0)
-	{
-		return nullptr;
-	}
-
-	path_iterator path_it(di_paths);
-	return create_debug_info(machine, path_it);
-}
-
-
-std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine, path_iterator &path_it)
-{
-	std::string di_path;
-	if (!path_it.next(di_path))
-	{
-		return nullptr;
-	}
-
 	std::string error;
 	srcdbg_format format;
 	if (!srcdbg_format_header_read(di_path.c_str(), format, error))

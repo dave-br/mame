@@ -13,8 +13,36 @@
 #include "srcdbg_info.h"
 #include "srcdbg_api.h"
 
+#include "emuopts.h"
 #include "fileio.h"
 
+
+// static
+std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &machine)
+{
+	const char * di_paths = machine.options().srcdbg_info();
+	if (di_paths[0] == 0)
+	{
+		return nullptr;
+	}
+
+	std::unique_ptr<srcdbg_info> ret = std::make_unique<srcdbg_info>(machine);
+
+	path_iterator path_it(di_paths);
+	std::string di_path;
+	while (!path_it.next(di_path))
+	{
+		std::unique_ptr<srcdbg_provider_base> provider(srcdbg_provider_base::create_debug_info(machine, di_path));
+		if (provider == nullptr)
+		{
+			return nullptr;
+		}
+
+		srcdbg_provider_entry sp(/* di_path,*/ provider);
+	}
+
+	// TODO: verify ~srcdbg_info called if return null
+}
 
 
 srcdbg_info::srcdbg_info(const running_machine& machine)
