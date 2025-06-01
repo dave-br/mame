@@ -2,7 +2,7 @@
 // copyright-holders:David Broman
 /*********************************************************************
 
-    srcdbg_provider_aggregator.h
+    srcdbg_info.h
 
     TODO
 
@@ -16,7 +16,7 @@
 
 #include "srcdbg_provider.h"
 
-class srcdbg_provider_aggregator : public srcdbg_provider_base
+class srcdbg_info : public srcdbg_provider_base
 {
 public:
 	class srcdbg_provider_entry
@@ -33,8 +33,8 @@ public:
 		bool m_enabled;
 	};
 
-	srcdbg_provider_aggregator(const running_machine& machine);
-	~srcdbg_provider_aggregator() { }
+	srcdbg_info(const running_machine& machine);
+	~srcdbg_info() { }
 
 	// robin all, change params so caller creates the tables,
 	// and callees just populate them

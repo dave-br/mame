@@ -2,7 +2,7 @@
 // copyright-holders:David Broman
 /*********************************************************************
 
-    srcdbg_provider_aggregator.cpp
+    srcdbg_info.cpp
 
     TODO
 
@@ -10,19 +10,19 @@
 
 
 #include "emu.h"
-#include "srcdbg_provider_aggregator.h"
+#include "srcdbg_info.h"
 #include "srcdbg_api.h"
 
 #include "fileio.h"
 
 
 
-srcdbg_provider_aggregator::srcdbg_provider_aggregator(const running_machine& machine)
+srcdbg_info::srcdbg_info(const running_machine& machine)
 {}
 
 	// robin all, change params so caller creates the tables,
 	// and callees just populate them
-void srcdbg_provider_aggregator::get_srcdbg_symbols(
+void srcdbg_info::get_srcdbg_symbols(
 		symbol_table * symtable_srcdbg_globals,
 		symbol_table * symtable_srcdbg_locals,
 		const device_state_interface * state) const
@@ -73,7 +73,7 @@ void srcdbg_provider_aggregator::get_srcdbg_symbols(
 }
 
 	// robin all
-void srcdbg_provider_aggregator::complete_local_relative_initialization()
+void srcdbg_info::complete_local_relative_initialization()
 {
 	for (srcdbg_provider_entry & sp : m_providers)
 	{
@@ -86,19 +86,19 @@ void srcdbg_provider_aggregator::complete_local_relative_initialization()
 	}
 }
 
-u32 srcdbg_provider_aggregator::num_files() const
+u32 srcdbg_info::num_files() const
 {
 	return m_agg_file_to_provider_file.size();
 }
 
 
-const srcdbg_provider_base::source_file_path & srcdbg_provider_aggregator::file_index_to_path(u32 file_index) const
+const srcdbg_provider_base::source_file_path & srcdbg_info::file_index_to_path(u32 file_index) const
 {
 	std::pair provider_file = m_agg_file_to_provider_file[file_index];
 	return m_providers[provider_file.first].c_provider()->file_index_to_path(provider_file.second);
 }
 
-std::optional<u32> srcdbg_provider_aggregator::file_path_to_index(const char * file_path) const
+std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 {
 	// Ask all enabled providers for the answer without short-circuiting, so we
 	// can detect if > 1 provider found a match (in which case file_path is
@@ -135,7 +135,7 @@ std::optional<u32> srcdbg_provider_aggregator::file_path_to_index(const char * f
 
 	// use num_files successively to determine which provider owns
 	// this, use remainder on that provider
-void srcdbg_provider_aggregator::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
+void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
 	std::pair provider_file = m_agg_file_to_provider_file[file_index];
 	return m_providers[provider_file.first].c_provider()->
@@ -143,7 +143,7 @@ void srcdbg_provider_aggregator::file_line_to_address_ranges(u32 file_index, u32
 }
 
 	// robin to first successful
-bool srcdbg_provider_aggregator::address_to_file_line (offs_t address, file_line & loc) const
+bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 {
 	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
 	{

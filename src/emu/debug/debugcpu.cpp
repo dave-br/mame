@@ -647,7 +647,7 @@ device_debug::~device_debug()
 //  level debugging symbols when the offset changes
 //-------------------------------------------------
 
-void device_debug::update_symbols_from_srcdbg(const srcdbg_provider_aggregator & srcdbg_provider)
+void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_provider)
 {
 	m_symtable_srcdbg_globals.reset();
 	m_symtable_srcdbg_locals.reset();
