@@ -1346,13 +1346,13 @@ void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std
 	srcdbg_info::srcdbg_provider_entry & sp = providers[index];
 	if (sp.enabled() == enable)
 	{
-		m_console.printf("Source-debugging info %X is already %s\n", index, enable ? "enabled" : "disalbed");
+		m_console.printf("Source-debugging info %X is already %s\n", index, enable ? "enabled" : "disabled");
 		return;
 	}
 
 	sp.set_enabled(enable);
-	m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disalbed");
-	// TODO: Refresh?
+	m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disabled");
+	srcdbg->coalesce();
 }
 
 /*-------------------------------------------------

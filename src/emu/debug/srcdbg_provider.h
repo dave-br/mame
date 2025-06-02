@@ -168,7 +168,7 @@ public:
 	// Helper called by the public create_debug_info to create potentially
 	// many srcdbg_provider_base instances, based on how many MDI files
 	// are specified by the user
-	static std::unique_ptr<srcdbg_provider_base> create_debug_info(running_machine &machine, const std::string & di_path)
+	static srcdbg_provider_base * create_debug_info(running_machine &machine, const std::string & di_path);
 
 	virtual ~srcdbg_provider_base() {};
 

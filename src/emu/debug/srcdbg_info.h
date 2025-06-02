@@ -22,12 +22,14 @@ public:
 	class srcdbg_provider_entry
 	{
 	public:
-		srcdbg_provider_entry(/* std::string name,*/ std::unique_ptr<srcdbg_provider_base> provider)
-			: m_name( /*name */)
-			, m_provider(std::move(provider))
+		srcdbg_provider_entry(const std::string & name, srcdbg_provider_base * provider)
+			: m_name(name)
+			, m_provider(provider)
 			, m_enabled(true)
 		{
 		}
+
+		~srcdbg_provider_entry() {}
 
 		const std::string & name() const { return m_name; }
 		const srcdbg_provider_base * c_provider() const { return m_provider.get(); }
@@ -42,7 +44,15 @@ public:
 	};
 
 	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
-	srcdbg_info(const running_machine& machine);
+
+	srcdbg_info(const running_machine& machine)
+		: m_agg_file_to_provider_file()
+		, m_provider_file_to_agg_file()
+		, m_providers()
+		, m_offset(machine.options().srcdbg_offset())
+	{
+	}
+
 	~srcdbg_info() { }
 
 	// robin all, change params so caller creates the tables,
@@ -74,9 +84,11 @@ public:
 
 	// own offset and remove from base class
 	void set_offset(s32 offset) { m_offset = offset; }
-	// virtual s32 get_offset() const override { return m_offset; }
+	s32 get_offset() const { return m_offset; }
 
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
+
+	void coalesce();
 
 private:
 	// agg file index to provider index + local file index

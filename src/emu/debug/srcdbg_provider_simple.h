@@ -74,7 +74,7 @@ private:
 		std::vector<local_relative_eval_rule_internal> m_eval_rules;
 	};
 
-	virtual s32 get_offset() const override { return m_offset; }
+	// virtual s32 get_offset() const override { return m_offset; }
 
 	const running_machine& m_machine;
 	std::vector<source_file_path>               m_source_file_paths;      // Starting points for source file path strings

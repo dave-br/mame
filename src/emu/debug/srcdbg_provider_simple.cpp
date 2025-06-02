@@ -16,6 +16,8 @@
 #include "emuopts.h"
 #include "fileio.h"
 #include "path.h"
+#include "debugger.h"
+#include "srdbg_info.h"
 
 #include "corestr.h"
 
@@ -306,7 +308,6 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	, m_linemaps_by_line()
 	, m_global_fixed_symbols()
 	, m_local_fixed_symbols()
-	, m_offset(machine.options().srcdbg_offset())
 {
 }
 
@@ -431,6 +432,8 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 		return;
 	}
 
+	s32 offset = m_machine.debugger().srcdbg_provider()->get_offset();
+
 	auto answer = std::lower_bound(
 		list.cbegin(),
 		list.cend(),
@@ -442,7 +445,7 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 	while (answer < list.cend() && answer->line_number == line_number)
 	{
 		// Add range, applying offset first
-		ranges.push_back(address_range(answer->address_first + m_offset, answer->address_last + m_offset));
+		ranges.push_back(address_range(answer->address_first + offset, answer->address_last + offset));
 		answer++;
 	}
 }
@@ -455,7 +458,8 @@ bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & l
 	assert(m_linemaps_by_address.size() > 0);
 
 	// Undo offset so lookup uses addresses originally present in debugging information file
-	address -= m_offset;
+	s32 offset = m_machine.debugger().srcdbg_provider()->get_offset();
+	address -= offset;
 
 	auto guess = std::lower_bound(
 		m_linemaps_by_address.cbegin(),

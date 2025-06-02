@@ -33,7 +33,7 @@ helper: std::unique_ptr<srcdbg_provider_base> create_debug_info(path it)
 // the debug info file
 //
 // static
-std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(running_machine &machine, const std::string & di_path)
+srcdbg_provider_base * srcdbg_provider_base::create_debug_info(running_machine &machine, const std::string & di_path)
 {
 	std::string error;
 	srcdbg_format format;
@@ -46,7 +46,7 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 	{
 	case SRCDBG_FORMAT_SIMPLE:
 	{
-		std::unique_ptr<srcdbg_provider_simple> ret = std::make_unique<srcdbg_provider_simple>(machine);
+		srcdbg_provider_simple * ret = new srcdbg_provider_simple(machine);
 		srcdbg_import importer(*ret);
 		if (!srcdbg_format_simp_read(di_path.c_str(), importer, error))
 		{
@@ -56,7 +56,6 @@ std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info(ru
 			}
 			return nullptr;
 		}
-		ret->m_next = create_debug_info(machine, path_it);
 		return ret;
 	}
 

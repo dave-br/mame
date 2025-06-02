@@ -32,21 +32,22 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 	std::string di_path;
 	while (!path_it.next(di_path))
 	{
-		std::unique_ptr<srcdbg_provider_base> provider(srcdbg_provider_base::create_debug_info(machine, di_path));
+		srcdbg_provider_base * provider = srcdbg_provider_base::create_debug_info(machine, di_path);
 		if (provider == nullptr)
 		{
 			return nullptr;
 		}
 
-		srcdbg_provider_entry sp(/* di_path,*/ provider);
+		srcdbg_provider_entry sp(di_path, provider);
+		ret->m_providers.push_back(sp);
 	}
 
+	ret->coalesce();
+
 	// TODO: verify ~srcdbg_info called if return null
+	return ret;
 }
 
-
-srcdbg_info::srcdbg_info(const running_machine& machine)
-{}
 
 	// robin all, change params so caller creates the tables,
 	// and callees just populate them
@@ -191,4 +192,44 @@ bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 		}
 	}
 	return false;
+}
+
+
+// std::vector<std::pair<std::size_t, u32>> m_agg_file_to_provider_file;
+	
+// 	// provider index + local file inex to agg file index
+// 	std::vector<std::vector<u32>> m_provider_file_to_agg_file;
+
+
+void srcdbg_info::coalesce()
+{
+	m_provider_file_to_agg_file.clear();
+	m_agg_file_to_provider_file.clear();
+
+	m_provider_file_to_agg_file.reserve(m_providers.size());
+	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
+	{
+		const srcdbg_provider_entry & sp = m_providers[provider_idx];
+		if (!sp.enabled())
+		{
+			continue;
+		}
+
+		const srcdbg_provider_base * provider = sp.c_provider();
+		if (provider->num_files() == 0)
+		{
+			continue;
+		}
+		
+		m_provider_file_to_agg_file[provider_idx] = std::vector<u32>();
+		std::vector<u32> & provider_files = m_provider_file_to_agg_file[m_provider_file_to_agg_file.size() - 1];
+		for (u32 file_idx = 0; file_idx < provider->num_files(); file_idx++)
+		{
+			// (provider_idx, file_idx) maps to the next available aggregated index
+			m_provider_file_to_agg_file[provider_idx].push_back(m_agg_file_to_provider_file.size());
+
+			// That same next available aggregated index maps to (provider_idx, file_idx)
+			m_agg_file_to_provider_file.push_back(std::pair(provider_idx, file_idx));
+		}
+	}
 }
