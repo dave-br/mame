@@ -15,6 +15,7 @@
 #include "debug/debugcmd.h"
 #include "debug/debugcon.h"
 #include "debug/debugvw.h"
+#include "debug/srcdbg_info.h"
 #include "debug/srcdbg_provider.h"
 #include <cctype>
 
@@ -94,9 +95,9 @@ debugger_manager::~debugger_manager()
     debugging information file if enabled
 -------------------------------------------------*/
 
-std::unique_ptr<srcdbg_provider_base> debugger_manager::load_debug_info(running_machine &machine)
+std::unique_ptr<srcdbg_info> debugger_manager::load_debug_info(running_machine &machine)
 {
-	return srcdbg_provider_base::create_debug_info(machine);
+	return srcdbg_info::create_debug_info(machine);
 }
 
 

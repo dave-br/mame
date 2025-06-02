@@ -29,6 +29,13 @@ public:
 		{
 		}
 
+		srcdbg_provider_entry(srcdbg_provider_entry && that)
+			: m_name(std::move(that.m_name))
+			, m_provider(std::move(that.m_provider))
+			, m_enabled(that.m_enabled)
+		{			
+		}
+
 		~srcdbg_provider_entry() {}
 
 		const std::string & name() const { return m_name; }
@@ -45,14 +52,7 @@ public:
 
 	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
 
-	srcdbg_info(const running_machine& machine)
-		: m_agg_file_to_provider_file()
-		, m_provider_file_to_agg_file()
-		, m_providers()
-		, m_offset(machine.options().srcdbg_offset())
-	{
-	}
-
+	srcdbg_info(const running_machine& machine);
 	~srcdbg_info() { }
 
 	// robin all, change params so caller creates the tables,

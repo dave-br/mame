@@ -17,7 +17,7 @@
 #include "fileio.h"
 #include "path.h"
 #include "debugger.h"
-#include "srdbg_info.h"
+#include "srcdbg_info.h"
 
 #include "corestr.h"
 
@@ -306,8 +306,6 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 	, m_source_file_paths()
 	, m_linemaps_by_address()
 	, m_linemaps_by_line()
-	, m_global_fixed_symbols()
-	, m_local_fixed_symbols()
 {
 }
 

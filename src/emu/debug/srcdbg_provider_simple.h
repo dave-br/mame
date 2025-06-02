@@ -36,10 +36,7 @@ public:
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const override;
-	virtual const std::vector<global_fixed_symbol> & global_fixed_symbols() const override { return m_global_fixed_symbols; };
-	virtual const std::vector<local_fixed_symbol> & local_fixed_symbols() const override { return m_local_fixed_symbols; };
-	virtual const std::vector<local_relative_symbol> & local_relative_symbols() const override { return m_local_relative_symbols; };
-	virtual void set_offset(s32 offset) override { m_offset = offset; }
+	// virtual void set_offset(s32 offset) override { m_offset = offset; }
 
 private:
 	struct address_line
@@ -81,10 +78,7 @@ private:
 	std::vector<srcdbg_line_mapping>            m_linemaps_by_address;    // a list of srcdbg_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>      m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 																		  // sorted by line, from file #i
-	std::vector<global_fixed_symbol>            m_global_fixed_symbols;
-	std::vector<local_fixed_symbol>             m_local_fixed_symbols;
 	std::vector<local_relative_symbol_internal> m_local_relative_symbols_internal;
-	std::vector<local_relative_symbol>          m_local_relative_symbols;
 	// s32                                         m_offset;
 };
 

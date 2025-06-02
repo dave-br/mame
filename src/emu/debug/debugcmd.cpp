@@ -1314,7 +1314,7 @@ void debugger_commands::execute_srcdbg_provider_list(const std::vector<std::stri
 		return;
 	}
 
-	auto providers = srcdbg->providers();
+	std::vector<srcdbg_info::srcdbg_provider_entry> & providers = srcdbg->providers();
 	for (offs_t provider_idx = 0; provider_idx < providers.size(); provider_idx++)
 	{
 		srcdbg_info::srcdbg_provider_entry & sp = providers[provider_idx];
@@ -1335,7 +1335,7 @@ void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std
 	if (!m_console.validate_number_parameter(params[0], index))
 		return;
 
-	auto providers = srcdbg->providers();
+	std::vector<srcdbg_info::srcdbg_provider_entry> & providers = srcdbg->providers();
 	if (index >= providers.size())
 	{
 		m_console.printf("Invalid source-debugging info number: %X\n", index);

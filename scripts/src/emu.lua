@@ -260,6 +260,8 @@ files {
 	MAME_DIR .. "src/emu/debug/express.h",
 	MAME_DIR .. "src/emu/debug/points.cpp",
 	MAME_DIR .. "src/emu/debug/points.h",
+	MAME_DIR .. "src/emu/debug/srcdbg_info.cpp",
+	MAME_DIR .. "src/emu/debug/srcdbg_info.h",
 	MAME_DIR .. "src/emu/debug/srcdbg_provider.cpp",
 	MAME_DIR .. "src/emu/debug/srcdbg_provider.h",
 	MAME_DIR .. "src/emu/debug/srcdbg_provider_simple.cpp",

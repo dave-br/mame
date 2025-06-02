@@ -39,7 +39,7 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 		}
 
 		srcdbg_provider_entry sp(di_path, provider);
-		ret->m_providers.push_back(sp);
+		ret->m_providers.push_back(std::move(sp));
 	}
 
 	ret->coalesce();
@@ -48,6 +48,13 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 	return ret;
 }
 
+srcdbg_info::srcdbg_info(const running_machine& machine)
+	: m_agg_file_to_provider_file()
+	, m_provider_file_to_agg_file()
+	, m_providers()
+	, m_offset(machine.options().srcdbg_offset())
+{
+}
 
 	// robin all, change params so caller creates the tables,
 	// and callees just populate them
@@ -222,7 +229,6 @@ void srcdbg_info::coalesce()
 		}
 		
 		m_provider_file_to_agg_file[provider_idx] = std::vector<u32>();
-		std::vector<u32> & provider_files = m_provider_file_to_agg_file[m_provider_file_to_agg_file.size() - 1];
 		for (u32 file_idx = 0; file_idx < provider->num_files(); file_idx++)
 		{
 			// (provider_idx, file_idx) maps to the next available aggregated index

@@ -11,6 +11,7 @@
 #include "uimetrics.h"
 
 #include "debug/dvsourcecode.h"
+#include "srcdbg_info.h"
 
 #include "strconv.h"
 
@@ -51,7 +52,7 @@ std::optional<offs_t> sourceview_info::selected_address() const
 HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata)
 {
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
-	const srcdbg_provider_base * debug_info = dv_source->srcdbg_provider();
+	const srcdbg_info * debug_info = dv_source->srcdbg_provider();
 
 	// create a combo box
 	HWND const result = CreateWindowEx(COMBO_BOX_STYLE_EX, TEXT("COMBOBOX"), nullptr, COMBO_BOX_STYLE,

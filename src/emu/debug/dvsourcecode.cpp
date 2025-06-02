@@ -11,6 +11,7 @@
 #include "emu.h"
 #include "dvsourcecode.h"
 #include "debugger.h"
+#include "srcdbg_info.h"
 #include "srcdbg_provider.h"
 #include "emuopts.h"
 

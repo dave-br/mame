@@ -24,6 +24,7 @@
 #include "screen.h"
 #include "uiinput.h"
 #include "dvsourcecode.h"
+#include "srcdbg_info.h"
 #include "srcdbg_provider.h"
 
 #include "corestr.h"
@@ -562,7 +563,7 @@ device_debug::device_debug(device_t &device)
 			// Add symbols from source-level debugging information file
 			if (m_device.machine().debugger().srcdbg_provider() != nullptr)
 			{
-				srcdbg_provider_base & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
+				srcdbg_info & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
 				srcdbg_provider.complete_local_relative_initialization();
 				update_symbols_from_srcdbg(srcdbg_provider);
 			}
@@ -659,17 +660,15 @@ void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_provide
 	m_symtable_srcdbg_locals = std::make_unique<symbol_table>(
 		m_symtable_device->machine(),
 		symbol_table::SRCDBG_LOCALS,
-		m_symtable_srcdbg_globals,
+		m_symtable_srcdbg_globals.get(),
 		&m_device);
 	// Establish the following symbol table parent chain:
 	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
 	// symbol_table * new_symtable_srcdbg_globals = nullptr;
 	// symbol_table * new_symtable_srcdbg_locals = nullptr;
 	srcdbg_provider.get_srcdbg_symbols(
-		m_symtable_srcdbg_globals,
-		m_symtable_srcdbg_locals,
-		m_symtable_device.get(),
-		&m_device,
+		m_symtable_srcdbg_globals.get(),
+		m_symtable_srcdbg_locals.get(),
 		m_state);
 	// m_symtable_srcdbg_globals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_globals);
 	// m_symtable_srcdbg_locals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_locals);

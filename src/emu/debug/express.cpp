@@ -33,6 +33,7 @@
 #include "emuopts.h"
 #include "express.h"
 #include "debugger.h"
+#include "srcdbg_info.h"
 #include "srcdbg_provider.h"
 
 #include "corestr.h"
@@ -1805,7 +1806,7 @@ void parsed_expression::parse_source_file_position(parse_token &token, const cha
 	{
 		throw expression_error(expression_error::SRCDBG_UNAVAILABLE, token.offset());
 	}
-	const srcdbg_provider_base & debug_info = *symbols().machine().debugger().srcdbg_provider();
+	const srcdbg_info & debug_info = *symbols().machine().debugger().srcdbg_provider();
 	std::optional<u32> file_index = debug_info.file_path_to_index(file_path.c_str());
 	if (!file_index.has_value())
 	{
