@@ -636,12 +636,12 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 	std::size_t numFiles = debugInfo->num_files();
 	for (std::size_t i = 0; i < numFiles; i++)
 	{
-		srcdbg_provider_base::source_file_path path;
-		if (!debugInfo->file_index_to_path(i, path))
+		const srcdbg_provider_base::source_file_path * path;
+		if (!debugInfo->file_index_to_path(i, &path))
 		{
 			return;
 		}
-		const char * entryText = path.built();
+		const char * entryText = path->built();
 		m_srcdbgCombo->addItem(entryText);
 	}
 

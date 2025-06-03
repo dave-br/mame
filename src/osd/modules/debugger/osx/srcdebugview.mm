@@ -33,12 +33,12 @@
 		std::size_t num_files = debug_info->num_files();
 		for (std::size_t i = 0; i < num_files; i++)
 		{
-			srcdbg_provider_base::source_file_path path;
-			if (!debug_info->file_index_to_path(i, path))
+			const srcdbg_provider_base::source_file_path * path;
+			if (!debug_info->file_index_to_path(i, &path))
 			{
 				return;
 			}
-			const char * entry_text = path.built();
+			const char * entry_text = path->built();
 			NSString *title = [NSString stringWithUTF8String:entry_text];
 			[[menu insertItemWithTitle:title
 								action:@selector(sourceDebugBarChanged:)

@@ -70,7 +70,7 @@ public:
 
 	// use num_files successively to determine which provider owns
 	// this, use remainder on that provider
-	virtual bool file_index_to_path(u32 file_index, source_file_path & path) const override;
+	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const override;
 
 	// robin to first successful
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
@@ -85,6 +85,8 @@ public:
 	// own offset and remove from base class
 	void set_offset(s32 offset) { m_offset = offset; }
 	s32 get_offset() const { return m_offset; }
+
+	const std::vector<srcdbg_provider_entry> & c_providers() const { return m_providers; }
 
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
 

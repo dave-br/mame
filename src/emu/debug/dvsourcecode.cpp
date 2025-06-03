@@ -81,8 +81,10 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
-	m_line_for_cur_pc()
+	m_line_for_cur_pc(),
+	m_provider_enabled_state()
 {
+	update_provider_enabled_state();
 	if (m_srcdbg_provider != nullptr)
 	{
 		m_supports_cursor = true;
@@ -138,12 +140,12 @@ void debug_view_sourcecode::update_opened_file()
 		return;
 	}
 
-	srcdbg_provider_base::source_file_path path;
-	if (!m_srcdbg_provider->file_index_to_path(m_cur_src_index, path))
+	const srcdbg_provider_base::source_file_path * path;
+	if (!m_srcdbg_provider->file_index_to_path(m_cur_src_index, &path))
 	{
 		return;
 	}
-	const char * local_path = path.local();
+	const char * local_path = path->local();
 	if (local_path == nullptr)
 	{
 		return;
@@ -199,6 +201,20 @@ void debug_view_sourcecode::view_update()
 		pc_changed = update_previous_pc(pc);
 	}
 
+	bool do_flush_osd_updates = false;
+
+	if (update_provider_enabled_state())
+	{
+		// The update actually did something, so reset state given that the list
+		// of enabled providers has changed.
+		m_cur_src_index = 0;
+		m_displayed_src_index = -1;
+		m_displayed_src_file = std::make_unique<line_indexed_file>();
+		m_line_for_cur_pc = std::optional<u32>();
+		pc_changed = true;
+		do_flush_osd_updates = true;
+	}
+
 	// If pc has changed, find its file & line number if possible
 	if (pc_changed)
 	{
@@ -214,21 +230,32 @@ void debug_view_sourcecode::view_update()
 		}
 	}
 
+	viewdata_text_update(pc_changed, pc);
+
+	if (do_flush_osd_updates)
+	{
+		flush_osd_updates();
+	}
+}
+
+
+void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
+{
 	// Ensure the correct file is open.  First time view is displayed, this opens
 	// the top of file index 0
 	update_opened_file();
 
 	// Verify the open succeeded
-	srcdbg_provider_base::source_file_path path;
-	if (!m_srcdbg_provider->file_index_to_path(m_cur_src_index, path))
+	const srcdbg_provider_base::source_file_path * path;
+	if (!m_srcdbg_provider->file_index_to_path(m_cur_src_index, &path))
 	{
 		// TODO: ERROR
 		return;
 	}
 
-	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
+	if (path->local() == nullptr || m_displayed_src_file->last_open_error())
 	{
-		print_file_open_error(path);
+		print_file_open_error(*path);
 		return;
 	}
 
@@ -276,6 +303,35 @@ void debug_view_sourcecode::view_update()
 		}
 	}
 }
+
+bool debug_view_sourcecode::update_provider_enabled_state()
+{
+	if (m_srcdbg_provider == nullptr)
+	{
+		return false;
+	}
+
+	bool ret = false;
+	const std::vector<srcdbg_info::srcdbg_provider_entry> & providers = 
+		m_srcdbg_provider->c_providers();
+	if (providers.size() != m_provider_enabled_state.size())
+	{
+		ret = true;
+		m_provider_enabled_state.reserve(providers.size());
+		m_provider_enabled_state.resize(providers.size());
+	}
+	for (offs_t i=0; i < providers.size(); i++)
+	{
+		if (m_provider_enabled_state[i] != providers[i].enabled())
+		{
+			ret = true;
+			m_provider_enabled_state[i] = providers[i].enabled();
+		}
+	}
+
+	return ret;
+}
+
 
 
 //-------------------------------------------------

@@ -65,6 +65,8 @@ private:
 		std::vector<u32> m_line_starts;
 	};
 
+	bool update_provider_enabled_state();
+	void viewdata_text_update(bool pc_changed, offs_t pc);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
 	void print_file_open_error(const srcdbg_provider_base::source_file_path & path);
@@ -81,6 +83,7 @@ private:
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
 	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
+	std::vector<bool>                                 m_provider_enabled_state;
 };
 
 #endif // MAME_EMU_DEBUG_DVSOURCE_H

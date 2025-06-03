@@ -72,12 +72,12 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 		std::size_t num_files = debug_info->num_files();
 		for (std::size_t i = 0; i < num_files; i++)
 		{
-			srcdbg_provider_base::source_file_path path;
-			if (!debug_info->file_index_to_path(i, path))
+			const srcdbg_provider_base::source_file_path * path;
+			if (!debug_info->file_index_to_path(i, &path))
 			{
 				return result;
 			}
-			const char * entry_text = path.built();
+			const char * entry_text = path->built();
 			size_t const length = strlen(entry_text);
 			if (length > maxlength)
 			{

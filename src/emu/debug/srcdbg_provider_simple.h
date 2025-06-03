@@ -32,7 +32,7 @@ public:
 	~srcdbg_provider_simple() { }
 	virtual void complete_local_relative_initialization() override;
 	virtual u32 num_files() const override { return m_source_file_paths.size(); }
-	virtual bool file_index_to_path(u32 file_index, source_file_path & path) const override { path = m_source_file_paths[file_index]; return true;};
+	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const override { *path = m_source_file_paths.data()+file_index; return true;};
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const override;

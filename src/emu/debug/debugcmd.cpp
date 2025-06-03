@@ -1353,6 +1353,7 @@ void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std
 	sp.set_enabled(enable);
 	m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disabled");
 	srcdbg->coalesce();
+	m_machine.debug_view().update_all(DVT_SOURCE);
 }
 
 /*-------------------------------------------------

@@ -80,12 +80,6 @@ public:
 		{
 		}
 
-		source_file_path()
-			: m_built(nullptr)
-			, m_local(nullptr)
-		{
-		}
-
 		const char * built() const { return m_built.c_str(); }
 		const char * local() const { return m_local.c_str(); }
 
@@ -201,7 +195,7 @@ public:
 	virtual u32 num_files() const = 0;
 
 	// Returns the source_file_path corresponding to the specified 0-based file index
-	virtual bool file_index_to_path(u32 file_index, source_file_path & path) const = 0;
+	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const = 0;
 
 	// Returns the 0-based file index corresponding to the specified source file path
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const = 0;

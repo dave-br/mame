@@ -128,7 +128,7 @@ u32 srcdbg_info::num_files() const
 }
 
 
-bool srcdbg_info::file_index_to_path(u32 file_index, source_file_path & path) const
+bool srcdbg_info::file_index_to_path(u32 file_index, const source_file_path ** path) const
 { 
 	std::pair<std::size_t, u32> provider_file;	
 	if (!file_index_to_provider_file(file_index, provider_file))
