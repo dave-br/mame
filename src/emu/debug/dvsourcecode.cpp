@@ -82,11 +82,12 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
 	m_line_for_cur_pc(),
-	m_provider_enabled_state()
+	m_provider_list_rev_cur(u32(-1))
+	// m_provider_enabled_state()
 {
-	update_provider_enabled_state();
 	if (m_srcdbg_provider != nullptr)
 	{
+		m_provider_list_rev_cur = m_srcdbg_provider->provider_list_rev();
 		m_supports_cursor = true;
 	}
 }
@@ -203,7 +204,7 @@ void debug_view_sourcecode::view_update()
 
 	bool do_flush_osd_updates = false;
 
-	if (update_provider_enabled_state())
+	if (update_provider_list_rev())
 	{
 		// The update actually did something, so reset state given that the list
 		// of enabled providers has changed.
@@ -304,33 +305,43 @@ void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
 	}
 }
 
-bool debug_view_sourcecode::update_provider_enabled_state()
+bool debug_view_sourcecode::update_provider_list_rev()
 {
 	if (m_srcdbg_provider == nullptr)
 	{
 		return false;
 	}
 
-	bool ret = false;
-	const std::vector<srcdbg_info::srcdbg_provider_entry> & providers = 
-		m_srcdbg_provider->c_providers();
-	if (providers.size() != m_provider_enabled_state.size())
+	if (m_provider_list_rev_cur != m_srcdbg_provider->provider_list_rev())
 	{
-		ret = true;
-		m_provider_enabled_state.reserve(providers.size());
-		m_provider_enabled_state.resize(providers.size());
-	}
-	for (offs_t i=0; i < providers.size(); i++)
-	{
-		if (m_provider_enabled_state[i] != providers[i].enabled())
-		{
-			ret = true;
-			m_provider_enabled_state[i] = providers[i].enabled();
-		}
+		m_provider_list_rev_cur = m_srcdbg_provider->provider_list_rev();
+		return true;
 	}
 
-	return ret;
+	return false;
 }
+
+
+	// 	bool ret = false;
+// 	const std::vector<srcdbg_info::srcdbg_provider_entry> & providers = 
+// 		m_srcdbg_provider->c_providers();
+// 	if (providers.size() != m_provider_enabled_state.size())
+// 	{
+// 		ret = true;
+// 		m_provider_enabled_state.reserve(providers.size());
+// 		m_provider_enabled_state.resize(providers.size());
+// 	}
+// 	for (offs_t i=0; i < providers.size(); i++)
+// 	{
+// 		if (m_provider_enabled_state[i] != providers[i].enabled())
+// 		{
+// 			ret = true;
+// 			m_provider_enabled_state[i] = providers[i].enabled();
+// 		}
+// 	}
+
+// 	return ret;
+// }
 
 
 

@@ -90,6 +90,8 @@ public:
 
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
 
+	u32 provider_list_rev() const { return m_provider_list_rev; }
+
 	void coalesce();
 
 private:
@@ -98,10 +100,11 @@ private:
 	// agg file index to provider index + local file index
 	std::vector<std::pair<std::size_t, u32>> m_agg_file_to_provider_file;
 	
-	// provider index + local file inex to agg file index
+	// provider index + local file index to agg file index
 	std::vector<std::vector<u32>> m_provider_file_to_agg_file;
 	std::vector<srcdbg_provider_entry> m_providers;
 	s32                               m_offset;
+	u32                               m_provider_list_rev;
 };
 
 

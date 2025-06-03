@@ -53,6 +53,7 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 	, m_provider_file_to_agg_file()
 	, m_providers()
 	, m_offset(machine.options().srcdbg_offset())
+	, m_provider_list_rev(0)
 {
 }
 
@@ -270,4 +271,5 @@ void srcdbg_info::coalesce()
 			m_agg_file_to_provider_file.push_back(std::pair(provider_idx, file_idx));
 		}
 	}
+	m_provider_list_rev++;
 }

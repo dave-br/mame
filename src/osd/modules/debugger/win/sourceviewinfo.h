@@ -34,6 +34,11 @@ protected:
 	virtual void update() override;
 
 private:
+	bool populate_source_file_combo(HWND combo);
+	void repopulate_source_file_combo();
+	bool update_provider_list_rev();
+
+	u32     m_provider_list_rev_cur;
 	// TODO: Keeping my own copy of this HWND and making update() virtual seems
 	// inconsistent with rest of dbg arch.  Is there a more appropriate way to
 	// update its selection whenever the PC changes?

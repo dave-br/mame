@@ -26,8 +26,13 @@ namespace osd::debugger::win {
 
 sourceview_info::sourceview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent) :
 	disasmview_info(debugger, owner, parent, true /* source_code_debugging */)
+	, m_provider_list_rev_cur(u32(-1))
+	, m_combownd(nullptr)
 {
-
+	if (view<debug_view_sourcecode>()->srcdbg_provider() != nullptr)
+	{
+		m_provider_list_rev_cur = view<debug_view_sourcecode>()->srcdbg_provider()->provider_list_rev();
+	}
 }
 
 
@@ -67,32 +72,54 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	}
 	else
 	{
-		// populate the combobox with source file paths when present
-		size_t maxlength = 0;
-		std::size_t num_files = debug_info->num_files();
-		for (std::size_t i = 0; i < num_files; i++)
+		if (!populate_source_file_combo(result))
 		{
-			const srcdbg_provider_base::source_file_path * path;
-			if (!debug_info->file_index_to_path(i, &path))
-			{
-				return result;
-			}
-			const char * entry_text = path->built();
-			size_t const length = strlen(entry_text);
-			if (length > maxlength)
-			{
-				maxlength = length;
-			}
-			auto t_name = osd::text::to_tstring(entry_text);
-			SendMessage(result, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
+			return result;
 		}
 
 		SendMessage(result, CB_SETCURSEL, dv_source->cur_src_index(), 0);
-		SendMessage(result, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
 	}
 
 	m_combownd = result;
 	return result;
+}
+
+bool sourceview_info::populate_source_file_combo(HWND combo)
+{
+	// populate the combobox with source file paths when present
+	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
+	const srcdbg_info * debug_info = dv_source->srcdbg_provider();
+	if (debug_info == nullptr)
+	{
+		return false;
+	}
+	size_t maxlength = 0;
+	std::size_t num_files = debug_info->num_files();
+	for (std::size_t i = 0; i < num_files; i++)
+	{
+		const srcdbg_provider_base::source_file_path * path;
+		if (!debug_info->file_index_to_path(i, &path))
+		{
+			return false;
+		}
+		const char * entry_text = path->built();
+		size_t const length = strlen(entry_text);
+		if (length > maxlength)
+		{
+			maxlength = length;
+		}
+		auto t_name = osd::text::to_tstring(entry_text);
+		SendMessage(combo, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
+	}
+	SendMessage(combo, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
+
+	return true;
+}
+
+void sourceview_info::repopulate_source_file_combo()
+{
+	SendMessage(m_combownd, CB_RESETCONTENT, 0, 0);
+	populate_source_file_combo(m_combownd);
 }
 
 // Overriding update so source-file combo box can auto-select the new
@@ -100,12 +127,37 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 void sourceview_info::update()
 {
 	disasmview_info::update();
+	if (update_provider_list_rev())
+	{
+		repopulate_source_file_combo();
+	}
+	
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
 	// TODO: Keeping my own copy of m_combownd and making update() virtual seems
 	// inconsistent with rest of dbg arch.
 	// What is the proper way to update its selection whenever the PC changes?
 	SendMessage(m_combownd, CB_SETCURSEL, dv_source->cur_src_index(), 0);
 }
+
+
+bool sourceview_info::update_provider_list_rev()
+{
+	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
+	const srcdbg_info * debug_info = dv_source->srcdbg_provider();
+	if (debug_info == nullptr)
+	{
+		return false;
+	}
+
+	if (m_provider_list_rev_cur != debug_info->provider_list_rev())
+	{
+		m_provider_list_rev_cur = debug_info->provider_list_rev();
+		return true;
+	}
+
+	return false;
+}
+
 
 
 
