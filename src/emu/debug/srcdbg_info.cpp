@@ -30,7 +30,7 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 
 	path_iterator path_it(di_paths);
 	std::string di_path;
-	while (!path_it.next(di_path))
+	while (path_it.next(di_path))
 	{
 		srcdbg_provider_base * provider = srcdbg_provider_base::create_debug_info(machine, di_path);
 		if (provider == nullptr)
@@ -128,10 +128,15 @@ u32 srcdbg_info::num_files() const
 }
 
 
-const srcdbg_provider_base::source_file_path & srcdbg_info::file_index_to_path(u32 file_index) const
-{
-	std::pair provider_file = m_agg_file_to_provider_file[file_index];
-	return m_providers[provider_file.first].c_provider()->file_index_to_path(provider_file.second);
+bool srcdbg_info::file_index_to_path(u32 file_index, source_file_path & path) const
+{ 
+	std::pair<std::size_t, u32> provider_file;	
+	if (!file_index_to_provider_file(file_index, provider_file))
+	{
+		return false;
+	}
+
+	return m_providers[provider_file.first].c_provider()->file_index_to_path(provider_file.second, path);
 }
 
 std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
@@ -169,12 +174,34 @@ std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 	return m_provider_file_to_agg_file[found_index.value().first][found_index.value().second];
 }
 
+bool srcdbg_info::file_index_to_provider_file(u32 file_index, std::pair<std::size_t, u32> & ret) const
+{
+	if (file_index >= m_agg_file_to_provider_file.size())
+	{
+		return false;
+	}
+
+	std::pair<std::size_t, u32> provider_file = m_agg_file_to_provider_file[file_index];
+	if (!m_providers[provider_file.first].enabled())
+	{
+		return false;
+	}
+
+	ret = provider_file;
+	return true;
+}
+
 	// use num_files successively to determine which provider owns
 	// this, use remainder on that provider
 void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
-	std::pair provider_file = m_agg_file_to_provider_file[file_index];
-	return m_providers[provider_file.first].c_provider()->
+	std::pair<std::size_t, u32> provider_file;	
+	if (!file_index_to_provider_file(file_index, provider_file))
+	{
+		return;
+	}
+
+	m_providers[provider_file.first].c_provider()->
 		file_line_to_address_ranges(provider_file.second, line_number, ranges);
 }
 
@@ -213,7 +240,12 @@ void srcdbg_info::coalesce()
 	m_provider_file_to_agg_file.clear();
 	m_agg_file_to_provider_file.clear();
 
+	// Ensure m_provider_file_to_agg_file is pre-sized so as we encounter an
+	// enabled provider (not necessarily contiguous with the prior one),
+	// mapping, we'll always have an entry ready for it
 	m_provider_file_to_agg_file.reserve(m_providers.size());
+	m_provider_file_to_agg_file.resize(m_providers.size());
+
 	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
 	{
 		const srcdbg_provider_entry & sp = m_providers[provider_idx];

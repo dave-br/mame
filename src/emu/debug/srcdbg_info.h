@@ -70,7 +70,7 @@ public:
 
 	// use num_files successively to determine which provider owns
 	// this, use remainder on that provider
-	virtual const source_file_path & file_index_to_path(u32 file_index) const override;
+	virtual bool file_index_to_path(u32 file_index, source_file_path & path) const override;
 
 	// robin to first successful
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
@@ -91,6 +91,8 @@ public:
 	void coalesce();
 
 private:
+	bool file_index_to_provider_file(u32 file_index, std::pair<std::size_t, u32> & ret) const;
+
 	// agg file index to provider index + local file index
 	std::vector<std::pair<std::size_t, u32>> m_agg_file_to_provider_file;
 	

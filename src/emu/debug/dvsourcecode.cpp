@@ -138,7 +138,12 @@ void debug_view_sourcecode::update_opened_file()
 		return;
 	}
 
-	const char * local_path = m_srcdbg_provider->file_index_to_path(m_cur_src_index).local();
+	srcdbg_provider_base::source_file_path path;
+	if (!m_srcdbg_provider->file_index_to_path(m_cur_src_index, path))
+	{
+		return;
+	}
+	const char * local_path = path.local();
 	if (local_path == nullptr)
 	{
 		return;
@@ -214,7 +219,13 @@ void debug_view_sourcecode::view_update()
 	update_opened_file();
 
 	// Verify the open succeeded
-	const srcdbg_provider_base::source_file_path & path = m_srcdbg_provider->file_index_to_path(m_cur_src_index);
+	srcdbg_provider_base::source_file_path path;
+	if (!m_srcdbg_provider->file_index_to_path(m_cur_src_index, path))
+	{
+		// TODO: ERROR
+		return;
+	}
+
 	if (path.local() == nullptr || m_displayed_src_file->last_open_error())
 	{
 		print_file_open_error(path);
