@@ -75,7 +75,7 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 			srcdbg_provider_base::source_file_path path;
 			if (!debug_info->file_index_to_path(i, path))
 			{
-				return;
+				return result;
 			}
 			const char * entry_text = path.built();
 			size_t const length = strlen(entry_text);
