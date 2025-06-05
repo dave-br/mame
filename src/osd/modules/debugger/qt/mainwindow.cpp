@@ -624,7 +624,7 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 	dvLayout->setSpacing(3);
 
 	const debug_view_sourcecode *dvSource = downcast<debug_view_sourcecode*>(m_srcdbgView->view());
-	const srcdbg_info * debugInfo = dvSource->srcdbg_info();
+	const srcdbg_info * debugInfo = dvSource->get_srcdbg_info();
 
 	if (debugInfo == nullptr)
 	{

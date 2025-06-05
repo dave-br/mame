@@ -77,7 +77,7 @@ const std::error_condition & debug_view_sourcecode::line_indexed_file::open(cons
 debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate) :
 	debug_view_disasm(machine, osdupdate, osdprivate, true /* source_code_debugging */),
 	m_state(nullptr),
-	m_srcdbg_info(machine.debugger().srcdbg_info()),
+	m_srcdbg_info(machine.debugger().get_srcdbg_info()),
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),

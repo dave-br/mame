@@ -29,9 +29,9 @@ sourceview_info::sourceview_info(debugger_windows_interface &debugger, debugwin_
 	, m_provider_list_rev_cur(u32(-1))
 	, m_combownd(nullptr)
 {
-	if (view<debug_view_sourcecode>()->srcdbg_info() != nullptr)
+	if (view<debug_view_sourcecode>()->get_srcdbg_info() != nullptr)
 	{
-		m_provider_list_rev_cur = view<debug_view_sourcecode>()->srcdbg_info()->provider_list_rev();
+		m_provider_list_rev_cur = view<debug_view_sourcecode>()->get_srcdbg_info()->provider_list_rev();
 	}
 }
 
@@ -57,7 +57,7 @@ std::optional<offs_t> sourceview_info::selected_address() const
 HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata)
 {
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
-	const srcdbg_info * debug_info = dv_source->srcdbg_info();
+	const srcdbg_info * debug_info = dv_source->get_srcdbg_info();
 
 	// create a combo box
 	HWND const result = CreateWindowEx(COMBO_BOX_STYLE_EX, TEXT("COMBOBOX"), nullptr, COMBO_BOX_STYLE,
@@ -88,7 +88,7 @@ bool sourceview_info::populate_source_file_combo(HWND combo)
 {
 	// populate the combobox with source file paths when present
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
-	const srcdbg_info * debug_info = dv_source->srcdbg_info();
+	const srcdbg_info * debug_info = dv_source->get_srcdbg_info();
 	if (debug_info == nullptr)
 	{
 		return false;
@@ -143,7 +143,7 @@ void sourceview_info::update()
 bool sourceview_info::update_provider_list_rev()
 {
 	const debug_view_sourcecode * dv_source = view<debug_view_sourcecode>();
-	const srcdbg_info * debug_info = dv_source->srcdbg_info();
+	const srcdbg_info * debug_info = dv_source->get_srcdbg_info();
 	if (debug_info == nullptr)
 	{
 		return false;

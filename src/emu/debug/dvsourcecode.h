@@ -30,7 +30,7 @@ class debug_view_sourcecode : public debug_view_disasm
 
 public:
 	// getters
-	const srcdbg_info * srcdbg_info() const { return m_srcdbg_info; }
+	const srcdbg_info * get_srcdbg_info() const { return m_srcdbg_info; }
 	u16 cur_src_index() const { return m_cur_src_index; }
 	virtual std::optional<offs_t> selected_address() override;
 
