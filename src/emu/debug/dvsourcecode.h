@@ -65,7 +65,6 @@ private:
 		std::vector<u32> m_line_starts;
 	};
 
-	// bool update_provider_enabled_state();
 	bool update_provider_list_rev();
 	void viewdata_text_update(bool pc_changed, offs_t pc);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };

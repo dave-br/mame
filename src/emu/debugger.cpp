@@ -16,7 +16,6 @@
 #include "debug/debugcon.h"
 #include "debug/debugvw.h"
 #include "debug/srcdbg_info.h"
-#include "debug/srcdbg_provider.h"
 #include <cctype>
 
 /***************************************************************************

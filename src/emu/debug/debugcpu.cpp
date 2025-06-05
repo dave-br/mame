@@ -651,6 +651,9 @@ void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info)
 {
 	m_symtable_srcdbg_globals.reset();
 	m_symtable_srcdbg_locals.reset();
+
+	// Establish the following symbol table parent chain:
+	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
 	m_symtable_srcdbg_globals = std::make_unique<symbol_table>(
 		m_symtable_device->machine(),
 		symbol_table::SRCDBG_GLOBALS,
@@ -661,16 +664,10 @@ void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info)
 		symbol_table::SRCDBG_LOCALS,
 		m_symtable_srcdbg_globals.get(),
 		&m_device);
-	// Establish the following symbol table parent chain:
-	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
-	// symbol_table * new_symtable_srcdbg_globals = nullptr;
-	// symbol_table * new_symtable_srcdbg_locals = nullptr;
 	srcdbg_info.get_srcdbg_symbols(
 		m_symtable_srcdbg_globals.get(),
 		m_symtable_srcdbg_locals.get(),
 		m_state);
-	// m_symtable_srcdbg_globals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_globals);
-	// m_symtable_srcdbg_locals = std::unique_ptr<symbol_table>(new_symtable_srcdbg_locals);
 	m_symtable = m_symtable_srcdbg_locals.get();
 }
 

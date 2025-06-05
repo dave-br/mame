@@ -173,16 +173,6 @@ public:
 	srcdbg_provider_base();
 	virtual ~srcdbg_provider_base() {};
 
-	// Return symbol_table objects for globals and locals present in the source-level
-	// debugging information file.
-	// virtual void get_srcdbg_symbols(
-	// 	symbol_table ** symtable_srcdbg_globals,
-	// 	symbol_table ** symtable_srcdbg_locals,
-	// 	symbol_table * parent,
-	// 	device_t * device,
-	// 	const device_state_interface * state) const;
-
-
 	// ------------------------------------------------------------------------
 	// Interface implemented by derived classes
 	// ------------------------------------------------------------------------

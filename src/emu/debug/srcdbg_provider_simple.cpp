@@ -415,7 +415,6 @@ std::optional<u32> srcdbg_provider_simple::file_path_to_index(const char * file_
 }
 
 
-// TODO: INTENTIONALLY NOT CALLING NEXT
 // Given a source file & line number, return all address ranges attributable to that line
 void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {

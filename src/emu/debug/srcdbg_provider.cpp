@@ -18,15 +18,6 @@
 
 #include "emuopts.h"
 #include "fileio.h"
-// #include "path.h"
-
-
-/*
-
-public: std::unique_ptr<srcdbg_provider_base> srcdbg_provider_base::create_debug_info
-
-helper: std::unique_ptr<srcdbg_provider_base> create_debug_info(path it)
-*/
 
 
 // Create and initialize debug info provider of the correct type by reading

@@ -83,7 +83,6 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
 	m_line_for_cur_pc(),
 	m_provider_list_rev_cur(u32(-1))
-	// m_provider_enabled_state()
 {
 	if (m_srcdbg_info != nullptr)
 	{
@@ -320,30 +319,6 @@ bool debug_view_sourcecode::update_provider_list_rev()
 
 	return false;
 }
-
-
-	// 	bool ret = false;
-// 	const std::vector<srcdbg_info::srcdbg_provider_entry> & providers = 
-// 		m_srcdbg_info->c_providers();
-// 	if (providers.size() != m_provider_enabled_state.size())
-// 	{
-// 		ret = true;
-// 		m_provider_enabled_state.reserve(providers.size());
-// 		m_provider_enabled_state.resize(providers.size());
-// 	}
-// 	for (offs_t i=0; i < providers.size(); i++)
-// 	{
-// 		if (m_provider_enabled_state[i] != providers[i].enabled())
-// 		{
-// 			ret = true;
-// 			m_provider_enabled_state[i] = providers[i].enabled();
-// 		}
-// 	}
-
-// 	return ret;
-// }
-
-
 
 //-------------------------------------------------
 // print_file_open_error - Helper to print

@@ -62,34 +62,18 @@ public:
 		symbol_table * symtable_srcdbg_locals,
 		const device_state_interface * state) const;
 
-	// robin all
 	virtual void complete_local_relative_initialization() override;
-
-	// Sum
 	virtual u32 num_files() const override;
-
-	// use num_files successively to determine which provider owns
-	// this, use remainder on that provider
 	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const override;
-
-	// robin to first successful
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
-
-	// use num_files successively to determine which provider owns
-	// this, use remainder on that provider
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
-
-	// robin to first successful
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const override;
 
-	// own offset and remove from base class
 	void set_offset(s32 offset) { m_offset = offset; }
 	s32 get_offset() const { return m_offset; }
 
 	const std::vector<srcdbg_provider_entry> & c_providers() const { return m_providers; }
-
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
-
 	u32 provider_list_rev() const { return m_provider_list_rev; }
 
 	void coalesce();
@@ -98,13 +82,13 @@ private:
 	bool file_index_to_provider_file(u32 file_index, std::pair<std::size_t, u32> & ret) const;
 
 	// agg file index to provider index + local file index
-	std::vector<std::pair<std::size_t, u32>> m_agg_file_to_provider_file;
+	std::vector<std::pair<std::size_t, u32>>  m_agg_file_to_provider_file;
 	
 	// provider index + local file index to agg file index
-	std::vector<std::vector<u32>> m_provider_file_to_agg_file;
-	std::vector<srcdbg_provider_entry> m_providers;
-	s32                               m_offset;
-	u32                               m_provider_list_rev;
+	std::vector<std::vector<u32>>             m_provider_file_to_agg_file;
+	std::vector<srcdbg_provider_entry>        m_providers;
+	s32                                       m_offset;
+	u32                                       m_provider_list_rev;
 };
 
 

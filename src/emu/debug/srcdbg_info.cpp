@@ -57,8 +57,6 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 {
 }
 
-	// robin all, change params so caller creates the tables,
-	// and callees just populate them
 void srcdbg_info::get_srcdbg_symbols(
 		symbol_table * symtable_srcdbg_globals,
 		symbol_table * symtable_srcdbg_locals,
@@ -74,7 +72,6 @@ void srcdbg_info::get_srcdbg_symbols(
 		// Global fixed symbols
 		const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
 			sp.c_provider()->global_fixed_symbols();
-		// *symtable_srcdbg_globals = new symbol_table(parent->machine(), symbol_table::SRCDBG_GLOBALS, parent, device);
 		for (const srcdbg_provider_base::global_fixed_symbol & sym : srcdbg_global_symbols)
 		{
 			// Apply offset to symbol when appropriate
@@ -94,7 +91,6 @@ void srcdbg_info::get_srcdbg_symbols(
 		// Local fixed symbols
 		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
 			sp.c_provider()->local_fixed_symbols();
-		// *symtable_srcdbg_locals = new symbol_table(parent->machine(), symbol_table::SRCDBG_LOCALS, *symtable_srcdbg_globals, device);
 		for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
 		{
 			symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
@@ -109,7 +105,6 @@ void srcdbg_info::get_srcdbg_symbols(
 	}
 }
 
-	// robin all
 void srcdbg_info::complete_local_relative_initialization()
 {
 	for (srcdbg_provider_entry & sp : m_providers)
@@ -192,8 +187,6 @@ bool srcdbg_info::file_index_to_provider_file(u32 file_index, std::pair<std::siz
 	return true;
 }
 
-	// use num_files successively to determine which provider owns
-	// this, use remainder on that provider
 void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
 	std::pair<std::size_t, u32> provider_file;	
@@ -206,7 +199,6 @@ void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, s
 		file_line_to_address_ranges(provider_file.second, line_number, ranges);
 }
 
-	// robin to first successful
 bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 {
 	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
@@ -228,13 +220,6 @@ bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 	}
 	return false;
 }
-
-
-// std::vector<std::pair<std::size_t, u32>> m_agg_file_to_provider_file;
-	
-// 	// provider index + local file inex to agg file index
-// 	std::vector<std::vector<u32>> m_provider_file_to_agg_file;
-
 
 void srcdbg_info::coalesce()
 {
