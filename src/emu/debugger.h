@@ -36,7 +36,7 @@ public:
 	debugger_commands &commands() const { return *m_commands; }
 	debugger_cpu &cpu() const { return *m_cpu; }
 	debugger_console &console() const { return *m_console; }
-	srcdbg_info * srcdbg_provider() const { return m_debug_info.get(); }     // Note: can be null!
+	srcdbg_info * srcdbg_info() const { return m_debug_info.get(); }     // Note: can be null!
 
 private:
 	std::unique_ptr<srcdbg_info> load_debug_info(running_machine &machine);

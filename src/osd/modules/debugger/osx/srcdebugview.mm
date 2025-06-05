@@ -26,7 +26,7 @@
 
 - (void)insertSubviewItemsInMenu:(NSMenu *)menu atIndex:(NSInteger)index {
 	const debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
-	const srcdbg_provider_base *debug_info = dv_source->srcdbg_provider();
+	const srcdbg_info *debug_info = dv_source->srcdbg_info();
 
 	if (debug_info)
 	{

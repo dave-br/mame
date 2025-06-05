@@ -430,7 +430,7 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 		return;
 	}
 
-	s32 offset = m_machine.debugger().srcdbg_provider()->get_offset();
+	s32 offset = m_machine.debugger().srcdbg_info()->get_offset();
 
 	auto answer = std::lower_bound(
 		list.cbegin(),
@@ -456,7 +456,7 @@ bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & l
 	assert(m_linemaps_by_address.size() > 0);
 
 	// Undo offset so lookup uses addresses originally present in debugging information file
-	s32 offset = m_machine.debugger().srcdbg_provider()->get_offset();
+	s32 offset = m_machine.debugger().srcdbg_info()->get_offset();
 	address -= offset;
 
 	auto guess = std::lower_bound(

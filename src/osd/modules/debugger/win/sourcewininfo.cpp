@@ -73,7 +73,7 @@ void sourcewin_info::set_srcwnd_bounds(RECT const &bounds)
 bool sourcewin_info::show_src_window()
 {
 	m_views[VIEW_IDX_SOURCE]->show();
-	if (machine().debugger().srcdbg_provider() != nullptr)
+	if (machine().debugger().srcdbg_info() != nullptr)
 	{
 		smart_show_window(m_filecombownd, true);
 	}
@@ -161,7 +161,7 @@ bool sourcewin_info::handle_sourcewin_command(WPARAM wparam, LPARAM lparam)
 
 bool sourcewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 {
-	if (machine().debugger().srcdbg_provider() != nullptr &&
+	if (machine().debugger().srcdbg_info() != nullptr &&
 		m_views[VIEW_IDX_SOURCE] != nullptr &&
 		m_views[VIEW_IDX_SOURCE]->is_visible() &&
 		handle_sourcewin_command(wparam, lparam))

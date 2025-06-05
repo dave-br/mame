@@ -18,7 +18,7 @@
 #include "debugvw.h"
 #include "express.h"
 #include "points.h"
-#include "srcdbg_provider.h"
+// #include "srcdbg_provider.h"
 #include "srcdbg_info.h"
 
 #include "debugger.h"
@@ -1289,7 +1289,7 @@ void debugger_commands::execute_time(const std::vector<std::string_view> &params
 
 void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_view> &params)
 {
-	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_provider();
+	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_info();
 	if (srcdbg == nullptr)
 	{
 		m_console.printf("Error : source-level debugging is not enabled\n");
@@ -1307,7 +1307,7 @@ void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_
 
 void debugger_commands::execute_srcdbg_provider_list(const std::vector<std::string_view> &)
 {
-	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_provider();
+	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_info();
 	if (srcdbg == nullptr)
 	{
 		m_console.printf("Error : source-level debugging is not enabled\n");
@@ -1324,7 +1324,7 @@ void debugger_commands::execute_srcdbg_provider_list(const std::vector<std::stri
 
 void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std::vector<std::string_view> &params)
 {
-	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_provider();
+	srcdbg_info * srcdbg = m_machine.debugger().srcdbg_info();
 	if (srcdbg == nullptr)
 	{
 		m_console.printf("Error : source-level debugging is not enabled\n");

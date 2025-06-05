@@ -25,7 +25,6 @@
 #include "uiinput.h"
 #include "dvsourcecode.h"
 #include "srcdbg_info.h"
-#include "srcdbg_provider.h"
 
 #include "corestr.h"
 #include "osdepend.h"
@@ -561,11 +560,11 @@ device_debug::device_debug(device_t &device)
 			m_symtable_device->add("lastinstructioncycles", [this]() { return m_total_cycles - m_last_total_cycles; });
 
 			// Add symbols from source-level debugging information file
-			if (m_device.machine().debugger().srcdbg_provider() != nullptr)
+			if (m_device.machine().debugger().srcdbg_info() != nullptr)
 			{
-				srcdbg_info & srcdbg_provider = *m_device.machine().debugger().srcdbg_provider();
-				srcdbg_provider.complete_local_relative_initialization();
-				update_symbols_from_srcdbg(srcdbg_provider);
+				srcdbg_info & srcdbg_info = *m_device.machine().debugger().srcdbg_info();
+				srcdbg_info.complete_local_relative_initialization();
+				update_symbols_from_srcdbg(srcdbg_info);
 			}
 		}
 
@@ -648,7 +647,7 @@ device_debug::~device_debug()
 //  level debugging symbols when the offset changes
 //-------------------------------------------------
 
-void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_provider)
+void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info)
 {
 	m_symtable_srcdbg_globals.reset();
 	m_symtable_srcdbg_locals.reset();
@@ -666,7 +665,7 @@ void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_provide
 	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
 	// symbol_table * new_symtable_srcdbg_globals = nullptr;
 	// symbol_table * new_symtable_srcdbg_locals = nullptr;
-	srcdbg_provider.get_srcdbg_symbols(
+	srcdbg_info.get_srcdbg_symbols(
 		m_symtable_srcdbg_globals.get(),
 		m_symtable_srcdbg_locals.get(),
 		m_state);
@@ -1051,11 +1050,11 @@ void device_debug::instruction_hook(offs_t curpc)
 	// Once source-level stepping starts, initialize bookkeeping
 	if ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0 &&
 		m_step_source_start == nullptr &&
-		machine.debugger().srcdbg_provider() != nullptr)
+		machine.debugger().srcdbg_info() != nullptr)
 	{
 		// keep track of the first encountered file/line of user source.
 		file_line curloc;
-		if (machine.debugger().srcdbg_provider()->address_to_file_line(curpc, curloc))
+		if (machine.debugger().srcdbg_info()->address_to_file_line(curpc, curloc))
 		{
 			m_step_source_start = std::make_unique<file_line>(curloc);
 		}
@@ -1125,14 +1124,14 @@ bool device_debug::is_source_stepping_complete(offs_t pc)
 {
 	running_machine &machine = m_device.machine();
 	assert ((m_flags & DEBUG_FLAG_SOURCE_STEPPING) != 0);
-	assert (machine.debugger().srcdbg_provider() != nullptr);
+	assert (machine.debugger().srcdbg_info() != nullptr);
 
 	// When source-stepping, stop if we're currently on a user source line AND either
 	// i) we started outside a user source line, or
 	// ii) current source line is different from where we started, or
 	// iii) we just returned from source line where we started (e.g., recursive return to same line)
 	file_line file_line_cur;
-	bool has_file_line_cur = machine.debugger().srcdbg_provider()->address_to_file_line(pc, file_line_cur);
+	bool has_file_line_cur = machine.debugger().srcdbg_info()->address_to_file_line(pc, file_line_cur);
 	bool ret = has_file_line_cur &&
 		(
 			(m_step_source_start == nullptr) ||           // i)

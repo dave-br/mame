@@ -14,7 +14,7 @@
 #pragma once
 
 #include "dvdisasm.h"
-#include "srcdbg_provider.h"
+#include "srcdbg_info.h"
 
 
 //**************************************************************************
@@ -30,7 +30,7 @@ class debug_view_sourcecode : public debug_view_disasm
 
 public:
 	// getters
-	const srcdbg_info * srcdbg_provider() const { return m_srcdbg_provider; }
+	const srcdbg_info * srcdbg_info() const { return m_srcdbg_info; }
 	u16 cur_src_index() const { return m_cur_src_index; }
 	virtual std::optional<offs_t> selected_address() override;
 
@@ -79,12 +79,11 @@ private:
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
 	const device_state_interface *                    m_state;                 // state interface, if present
-	const srcdbg_info *                               m_srcdbg_provider;       // Interface to the loaded debugging info file, can be null!
+	const srcdbg_info *                               m_srcdbg_info;           // Interface to the loaded debugging info file, can be null!
 	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
 	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
-	// std::vector<bool>                                 m_provider_enabled_state;
 	u32                                               m_provider_list_rev_cur;
 };
 
