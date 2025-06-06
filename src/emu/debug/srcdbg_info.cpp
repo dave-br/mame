@@ -17,7 +17,7 @@
 #include "fileio.h"
 
 
-// static
+// static 
 std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &machine)
 {
 	const char * di_paths = machine.options().srcdbginfo();
