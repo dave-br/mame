@@ -82,11 +82,10 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_displayed_src_index(-1),
 	m_displayed_src_file(std::make_unique<line_indexed_file>()),
 	m_line_for_cur_pc(),
-	m_provider_list_rev_cur(u32(-1))
+	m_gui_needs_full_refresh(true)
 {
 	if (m_srcdbg_info != nullptr)
 	{
-		m_provider_list_rev_cur = m_srcdbg_info->provider_list_rev();
 		m_supports_cursor = true;
 	}
 }
@@ -203,7 +202,7 @@ void debug_view_sourcecode::view_update()
 
 	bool do_flush_osd_updates = false;
 
-	if (update_provider_list_rev())
+	if (m_srcdbg_info && m_srcdbg_info->update_view_needs_full_refresh())
 	{
 		// The update actually did something, so reset state given that the list
 		// of enabled providers has changed.
@@ -212,6 +211,7 @@ void debug_view_sourcecode::view_update()
 		m_displayed_src_file = std::make_unique<line_indexed_file>();
 		m_line_for_cur_pc = std::optional<u32>();
 		pc_changed = true;
+		m_gui_needs_full_refresh = true;
 		do_flush_osd_updates = true;
 	}
 
@@ -304,21 +304,6 @@ void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
 	}
 }
 
-bool debug_view_sourcecode::update_provider_list_rev()
-{
-	if (m_srcdbg_info == nullptr)
-	{
-		return false;
-	}
-
-	if (m_provider_list_rev_cur != m_srcdbg_info->provider_list_rev())
-	{
-		m_provider_list_rev_cur = m_srcdbg_info->provider_list_rev();
-		return true;
-	}
-
-	return false;
-}
 
 //-------------------------------------------------
 // print_file_open_error - Helper to print
@@ -475,4 +460,11 @@ void debug_view_sourcecode::set_src_index(u16 new_src_index)
 	m_update_pending = true;
 	// No need to call view_notify()
 	end_update();
+}
+
+bool debug_view_sourcecode::update_gui_needs_full_refresh()
+{
+	bool ret = m_gui_needs_full_refresh;
+	m_gui_needs_full_refresh = false;
+	return ret;
 }

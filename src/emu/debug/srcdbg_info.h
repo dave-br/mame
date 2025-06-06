@@ -74,7 +74,7 @@ public:
 
 	const std::vector<srcdbg_provider_entry> & c_providers() const { return m_providers; }
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
-	u32 provider_list_rev() const { return m_provider_list_rev; }
+	bool update_view_needs_full_refresh();
 
 	void coalesce();
 
@@ -88,7 +88,7 @@ private:
 	std::vector<std::vector<u32>>             m_provider_file_to_agg_file;
 	std::vector<srcdbg_provider_entry>        m_providers;
 	s32                                       m_offset;
-	u32                                       m_provider_list_rev;
+	bool                                      m_view_needs_full_refresh;
 };
 
 

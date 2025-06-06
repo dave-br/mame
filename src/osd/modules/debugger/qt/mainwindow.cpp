@@ -518,6 +518,11 @@ void MainWindow::unmountImage(bool changedTo)
 
 void MainWindow::codeViewUpdated()
 {
+	if (sourceFrameActive())
+	{
+		m_srcdbgFrame->update();
+	}
+
 	debug_view_disasm *const dasmView =
 		sourceFrameActive() ?
 			m_srcdbgFrame->view()->view<debug_view_disasm>() :
@@ -549,11 +554,6 @@ void MainWindow::codeViewUpdated()
 	m_breakpointToggleAct->setEnabled(haveCursor);
 	m_breakpointEnableAct->setEnabled(haveBreakpoint);
 	m_runToCursorAct->setEnabled(haveCursor);
-
-	if (sourceFrameActive())
-	{
-		m_srcdbgFrame->updateComboSelection();
-	}
 }
 
 
@@ -623,16 +623,15 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 	dvLayout->setContentsMargins(4,0,4,0);
 	dvLayout->setSpacing(3);
 
+	connect(m_srcdbgCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SrcdbgDockWidget::srcfileChanged);
+}
+
+void SrcdbgDockWidget::populateSrcdbgCombo()
+{
+	// populate the combobox with source file paths when present
+	m_srcdbgCombo->clear();
 	const debug_view_sourcecode *dvSource = downcast<debug_view_sourcecode*>(m_srcdbgView->view());
 	const srcdbg_info * debugInfo = dvSource->get_srcdbg_info();
-
-	if (debugInfo == nullptr)
-	{
-		// Nothing else to do if source-level debugging is off
-		return;
-	}
-
-	// populate the combobox with source file paths when present
 	std::size_t numFiles = debugInfo->num_files();
 	for (std::size_t i = 0; i < numFiles; i++)
 	{
@@ -644,10 +643,7 @@ SrcdbgDockWidget::SrcdbgDockWidget(running_machine &machine, QWidget *parent /* 
 		const char * entryText = path->built();
 		m_srcdbgCombo->addItem(entryText);
 	}
-
-	connect(m_srcdbgCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SrcdbgDockWidget::srcfileChanged);
 }
-
 
 void SrcdbgDockWidget::srcfileChanged(int index)
 {
@@ -662,9 +658,15 @@ SrcdbgDockWidget::~SrcdbgDockWidget()
 
 // While stepping, if the current file changes, update the
 // combo box to show the new filename
-void SrcdbgDockWidget::updateComboSelection()
+void SrcdbgDockWidget::update()
 {
-	u16 newIndex = view()->view<debug_view_sourcecode>()->cur_src_index();
+	debug_view_sourcecode *dvSource = downcast<debug_view_sourcecode*>(m_srcdbgView->view());
+	if (dvSource->update_gui_needs_full_refresh())
+	{
+		populateSrcdbgCombo();
+	}
+	
+	u16 newIndex = dvSource->cur_src_index();
 	if (m_srcdbgCombo->currentIndex() != newIndex)
 		m_srcdbgCombo->setCurrentIndex(newIndex);
 }

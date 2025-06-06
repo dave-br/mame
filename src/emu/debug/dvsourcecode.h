@@ -37,6 +37,8 @@ public:
 	// setters
 	void set_src_index(u16 new_src_index);
 
+	bool update_gui_needs_full_refresh();
+
 protected:
 	// construction/destruction
 	debug_view_sourcecode(running_machine &machine, debug_view_osd_update_func osdupdate, void *osdprivate);
@@ -65,7 +67,6 @@ private:
 		std::vector<u32> m_line_starts;
 	};
 
-	bool update_provider_list_rev();
 	void viewdata_text_update(bool pc_changed, offs_t pc);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
@@ -78,12 +79,12 @@ private:
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
 	const device_state_interface *                    m_state;                 // state interface, if present
-	const srcdbg_info *                               m_srcdbg_info;           // Interface to the loaded debugging info file, can be null!
+	srcdbg_info *                                     m_srcdbg_info;           // Interface to the loaded debugging info file, can be null!
 	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
 	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
 	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
-	u32                                               m_provider_list_rev_cur;
+	bool                                              m_gui_needs_full_refresh;
 };
 
 #endif // MAME_EMU_DEBUG_DVSOURCE_H

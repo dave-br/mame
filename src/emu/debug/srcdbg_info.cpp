@@ -53,7 +53,7 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 	, m_provider_file_to_agg_file()
 	, m_providers()
 	, m_offset(machine.options().srcdbg_offset())
-	, m_provider_list_rev(0)
+	, m_view_needs_full_refresh(true)
 {
 }
 
@@ -221,6 +221,14 @@ bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 	return false;
 }
 
+bool srcdbg_info::update_view_needs_full_refresh()
+{
+	bool ret = m_view_needs_full_refresh;
+	m_view_needs_full_refresh = false;
+	return ret;
+}
+
+
 void srcdbg_info::coalesce()
 {
 	m_provider_file_to_agg_file.clear();
@@ -256,5 +264,5 @@ void srcdbg_info::coalesce()
 			m_agg_file_to_provider_file.push_back(std::pair(provider_idx, file_idx));
 		}
 	}
-	m_provider_list_rev++;
+	m_view_needs_full_refresh = true;
 }
