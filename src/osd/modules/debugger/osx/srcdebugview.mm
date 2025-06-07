@@ -59,7 +59,7 @@
 	NSWindow *window = [self window];
 	id delegate = [window delegate];
 
-	const debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
+	debug_view_sourcecode *dv_source = downcast<debug_view_sourcecode *>(view);
 	if (dv_source->update_gui_needs_full_refresh())
 	{
 		[delegate populateSourceButton];
