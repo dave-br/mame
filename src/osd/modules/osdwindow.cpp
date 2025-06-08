@@ -51,7 +51,7 @@ osd_window::osd_window(
 {
 }
 
-osd_window::~osd_window()
+osd_window::~osd_window() 
 {
 }
 
