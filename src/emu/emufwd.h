@@ -84,6 +84,14 @@ class debug_watchpoint;
 class debug_registerpoint;
 class debug_exceptionpoint;
 
+// declared in debug/srcdbg_provider.h
+class srcdbg_provider_base;
+class file_line;
+
+// declared in debug/srcdbg_info.h
+class line_indexed_file;
+class srcdbg_info;
+
 // declared in debugger.h
 class debugger_manager;
 
@@ -143,6 +151,7 @@ class emu_options;
 
 // declared in fileio.h
 class emu_file;
+class path_iterator;
 
 // declared in http.h
 class http_manager;
