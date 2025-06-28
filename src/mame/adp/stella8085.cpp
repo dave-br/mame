@@ -50,7 +50,7 @@ public:
 
 	void dicemstr(machine_config &config);
 	void doppelpot(machine_config &config);
-	void excellent(machine_config &config);
+	[[maybe_unused]] void excellent(machine_config &config);
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -185,6 +185,7 @@ ROM_START( dicemstr ) // curiously hand-written stickers say F3 but strings in R
 	ROM_LOAD( "stella_dice_master_f3_ii.icd6", 0x8000, 0x8000, CRC(9484cf3b) SHA1(e1104882eaba860ab984c1a37e2f97d4bed08829) ) // 0x0000 - 0x1fff is 0xff filled
 ROM_END
 
+#if 0
 ROM_START( doppelpot )
 	ROM_REGION( 0x9000, "maincpu", 0 )
 	ROM_LOAD( "doppelpot.ice6", 0x0000, 0x4000, CRC(b01d3307) SHA1(8364506e8169432ddec275ef5b53660c01dc209e) )
@@ -224,6 +225,7 @@ ROM_START( excellent )
 	ROM_LOAD( "excellent.icd6", 0x3800, 0x0800, CRC(5a2b95b4) SHA1(b0d17b327664e8680b163c872109769c4ae42039) BAD_DUMP ) // underdumped
 	ROM_LOAD( "excellent.icc5", 0x4800, 0x0800, CRC(ae424805) SHA1(14e12ceebd9fbf6eba96c168e8e7b797b34f7ca5) BAD_DUMP ) // underdumped
 ROM_END
+#endif
 
 ROM_START( extrablatt )
 	ROM_REGION( 0x10000, "maincpu", 0 )
@@ -249,11 +251,13 @@ ROM_START( karoas )
 	ROM_LOAD( "karoas.icd6", 0x8000, 0x8000, CRC(e1b131bd) SHA1(dc2fbfaf86fa5b161d17a563eae2bc8fc4d19395) )
 ROM_END
 
+#if 0
 ROM_START( kniffi )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "kniffi.ice6", 0x0000, 0x8000, CRC(57df5d69) SHA1(78bc9cabf0b4bec5f8c2578d55011f0adc034798) )
 	ROM_LOAD( "kniffi.icd6", 0x8000, 0x8000, CRC(1c129cec) SHA1(bad22f18b94c16dba36995ff8daf4d48f4d082a2) )
 ROM_END
+#endif
 
 ROM_START( supermultib )
 	ROM_REGION( 0x10000, "maincpu", 0 )
