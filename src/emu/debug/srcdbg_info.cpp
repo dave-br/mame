@@ -97,7 +97,8 @@ void srcdbg_info::get_srcdbg_symbols(
 		}
 
 		// Local "relative" symbols (values are offsets to a register)
-		const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = local_relative_symbols();
+		const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
+			sp.c_provider()->local_relative_symbols();
 		for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
 		{
 			symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
