@@ -4098,6 +4098,8 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 			assert(entry != nullptr);
 			if (entry->is_in_scope())
 				m_console.printf("%s = %X", symname, entry->value());
+			else
+				m_console.printf("%s (not currently in scope)", symname);
 			if (!entry->is_lval())
 				m_console.printf("  (read-only)");
 			m_console.printf("\n");
