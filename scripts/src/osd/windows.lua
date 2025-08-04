@@ -171,8 +171,6 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/debugger/win/pointswininfo.h",
 		MAME_DIR .. "src/osd/modules/debugger/win/sourceviewinfo.cpp",
 		MAME_DIR .. "src/osd/modules/debugger/win/sourceviewinfo.h",
-		MAME_DIR .. "src/osd/modules/debugger/win/sourcewininfo.cpp",
-		MAME_DIR .. "src/osd/modules/debugger/win/sourcewininfo.h",
 		MAME_DIR .. "src/osd/modules/debugger/win/uimetrics.cpp",
 		MAME_DIR .. "src/osd/modules/debugger/win/uimetrics.h",
 		MAME_DIR .. "src/osd/modules/debugger/win/debugwin.h",
