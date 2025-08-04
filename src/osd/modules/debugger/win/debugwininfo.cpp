@@ -433,15 +433,15 @@ bool debugwin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			return true;
 
 		case ID_STEP:
-			machine().debugger().console().get_visible_cpu()->debug()->single_step();
+			machine().debugger().console().get_visible_cpu()->debug()->single_step(1, source_stepping_active());
 			return true;
 
 		case ID_STEP_OVER:
-			machine().debugger().console().get_visible_cpu()->debug()->single_step_over();
+			machine().debugger().console().get_visible_cpu()->debug()->single_step_over(1, source_stepping_active());
 			return true;
 
 		case ID_STEP_OUT:
-			machine().debugger().console().get_visible_cpu()->debug()->single_step_out();
+			machine().debugger().console().get_visible_cpu()->debug()->single_step_out(source_stepping_active());
 			return true;
 
 		case ID_REWIND_STEP:

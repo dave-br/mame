@@ -142,7 +142,7 @@ void disasmbasewin_info::update_menu()
 			else
 				ModifyMenu(menu, ID_DISABLE_BREAKPOINT, MF_BYCOMMAND, ID_DISABLE_BREAKPOINT, TEXT("Enable breakpoint at cursor\tShift+F9"));
 		}
-		bool const available = bp && (!is_main_console() || visible_view->source_is_visible_cpu());
+		bool const available = bp && (!is_main_console() || dasmview->source_is_visible_cpu());
 		EnableMenuItem(menu, ID_DISABLE_BREAKPOINT, MF_BYCOMMAND | (available ? MF_ENABLED : MF_GRAYED));
 	}
 	else
@@ -154,7 +154,7 @@ void disasmbasewin_info::update_menu()
 	EnableMenuItem(menu, ID_TOGGLE_BREAKPOINT, MF_BYCOMMAND | (cursor_visible ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(menu, ID_RUN_TO_CURSOR, MF_BYCOMMAND | (cursor_visible ? MF_ENABLED : MF_GRAYED));
 
-	disasm_right_column const rightcol = visible_view->right_column();
+	disasm_right_column const rightcol = dasmview->right_column();
 	CheckMenuItem(menu, ID_SHOW_RAW, MF_BYCOMMAND | (rightcol == DASM_RIGHTCOL_RAW ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(menu, ID_SHOW_ENCRYPTED, MF_BYCOMMAND | (rightcol == DASM_RIGHTCOL_ENCRYPTED ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(menu, ID_SHOW_COMMENTS, MF_BYCOMMAND | (rightcol == DASM_RIGHTCOL_COMMENTS ? MF_CHECKED : MF_UNCHECKED));

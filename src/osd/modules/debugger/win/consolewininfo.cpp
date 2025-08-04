@@ -10,6 +10,7 @@
 #include "consolewininfo.h"
 
 #include "debugviewinfo.h"
+#include "sourceviewinfo.h"
 #include "uimetrics.h"
 
 // devices
@@ -215,7 +216,7 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	m_devices_menu(nullptr),
 	m_filecombownd(nullptr)
 {
-	if (!window() || !m_views[VIEW_IDX_SOURCE] || !m_views[VIEW_IDX_DISASM])
+	if (!window() || !m_views[VIEW_IDX_DISASM])
 		goto cleanup;
 
 	// create the views
@@ -612,18 +613,6 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			m_views[VIEW_IDX_DISASM]->show();
 			machine().debug_view().update_all(DVT_DISASSEMBLY);
 			return true;
-		case ID_SHOW_SOURCE:
-			if (show_src_window())
-			{
-				m_views[VIEW_IDX_DISASM]->hide();
-				machine().debug_view().update_all(DVT_SOURCE);
-			}
-			return true;
-		case ID_SHOW_DISASM:
-			hide_src_window();
-			m_views[VIEW_IDX_DISASM]->show();
-			machine().debug_view().update_all(DVT_DISASSEMBLY);
-			return true;
 		}
 		break;
 	}
@@ -647,14 +636,14 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 
 bool consolewin_info::source_stepping_active()
 {
-	return (machine().debugger().srcdbg_provider() != nullptr) &&
+	return (machine().debugger().get_srcdbg_info() != nullptr) &&
 		m_views[VIEW_IDX_SOURCE]->is_visible();
 }
 
 bool consolewin_info::show_src_window()
 {
 	m_views[VIEW_IDX_SOURCE]->show();
-	if (machine().debugger().srcdbg_provider() != nullptr)
+	if (machine().debugger().get_srcdbg_info() != nullptr)
 	{
 		smart_show_window(m_filecombownd, true);
 	}
@@ -670,7 +659,7 @@ void consolewin_info::hide_src_window()
 
 void consolewin_info::save_configuration_to_node(util::xml::data_node &node)
 {
-	sourcewin_info::save_configuration_to_node(node);
+	disasmbasewin_info::save_configuration_to_node(node);
 	node.set_attribute_int(ATTR_WINDOW_TYPE, WINDOW_TYPE_CONSOLE);
 }
 

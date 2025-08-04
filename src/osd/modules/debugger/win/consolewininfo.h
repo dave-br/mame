@@ -17,7 +17,7 @@
 
 namespace osd::debugger::win {
 
-class consolewin_info : public sourcewin_info
+class consolewin_info : public disasmbasewin_info
 {
 public:
 	consolewin_info(debugger_windows_interface &debugger);
