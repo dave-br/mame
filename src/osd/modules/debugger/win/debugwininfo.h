@@ -60,6 +60,11 @@ protected:
 	static DWORD const  DEBUG_WINDOW_STYLE_EX = 0;
 
 	static int const    EDGE_WIDTH = 3;
+
+	// TODO: This duplicates consolewin_info::MAX_VIEWS
+	// I removed it in commit c25a4b8 to avoid the duplication,
+	// but it was then added back again in commit 0bdb4f0.  Would
+	// like to understand why...
 	static int const    MAX_VIEWS = 4;
 
 	enum
@@ -145,10 +150,6 @@ protected:
 	virtual void save_configuration_to_node(util::xml::data_node &node);
 
 
-	// TODO: This duplicates consolewin_info::MAX_VIEWS
-	// I removed it in commit c25a4b8 to avoid the duplication,
-	// but it was then added back again in commit 0bdb4f0.  Would
-	// like to understand why...
 	std::unique_ptr<debugview_info>    m_views[MAX_VIEWS];
 
 private:
