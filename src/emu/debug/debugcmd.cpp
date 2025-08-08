@@ -3921,6 +3921,7 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		return;
 
 	// TODO: Should be able to assert cpu is non-null right?
+	assert(cpu != nullptr);
 	
 	// unknown tag if CPU is invalid
 	const char *cpu_tag = cpu ? cpu->tag() : ":?";
