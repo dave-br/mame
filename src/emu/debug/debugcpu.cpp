@@ -489,7 +489,6 @@ device_debug::device_debug(device_t &device)
 	, m_state(nullptr)
 	, m_disasm(nullptr)
 	, m_flags(0)				// TODO: CPU '%s', cpu_tag
-	, m_symtable(std::make_unique<described_symbol_table>("CPU", device.machine(), &device.machine().debugger().cpu().global_symtable(), &device))
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
@@ -516,6 +515,10 @@ device_debug::device_debug(device_t &device)
 	, m_track_mem_set()
 	, m_track_mem(false)
 {
+	m_symtable = std::make_unique<described_symbol_table>(
+		std::move(util::string_format("CPU %s", device.tag())),
+		device.machine(), &device.machine().debugger().cpu().global_symtable(), &device);
+
 	memset(m_pc_history, 0, sizeof(m_pc_history));
 
 	// find out which interfaces we have to work with

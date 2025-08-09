@@ -22,7 +22,7 @@ class described_symbol_table : public symbol_table
 {
 public:
 	// construction/destruction
-	described_symbol_table(const char *description, running_machine &machine, symbol_table *parent = nullptr, device_t *device = nullptr);
+	described_symbol_table(std::string && description, running_machine &machine, symbol_table *parent = nullptr, device_t *device = nullptr);
 	virtual ~described_symbol_table() {};
 
 	// getters
