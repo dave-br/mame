@@ -516,7 +516,7 @@ device_debug::device_debug(device_t &device)
 	, m_track_mem(false)
 {
 	m_symtable = std::make_unique<described_symbol_table>(
-		std::move(util::string_format("CPU %s", device.tag())),
+		util::string_format("CPU %s", device.tag()),
 		device.machine(), &device.machine().debugger().cpu().global_symtable(), &device);
 
 	memset(m_pc_history, 0, sizeof(m_pc_history));
