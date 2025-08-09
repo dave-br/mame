@@ -3932,12 +3932,6 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 	else if (!m_console.validate_cpu_parameter(params[0], cpu))
 		return;
 
-	// TODO: Find a scenario that makes this happen, then remove it
-	assert(cpu != nullptr);
-	
-	// unknown tag if CPU is invalid
-	// const char *cpu_tag = cpu ? cpu->tag() : ":?";
-
 	// traverse symbol_table parent chain, printing each table's symbols in its own block
 	const symbol_table *symtable = cpu ? &cpu->debug()->symtable() : &m_console.visible_symtable();
 	for ( ; symtable; symtable = params.empty() ? symtable->parent() : nullptr)
