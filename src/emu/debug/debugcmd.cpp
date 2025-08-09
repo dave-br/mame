@@ -46,6 +46,18 @@ const size_t debugger_commands::MAX_GLOBALS = 1000;
     FUNCTIONS
 ***************************************************************************/
 
+
+/*-------------------------------------------------
+    described_symbol_table constructor
+-------------------------------------------------*/
+
+described_symbol_table::described_symbol_table(const char *description, running_machine &machine, symbol_table *parent /* = nullptr */, device_t *device /* = nullptr */)
+	: symbol_table(machine, parent, device)
+	, m_description(description)
+{
+}
+
+
 /*-------------------------------------------------
     cheat_address_is_valid - return true if the
     given address is valid for cheating
@@ -3924,10 +3936,10 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 	assert(cpu != nullptr);
 	
 	// unknown tag if CPU is invalid
-	const char *cpu_tag = cpu ? cpu->tag() : ":?";
+	// const char *cpu_tag = cpu ? cpu->tag() : ":?";
 
 	// traverse symbol_table parent chain, printing each table's symbols in its own block
-	auto *symtable = cpu ? &cpu->debug()->symtable() : &m_console.visible_symtable();
+	const symbol_table *symtable = &cpu->debug()->symtable();
 	for ( ; symtable; symtable = params.empty() ? symtable->parent() : nullptr)
 	{
 		if (symtable->entries().size() == 0)
@@ -3936,17 +3948,8 @@ void debugger_commands::execute_symlist(const std::vector<std::string_view> &par
 		std::vector<const char *> namelist;
 
 		// print heading for table
-		switch (symtable->type())
-		{
-		case symbol_table::CPU_STATE:
-			m_console.printf("\n**** CPU '%s' symbols ****\n", cpu_tag);
-			break;
-		case symbol_table::DEBUGGER_GLOBALS:
-			m_console.printf("\n**** Global symbols ****\n");
-			break;
-		default:
-			assert(!"Unrecognized symbol table type");
-		}
+		const described_symbol_table *descr_symtable = downcast<const described_symbol_table *>(symtable);
+		m_console.printf("\n**** %s ****\n", descr_symtable->description());
 
 		// gather names for all relevant symbols
 		for (auto &entry : symtable->entries())

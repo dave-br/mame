@@ -13,6 +13,7 @@
 #include "debugbuf.h"
 
 #include "express.h"
+#include "debugcmd.h"
 #include "points.h"
 #include "debugcon.h"
 #include "debugvw.h"
@@ -57,7 +58,7 @@ debugger_cpu::debugger_cpu(running_machine &machine)
 	m_tempvar = make_unique_clear<u64[]>(NUM_TEMP_VARIABLES);
 
 	/* create a global symbol table */
-	m_symtable = std::make_unique<symbol_table>(machine, symbol_table::DEBUGGER_GLOBALS);
+	m_symtable = std::make_unique<described_symbol_table>("Global", machine);
 	m_symtable->set_memory_modified_func([this]() { set_memory_modified(true); });
 
 	/* add "wpaddr", "wpdata", "wpsize" to the global symbol table */
@@ -487,8 +488,8 @@ device_debug::device_debug(device_t &device)
 	, m_memory(nullptr)
 	, m_state(nullptr)
 	, m_disasm(nullptr)
-	, m_flags(0)
-	, m_symtable(std::make_unique<symbol_table>(device.machine(), symbol_table::CPU_STATE, &device.machine().debugger().cpu().global_symtable(), &device))
+	, m_flags(0)				// TODO: CPU '%s', cpu_tag
+	, m_symtable(std::make_unique<described_symbol_table>("CPU", device.machine(), &device.machine().debugger().cpu().global_symtable(), &device))
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
