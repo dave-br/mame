@@ -172,8 +172,8 @@ public:
 	};
 
 	// construction/destruction
-	virtual ~symbol_table() {}
 	symbol_table(running_machine &machine, symbol_table *parent = nullptr, device_t *device = nullptr);
+	virtual ~symbol_table() {}
 
 	// getters
 	const std::unordered_map<std::string, std::unique_ptr<symbol_entry>> &entries() const { return m_symlist; }

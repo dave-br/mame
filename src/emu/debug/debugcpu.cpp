@@ -488,7 +488,7 @@ device_debug::device_debug(device_t &device)
 	, m_memory(nullptr)
 	, m_state(nullptr)
 	, m_disasm(nullptr)
-	, m_flags(0)				// TODO: CPU '%s', cpu_tag
+	, m_flags(0)
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
