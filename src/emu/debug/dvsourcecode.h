@@ -49,24 +49,6 @@ protected:
 	virtual void view_update() override;
 
 private:
-	// Helper class to encapsulate the contents of a text file, indexed
-	// by line number.  The view is populated with data from this class.
-	class line_indexed_file
-	{
-	public:
-		line_indexed_file();
-		~line_indexed_file() { };
-		const std::error_condition & open(const char * file_path);
-		const std::error_condition & last_open_error() { return m_err; };
-		u32 num_lines() { return m_line_starts.size(); };
-		const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
-
-	private:
-		std::error_condition m_err;
-		std::vector<uint8_t> m_data;
-		std::vector<u32> m_line_starts;
-	};
-
 	void viewdata_text_update(bool pc_changed, offs_t pc);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);

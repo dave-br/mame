@@ -16,6 +16,26 @@
 
 #include "srcdbg_provider.h"
 
+
+// TODO: This might better belong somewhere in util lib
+// Helper class to encapsulate the contents of a text file, indexed
+// by line number.  The view is populated with data from this class.
+class line_indexed_file
+{
+public:
+	line_indexed_file();
+	~line_indexed_file() { };
+	const std::error_condition & open(const char * file_path);
+	const std::error_condition & last_open_error() { return m_err; };
+	u32 num_lines() { return m_line_starts.size(); };
+	const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
+
+private:
+	std::error_condition m_err;
+	std::vector<uint8_t> m_data;
+	std::vector<u32> m_line_starts;
+};
+
 class srcdbg_info : public srcdbg_provider_base
 {
 public:
@@ -75,10 +95,10 @@ public:
 	const std::vector<srcdbg_provider_entry> & c_providers() const { return m_providers; }
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
 	bool update_view_needs_full_refresh();
-
-	void coalesce();
+	bool disenable_provider(u64 index, bool enable, std::string & error);
 
 private:
+	void coalesce();
 	bool file_index_to_provider_file(u32 file_index, std::pair<std::size_t, u32> & ret) const;
 
 	// agg file index to provider index + local file index

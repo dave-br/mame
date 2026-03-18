@@ -245,6 +245,8 @@ private:
 		bool logerror() const { return m_logerror; }
 
 	private:
+		void get_srcdbg_line(offs_t pc, std::string & srcdbg_line);
+
 		static const int TRACE_LOOPS = 64;
 
 		device_debug &      m_debug;                    // reference to our owner
@@ -259,6 +261,8 @@ private:
 		offs_t              m_trace_over_target;        // target for tracing over
 														//    (0 = not tracing over,
 														//    ~0 = not currently tracing over)
+		u16                 m_opened_srcdbg_file_index;
+		std::unique_ptr<line_indexed_file> m_opened_srcdbg_file;
 	};
 	std::unique_ptr<tracer>                m_trace;     // tracer state
 
