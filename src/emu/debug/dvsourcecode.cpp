@@ -16,60 +16,6 @@
 #include "emuopts.h"
 
 
-
-//-------------------------------------------------
-// line_indexed_file - constructor
-//-------------------------------------------------
-
-debug_view_sourcecode::line_indexed_file::line_indexed_file() :
-	m_err(),
-	m_data(),
-	m_line_starts()
-{
-}
-
-
-//-------------------------------------------------
-// open - Reads full contents of text file,
-// and initializes line index
-//-------------------------------------------------
-
-const std::error_condition & debug_view_sourcecode::line_indexed_file::open(const char * file_path)
-{
-	m_data.resize(0);
-	m_line_starts.resize(0);
-	m_err = util::core_file::load(file_path, m_data);
-	if (m_err)
-	{
-		return m_err;
-	}
-
-	u32 cur_line_start = 0;
-	for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
-	{
-		// Check for line endings
-		bool crlf = (m_data[i] == '\r' && m_data[i+1] == '\n');
-		bool line_end = crlf || (m_data[i] == '\n');
-		if (!line_end)
-		{
-			continue;
-		}
-
-		m_data[i] = '\0';                                       // Terminate line
-		m_line_starts.push_back(cur_line_start);                // Record line's starting index
-		if (crlf)
-		{
-			i++;                                                // Skip \n in \r\n
-		}
-		cur_line_start = i+1;                                   // Prepare for next line
-	}
-
-	m_line_starts.push_back(cur_line_start);
-	m_data.push_back('\0');
-	return m_err;
-}
-
-
 //-------------------------------------------------
 //  debug_view_sourcecode - constructor
 //-------------------------------------------------

@@ -2200,6 +2200,9 @@ device_debug::tracer::tracer(device_debug &debug, std::unique_ptr<std::ostream> 
 	, m_nextdex(0)
 	, m_trace_over(trace_over)
 	, m_trace_over_target(~0)
+	, m_opened_srcdbg_file_index(-1)
+	, m_opened_srcdbg_file(std::make_unique<line_indexed_file>())
+
 {
 	memset(m_history, 0, sizeof(m_history));
 }
@@ -2262,8 +2265,11 @@ void device_debug::tracer::update(offs_t pc)
 	u32 dasmresult;
 	buffer.disassemble(pc, instruction, next_pc, size, dasmresult);
 
+	std::string srcdbg_line;
+	get_srcdbg_line(pc, srcdbg_line);
+
 	// output the result
-	util::stream_format(*m_file, "%s: %s\n", buffer.pc_to_string(pc), instruction);
+	util::stream_format(*m_file, "%s: %s%s\n", buffer.pc_to_string(pc), instruction, srcdbg_line);
 
 	// do we need to step the trace over this instruction?
 	if (m_trace_over && (dasmresult & util::disasm_interface::SUPPORTED) != 0 && (dasmresult & util::disasm_interface::STEP_OVER) != 0)
@@ -2282,6 +2288,44 @@ void device_debug::tracer::update(offs_t pc)
 	m_nextdex = (m_nextdex + 1) % TRACE_LOOPS;
 	m_history[m_nextdex] = pc;
 	m_file->flush();
+}
+
+void device_debug::tracer::get_srcdbg_line(offs_t pc, std::string & srcdbg_line)
+{
+	if (m_debug.m_device.machine().debugger().get_srcdbg_info() == nullptr)
+	{
+		return;
+	}
+
+	srcdbg_info & srcdbg_info = *m_debug.m_device.machine().debugger().get_srcdbg_info();
+	file_line loc;
+	if (!srcdbg_info.address_to_file_line(pc, loc))
+	{
+		return;
+	}
+	
+	if (loc.file_index() != m_opened_srcdbg_file_index)
+	{
+		const srcdbg_provider_base::source_file_path * path;
+		if (!srcdbg_info.file_index_to_path(loc.file_index(), &path))
+		{
+			return;
+		}
+		const char * local_path = path->local();
+		if (local_path == nullptr)
+		{
+			return;
+		}
+
+		std::error_condition err = m_opened_srcdbg_file->open(local_path);
+		m_opened_srcdbg_file_index = loc.file_index();
+		if (err)
+		{
+			return;
+		}
+	}
+	srcdbg_line += "\t";
+	srcdbg_line +=  m_opened_srcdbg_file->get_line_text(loc.line_number());
 }
 
 

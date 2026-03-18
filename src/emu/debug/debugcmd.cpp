@@ -1361,24 +1361,14 @@ void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std
 	if (!m_console.validate_number_parameter(params[0], index))
 		return;
 
-	std::vector<srcdbg_info::srcdbg_provider_entry> & providers = srcdbg->providers();
-	if (index >= providers.size())
+	std::string error;
+	if (!srcdbg->disenable_provider(index, enable, error))
 	{
-		m_console.printf("Invalid source-debugging info number: %X\n", index);
-		m_console.printf("Run sdlist for a list of valid source-debugging info numbers.\n");
+		m_console.printf(error.c_str());
 		return;
 	}
 
-	srcdbg_info::srcdbg_provider_entry & sp = providers[index];
-	if (sp.enabled() == enable)
-	{
-		m_console.printf("Source-debugging info %X is already %s\n", index, enable ? "enabled" : "disabled");
-		return;
-	}
-
-	sp.set_enabled(enable);
 	m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disabled");
-	srcdbg->coalesce();
 	m_machine.debug_view().update_all(DVT_SOURCE);
 }
 
