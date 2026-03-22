@@ -2226,6 +2226,10 @@ device_debug::tracer::~tracer()
 
 void device_debug::tracer::update(offs_t pc)
 {
+	// TODO: dvdisasm uses DEFAULT_DASM_WIDTH=50, which seems excessive.  Could we make
+	// this customizable by CPU?
+	static constexpr int DASM_PAD_TO_LENGTH = 20;
+
 	// are we in trace over mode and in a subroutine?
 	if (m_trace_over && m_trace_over_target != ~0)
 	{
@@ -2264,6 +2268,10 @@ void device_debug::tracer::update(offs_t pc)
 	offs_t next_pc, size;
 	u32 dasmresult;
 	buffer.disassemble(pc, instruction, next_pc, size, dasmresult);
+	if (instruction.size() < DASM_PAD_TO_LENGTH)
+	{
+		instruction.append(std::string(DASM_PAD_TO_LENGTH - instruction.size(), ' '));
+	}
 
 	std::string srcdbg_line;
 	get_srcdbg_line(pc, srcdbg_line);
@@ -2324,8 +2332,7 @@ void device_debug::tracer::get_srcdbg_line(offs_t pc, std::string & srcdbg_line)
 			return;
 		}
 	}
-	srcdbg_line += "\t";
-	srcdbg_line +=  m_opened_srcdbg_file->get_line_text(loc.line_number());
+	srcdbg_line = m_opened_srcdbg_file->get_line_text(loc.line_number());
 }
 
 

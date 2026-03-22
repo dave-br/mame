@@ -47,6 +47,16 @@ const std::error_condition & line_indexed_file::open(const char * file_path)
 	u32 cur_line_start = 0;
 	for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
 	{
+		// Replace tabs with spaces for more consistent alignment
+		if (m_data[i] == '\t')
+		{
+			for (u32 j = 0; j < 4; j++)
+			{
+				m_line_starts.push_back(' ');
+			}
+			continue;
+		}
+		
 		// Check for line endings
 		bool crlf = (m_data[i] == '\r' && m_data[i+1] == '\n');
 		bool line_end = crlf || (m_data[i] == '\n');
