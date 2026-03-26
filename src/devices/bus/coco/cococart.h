@@ -112,6 +112,7 @@ private:
 		int                         delay;
 		line_value                  value;
 		int                         line;
+		int							assert_count;
 		int                         q_count;
 		devcb_write_line *          callback;
 	};
