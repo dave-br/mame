@@ -36,6 +36,9 @@ line_indexed_file::line_indexed_file() :
 
 const std::error_condition & line_indexed_file::open(const char * file_path)
 {
+    // TODO: This should be configurable
+    const int SPACES_PER_TAB = 4;
+
 	m_data.resize(0);
 	m_line_starts.resize(0);
 	m_err = util::core_file::load(file_path, m_data);
@@ -45,15 +48,17 @@ const std::error_condition & line_indexed_file::open(const char * file_path)
 	}
 
 	u32 cur_line_start = 0;
-	for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
+    for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
 	{
 		// Replace tabs with spaces for more consistent alignment
 		if (m_data[i] == '\t')
 		{
-			for (u32 j = 0; j < 4; j++)
+            m_data[i] = ' ';
+			for (u32 j = 0; j < SPACES_PER_TAB - 1; j++)
 			{
-				m_line_starts.push_back(' ');
+                m_data.insert(m_data.begin() + i, ' ');
 			}
+            i += SPACES_PER_TAB;
 			continue;
 		}
 		
