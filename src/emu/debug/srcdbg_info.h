@@ -41,6 +41,8 @@ class srcdbg_info : public srcdbg_provider_base
 public:
 	class srcdbg_provider_entry
 	{
+		friend class srcdbg_info;
+
 	public:
 		srcdbg_provider_entry(const std::string & name, srcdbg_provider_base * provider)
 			: m_name(name)
@@ -62,9 +64,10 @@ public:
 		const srcdbg_provider_base * c_provider() const { return m_provider.get(); }
 		srcdbg_provider_base * provider() { return m_provider.get(); }
 		bool enabled() const { return m_enabled; }
-		void set_enabled(bool enabled) { m_enabled = enabled; }
 
 	private:
+		void set_enabled(bool enabled) { m_enabled = enabled; }
+
 		std::string m_name;
 		std::unique_ptr<srcdbg_provider_base> m_provider;
 		bool m_enabled;
@@ -99,12 +102,14 @@ public:
 
 private:
 	void coalesce();
-	bool file_index_to_provider_file(u32 file_index, std::pair<std::size_t, u32> & ret) const;
+	bool file_index_to_provider_files(u32 file_index, std::vector<std::pair<std::size_t, u32>> & ret) const;
 
-	// agg file index to provider index + local file index
-	std::vector<std::pair<std::size_t, u32>>  m_agg_file_to_provider_file;
+	// agg file index to list of pairs of provider index + local file index
+	// [agg_file] = { (provider_idx, local_file_idx), ... }
+	std::vector<std::vector<std::pair<std::size_t, u32>>>  m_agg_file_to_provider_files;
 	
 	// provider index + local file index to agg file index
+	// [provider_idx] = [local_file_idx] = agg_file
 	std::vector<std::vector<u32>>             m_provider_file_to_agg_file;
 	std::vector<srcdbg_provider_entry>        m_providers;
 	s32                                       m_offset;

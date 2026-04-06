@@ -83,12 +83,13 @@ void sourceview_info::populate_source_file_combo()
 
 	size_t maxlength = 0;
 	std::size_t num_files = debug_info->num_files();
+	u32 cur_sel_idx = 0;
 	for (std::size_t i = 0; i < num_files; i++)
 	{
 		const srcdbg_provider_base::source_file_path * path;
 		if (!debug_info->file_index_to_path(i, &path))
 		{
-			return;
+			continue;
 		}
 		const char * entry_text = path->built();
 		size_t const length = strlen(entry_text);
@@ -97,10 +98,15 @@ void sourceview_info::populate_source_file_combo()
 			maxlength = length;
 		}
 		auto t_name = osd::text::to_tstring(entry_text);
-		SendMessage(m_combownd, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
+		LRESULT combo_idx = SendMessage(m_combownd, CB_ADDSTRING, 0, (LPARAM) t_name.c_str());
+		SendMessage(m_combownd, CB_SETITEMDATA, (WPARAM) combo_idx, (LPARAM) i);
+		if (dv_source->cur_src_index() == i)
+		{
+			cur_sel_idx = u32(combo_idx);
+		}
 	}
 	SendMessage(m_combownd, CB_SETDROPPEDWIDTH, ((maxlength + 2) * metrics().debug_font_width()) + metrics().vscroll_width(), 0);
-	SendMessage(m_combownd, CB_SETCURSEL, dv_source->cur_src_index(), 0);
+	SendMessage(m_combownd, CB_SETCURSEL, (WPARAM) cur_sel_idx, 0);
 }
 
 
@@ -113,12 +119,22 @@ void sourceview_info::update()
 	if (dv_source->update_gui_needs_full_refresh())
 	{
 		populate_source_file_combo();
+		return;
 	}
 	
 	// TODO: Keeping my own copy of m_combownd and making update() virtual seems
 	// inconsistent with rest of dbg arch.
 	// What is the proper way to update its selection whenever the PC changes?
-	SendMessage(m_combownd, CB_SETCURSEL, dv_source->cur_src_index(), 0);
+	LRESULT num_items = SendMessage(m_combownd, CB_GETCOUNT, 0, 0);
+	for (u32 combo_idx = 0; combo_idx < num_items; combo_idx++)
+	{
+		LRESULT item_data = SendMessage(m_combownd, CB_GETITEMDATA, combo_idx, 0);
+		if (item_data == dv_source->cur_src_index())
+		{
+			SendMessage(m_combownd, CB_SETCURSEL, combo_idx, 0);
+			return;
+		}
+	}
 }
 
 

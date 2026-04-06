@@ -638,16 +638,17 @@ void SrcdbgDockWidget::populateSrcdbgCombo()
 		const srcdbg_provider_base::source_file_path * path;
 		if (!debugInfo->file_index_to_path(i, &path))
 		{
-			return;
+			continue;
 		}
 		const char * entryText = path->built();
-		m_srcdbgCombo->addItem(entryText);
+		m_srcdbgCombo->addItem(entryText, QVariant(i));
 	}
 }
 
 void SrcdbgDockWidget::srcfileChanged(int index)
 {
-	downcast<debug_view_sourcecode*>(m_srcdbgView->view())->set_src_index(u16(index));
+	u16 fileIdx = m_srcdbgCombo->itemData(index).toInt();
+	downcast<debug_view_sourcecode*>(m_srcdbgView->view())->set_src_index(fileIdx);
 }
 
 
@@ -664,11 +665,19 @@ void SrcdbgDockWidget::update()
 	if (dvSource->update_gui_needs_full_refresh())
 	{
 		populateSrcdbgCombo();
+		return;
 	}
 	
-	u16 newIndex = dvSource->cur_src_index();
-	if (m_srcdbgCombo->currentIndex() != newIndex)
-		m_srcdbgCombo->setCurrentIndex(newIndex);
+	u32 numItems = m_srcdbgCombo->count();
+	for (u32 comboIdx = 0; comboIdx < numItems; comboIdx++)
+	{
+		u16 fileIdx = m_srcdbgCombo->itemData(comboIdx).toInt();
+		if (fileIdx == dvSource->cur_src_index())
+		{
+			m_srcdbgCombo->setCurrentIndex(comboIdx);
+			return;
+		}
+	}
 }
 
 

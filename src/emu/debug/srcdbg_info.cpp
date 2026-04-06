@@ -16,6 +16,8 @@
 #include "emuopts.h"
 #include "fileio.h"
 
+#include <filesystem>
+
 
 //-------------------------------------------------
 // line_indexed_file - constructor
@@ -118,7 +120,7 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 }
 
 srcdbg_info::srcdbg_info(const running_machine& machine)
-	: m_agg_file_to_provider_file()
+	: m_agg_file_to_provider_files()
 	, m_provider_file_to_agg_file()
 	, m_providers()
 	, m_offset(machine.options().srcdbg_offset())
@@ -190,27 +192,38 @@ void srcdbg_info::complete_local_relative_initialization()
 
 u32 srcdbg_info::num_files() const
 {
-	return m_agg_file_to_provider_file.size();
+	return m_agg_file_to_provider_files.size();
 }
 
 
 bool srcdbg_info::file_index_to_path(u32 file_index, const source_file_path ** path) const
 { 
-	std::pair<std::size_t, u32> provider_file;	
-	if (!file_index_to_provider_file(file_index, provider_file))
+	std::vector<std::pair<std::size_t, u32>> provider_files;
+	if (!file_index_to_provider_files(file_index, provider_files))
 	{
 		return false;
 	}
 
-	return m_providers[provider_file.first].c_provider()->file_index_to_path(provider_file.second, path);
+	for (const std::pair<std::size_t, u32> & pf : provider_files)
+	{
+		std::size_t prov_idx = pf.first;
+		if (!m_providers[prov_idx].enabled())
+		{
+			continue;
+		}
+
+		u32 local_file_idx = pf.second;
+		return m_providers[prov_idx].c_provider()->file_index_to_path(local_file_idx, path);
+	}
+
+	return false;
 }
+
 
 std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 {
-	// Ask all enabled providers for the answer without short-circuiting, so we
-	// can detect if > 1 provider found a match (in which case file_path is
-	// ambiguous, and an empty optional should be returned)
-	std::optional<std::pair<offs_t, u32>> found_index;
+	// Find first enabled provider who claims this path, to look up
+	// the aggregated file index
 	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
 	{
 		const srcdbg_provider_entry & sp = m_providers[provider_idx];
@@ -222,51 +235,53 @@ std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 		std::optional<u32> file_idx = sp.c_provider()->file_path_to_index(file_path);
 		if (file_idx.has_value())
 		{
-			if (found_index.has_value())
-			{
-				// Two providers found a match, so input string is ambiguous
-				return std::optional<u32>();
-			}
-			found_index = std::pair(provider_idx, file_idx.value());
+			return m_provider_file_to_agg_file[provider_idx][file_idx.value()];
 		}
 	}
 
-	if (!found_index.has_value())
-	{
-		return std::optional<u32>();
-	}
-
-	// Convert from provider's index space to coalesced index space
-	return m_provider_file_to_agg_file[found_index.value().first][found_index.value().second];
+	return std::optional<u32>();
 }
 
-bool srcdbg_info::file_index_to_provider_file(u32 file_index, std::pair<std::size_t, u32> & ret) const
+
+// Private helper to look up aggregated file index, and return list of
+// (provider, local index) pairs
+bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<std::pair<std::size_t, u32>> & ret) const
 {
-	if (file_index >= m_agg_file_to_provider_file.size())
+	if (file_index >= m_agg_file_to_provider_files.size())
 	{
 		return false;
 	}
 
-	std::pair<std::size_t, u32> provider_file = m_agg_file_to_provider_file[file_index];
-	if (!m_providers[provider_file.first].enabled())
-	{
-		return false;
-	}
-
-	ret = provider_file;
+	ret = m_agg_file_to_provider_files[file_index];
 	return true;
 }
 
+
 void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
-	std::pair<std::size_t, u32> provider_file;	
-	if (!file_index_to_provider_file(file_index, provider_file))
+	std::vector<std::pair<std::size_t, u32>> provider_files;	
+	if (!file_index_to_provider_files(file_index, provider_files))
 	{
 		return;
 	}
 
-	m_providers[provider_file.first].c_provider()->
-		file_line_to_address_ranges(provider_file.second, line_number, ranges);
+	// Multiple providers might know about this file.  Find the first one who
+	// knows about this line
+	for (u32 i = 0; i < provider_files.size(); i++)
+	{
+		std::size_t provider_idx = provider_files[i].first;
+		const srcdbg_provider_entry & provider = m_providers[provider_idx];
+		if (!provider.enabled())
+		{
+			continue;
+		}
+
+		provider.c_provider()->file_line_to_address_ranges(provider_files[i].second, line_number, ranges);
+		if (ranges.size() > 0)
+		{
+			return;
+		}
+	}
 }
 
 bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
@@ -288,6 +303,7 @@ bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 			return true;
 		}
 	}
+
 	return false;
 }
 
@@ -301,8 +317,13 @@ bool srcdbg_info::update_view_needs_full_refresh()
 
 void srcdbg_info::coalesce()
 {
+	namespace fs = std::filesystem;
+
 	m_provider_file_to_agg_file.clear();
-	m_agg_file_to_provider_file.clear();
+	m_agg_file_to_provider_files.clear();
+
+	// Keep track of duplicate file paths.
+	std::vector<std::pair<const char *, u32>> path_and_agg_idxs;
 
 	// Ensure m_provider_file_to_agg_file is pre-sized so as we encounter
 	// each provider, we'll always have an entry ready for it
@@ -317,15 +338,44 @@ void srcdbg_info::coalesce()
 		{
 			continue;
 		}
-		
+
 		m_provider_file_to_agg_file[provider_idx] = std::vector<u32>();
 		for (u32 file_idx = 0; file_idx < provider->num_files(); file_idx++)
 		{
-			// (provider_idx, file_idx) maps to the next available aggregated index
-			m_provider_file_to_agg_file[provider_idx].push_back(m_agg_file_to_provider_file.size());
+			const source_file_path * sfp = nullptr;
+			if (!provider->file_index_to_path(file_idx, &sfp))
+			{
+				break;
+			}
 
-			// That same next available aggregated index maps to (provider_idx, file_idx)
-			m_agg_file_to_provider_file.push_back(std::pair(provider_idx, file_idx));
+			// If this file has already been encountered from another provider,
+			// reuse the same aggregated file index
+			u32 agg_file_idx = u32(-1);
+			
+			for (const std::pair<const char *, u32> & path_agg : path_and_agg_idxs)
+			{
+				if (fs::equivalent(path_agg.first, sfp->local()))
+				{
+					// Already seen.  Reuse its aggregated file index
+					agg_file_idx = path_agg.second;
+					break;
+				}
+			}
+
+			if (agg_file_idx == u32(-1))
+			{
+				// New.  Use the next available aggregated index
+				agg_file_idx = m_agg_file_to_provider_files.size();
+				m_agg_file_to_provider_files.push_back(std::vector<std::pair<std::size_t, u32>>());
+				path_and_agg_idxs.push_back(std::pair<const char *, u32>(sfp->local(), agg_file_idx));
+			}
+
+			// (provider_idx, file_idx) maps to agg_file_idx
+			m_provider_file_to_agg_file[provider_idx].push_back(agg_file_idx);
+
+			// agg_file_idx maps to (provider_idx, file_idx)
+			// TODO: These pairs should be replaced with a struct
+			m_agg_file_to_provider_files[agg_file_idx].push_back(std::pair(provider_idx, file_idx));
 		}
 	}
 }

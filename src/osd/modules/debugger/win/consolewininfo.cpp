@@ -623,7 +623,11 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		if (sel == CB_ERR)
 			break;
 
-		downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->set_src_index(u16(sel));
+		LRESULT src_index = SendMessage((HWND)lparam, CB_GETITEMDATA, (WPARAM) sel, 0);
+		if (src_index == CB_ERR)
+			break;
+
+		downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->set_src_index(u16(src_index));
 
 		// reset the focus
 		set_default_focus();

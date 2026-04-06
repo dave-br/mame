@@ -36,7 +36,7 @@
 			const srcdbg_provider_base::source_file_path * path;
 			if (!debug_info->file_index_to_path(i, &path))
 			{
-				return;
+				continue;
 			}
 			const char * entry_text = path->built();
 			NSString *title = [NSString stringWithUTF8String:entry_text];
