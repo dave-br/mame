@@ -354,7 +354,9 @@ void srcdbg_info::coalesce()
 			
 			for (const std::pair<const char *, u32> & path_agg : path_and_agg_idxs)
 			{
-				if (fs::equivalent(path_agg.first, sfp->local()))
+				std::error_code err;
+				bool ret = fs::equivalent(path_agg.first, sfp->local(), err);
+				if (!err && ret)
 				{
 					// Already seen.  Reuse its aggregated file index
 					agg_file_idx = path_agg.second;
