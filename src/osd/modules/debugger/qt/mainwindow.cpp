@@ -641,7 +641,7 @@ void SrcdbgDockWidget::populateSrcdbgCombo()
 			continue;
 		}
 		const char * entryText = path->built();
-		m_srcdbgCombo->addItem(entryText, QVariant(i));
+		m_srcdbgCombo->addItem(entryText, QVariant(u32(i)));
 	}
 }
 
