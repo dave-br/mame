@@ -152,6 +152,7 @@ void cococart_slot_device::device_start()
 	m_cart_line.delay           = 0;
 	m_cart_line.value           = line_value::CLEAR;
 	m_cart_line.line            = 0;
+	m_cart_line.assert_count    = 0;
 	m_cart_line.q_count         = 0;
 	m_cart_line.callback = &m_cart_callback;
 
@@ -159,6 +160,7 @@ void cococart_slot_device::device_start()
 	m_nmi_line.delay            = 0;
 	m_nmi_line.value            = line_value::CLEAR;
 	m_nmi_line.line             = 0;
+	m_nmi_line.assert_count     = 0;
 	m_nmi_line.q_count          = 0;
 	m_nmi_line.callback = &m_nmi_callback;
 
@@ -166,6 +168,7 @@ void cococart_slot_device::device_start()
 	m_halt_line.delay           = 0;
 	m_halt_line.value           = line_value::CLEAR;
 	m_halt_line.line            = 0;
+	m_halt_line.assert_count    = 0;
 	m_halt_line.q_count         = 0;
 	m_halt_line.callback = &m_halt_callback;
 
@@ -175,18 +178,21 @@ void cococart_slot_device::device_start()
 	save_item(STRUCT_MEMBER(m_cart_line, delay));
 	save_item(STRUCT_MEMBER(m_cart_line, value));
 	save_item(STRUCT_MEMBER(m_cart_line, line));
+	save_item(STRUCT_MEMBER(m_cart_line, assert_count));
 	save_item(STRUCT_MEMBER(m_cart_line, q_count));
 
 	save_item(STRUCT_MEMBER(m_nmi_line, timer_index));
 	save_item(STRUCT_MEMBER(m_nmi_line, delay));
 	save_item(STRUCT_MEMBER(m_nmi_line, value));
 	save_item(STRUCT_MEMBER(m_nmi_line, line));
+	save_item(STRUCT_MEMBER(m_nmi_line, assert_count));
 	save_item(STRUCT_MEMBER(m_nmi_line, q_count));
 
 	save_item(STRUCT_MEMBER(m_halt_line, timer_index));
 	save_item(STRUCT_MEMBER(m_halt_line, delay));
 	save_item(STRUCT_MEMBER(m_halt_line, value));
 	save_item(STRUCT_MEMBER(m_halt_line, line));
+	save_item(STRUCT_MEMBER(m_halt_line, assert_count));
 	save_item(STRUCT_MEMBER(m_halt_line, q_count));
 }
 
@@ -333,6 +339,7 @@ void cococart_slot_device::set_line(line ln, coco_cartridge_line &line, cococart
 
 			case line_value::ASSERT:
 				line.line = 0x01;
+				line.assert_count++;
 				line.q_count = 0;
 				break;
 

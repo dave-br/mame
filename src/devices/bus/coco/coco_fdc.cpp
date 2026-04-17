@@ -318,7 +318,10 @@ void coco_fdc_device_base::dskreg_w(u8 data)
 	if (selected_floppy)
 		selected_floppy->ss_w(head);
 
-	m_wd17xx->dden_w(!BIT(dskreg(), 5));
+	// For use in video, assume we always want double-density
+	// asserted, so we can use the DDEN flag solely to enable / disable NMI
+	// m_wd17xx->dden_w(!BIT(dskreg(), 5));
+	m_wd17xx->dden_w(0);
 }
 
 
