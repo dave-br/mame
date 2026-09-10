@@ -58,7 +58,7 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 	HWND const result = CreateWindowEx(COMBO_BOX_STYLE_EX, TEXT("COMBOBOX"), nullptr, COMBO_BOX_STYLE,
 			0, 0, 100, 1000, parent, nullptr, GetModuleHandleUni(), nullptr);
 	SetWindowLongPtr(result, GWLP_USERDATA, userdata);
-	SendMessage(result, WM_SETFONT, (WPARAM)metrics().debug_font(), (LPARAM)FALSE);
+	SendMessage(result, WM_SETFONT, (WPARAM) metrics().debug_font(), (LPARAM)FALSE);
 
 	if (debug_info == nullptr)
 	{

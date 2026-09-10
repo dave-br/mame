@@ -11,6 +11,7 @@
 #pragma once
 
 #include "debugwin.h"
+#include "uimetrics.h"
 
 #include "debugbaseinfo.h"
 
@@ -70,6 +71,7 @@ protected:
 	};
 
 	template <typename T> T *view() const { return downcast<T *>(m_view); }
+	ui_metrics const &metrics() const;
 
 	virtual void add_items_to_context_menu(HMENU menu);
 	virtual void update_context_menu(HMENU menu);
