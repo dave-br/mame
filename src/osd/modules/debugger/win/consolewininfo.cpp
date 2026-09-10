@@ -264,10 +264,6 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 		AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_SOURCE, TEXT("Show source\tCtrl+U"));
 		AppendMenu(m_optionsmenu, MF_ENABLED, ID_SHOW_DISASM, TEXT("Show disassembly\tCtrl+Shift+U"));
 
-		// get the work bounds
-		RECT work_bounds, bounds;
-		SystemParametersInfo(SPI_GETWORKAREA, 0, &work_bounds, 0);
-
 		// adjust the min/max sizes for the window style
 		adjust_minmax();
 
