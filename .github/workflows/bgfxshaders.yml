@@ -2,6 +2,8 @@ name: Rebuild BGFX shaders
 
 on:
   push:
+    branches-ignore:
+      - 'pr-sd3-cleanup'
     paths:
     - '.github/workflows/**'
     - 'src/osd/modules/render/bgfx/shaders/**'

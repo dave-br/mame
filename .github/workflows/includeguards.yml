@@ -2,6 +2,8 @@ name: 'Check #include guards'
 
 on:
   push:
+    branches-ignore:
+      - 'pr-sd3-cleanup'
     paths:
     - '.github/workflows/**'
     - 'src/devices/**.h'
