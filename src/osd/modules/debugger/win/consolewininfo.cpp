@@ -227,7 +227,7 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	m_views[VIEW_IDX_CONSOLE].reset(new debugview_info(debugger, *this, window(), DVT_CONSOLE));
 	if (!m_views[VIEW_IDX_CONSOLE]->is_valid())
 		goto cleanup;
-	m_views[VIEW_IDX_SOURCE].reset(new sourceview_info(debugger, *this, window() /* , DVT_SOURCE */));
+	m_views[VIEW_IDX_SOURCE].reset(new sourceview_info(debugger, *this, window()));
 	if (!m_views[VIEW_IDX_SOURCE]->is_valid())
 		goto cleanup;
 	m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
