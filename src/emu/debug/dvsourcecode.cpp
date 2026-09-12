@@ -123,6 +123,8 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 // source code view
 //-------------------------------------------------
 
+// TODO: flush_osd_updates should be unnecessary.  Some
+// of this perhaps moves to view_notify override
 void debug_view_sourcecode::view_update()
 {
 	// Show explanatory text if source-level debugging is not active
@@ -386,6 +388,27 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	}
 }
 
+//-------------------------------------------------
+//  view_notify - If cursor changed, source-code
+//	file may have changed as well
+//-------------------------------------------------
+
+void debug_view_sourcecode::view_notify(debug_view_notification type)
+{
+	if (type == VIEW_NOTIFY_CURSOR_CHANGED)
+	{
+		if (update_gui_needs_full_refresh())
+		{
+			this->v
+			populate_source_file_combo();
+			return;
+		}
+
+	}
+		adjust_visible_y_for_cursor();
+
+	debug_view_disasm::view_notify(type)
+}
 
 //-------------------------------------------------
 // set_src_index - Called when user selects a
