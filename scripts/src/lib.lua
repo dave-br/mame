@@ -229,7 +229,7 @@ project "mame_srcdbg_static"
 	-- Force all symbols from static lib to be present in linked shared library,
 	-- otherwise they'd be optimized out without other object files to reference
 	-- them.  Uses --whole-archive then --no-whole-archive to achieve this.
-	-- (TODO: I think -all_load then -noall_load on Mac?)
+	-- (On Mac, I think -all_load then -noall_load)
 	wholearchive {
 		"mame_srcdbg_static",
 	}
