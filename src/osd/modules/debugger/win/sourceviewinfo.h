@@ -34,12 +34,11 @@ protected:
 	virtual void update() override;
 
 private:
-	void populate_source_file_combo(HWND combo);
+	void populate_source_file_combo();
 
-	// // TODO: Keeping my own copy of this HWND and making update() virtual seems
-	// // inconsistent with rest of dbg arch.  Is there a more appropriate way to
-	// // update its selection whenever the PC changes?
-	// HWND    m_combownd;             // Selects from list of source files
+	// Non-owning reference to the source-code-file-selector combobox.
+	// Used to update its selection whenever the PC changes
+	HWND    m_combownd;
 };
 
 } // namespace osd::debugger::win
