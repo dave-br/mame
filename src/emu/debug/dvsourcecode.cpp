@@ -77,33 +77,37 @@ std::optional<offs_t> debug_view_sourcecode::selected_address()
 // the file identified by m_cur_src_index is shown
 //-------------------------------------------------
 
-void debug_view_sourcecode::update_opened_file()
+bool debug_view_sourcecode::update_opened_file()
 {
 	assert(m_srcdbg_info != nullptr);
 	if (m_cur_src_index == m_displayed_src_index)
 	{
-		return;
+		return true;
 	}
 
 	const srcdbg_provider_base::source_file_path * path;
 	if (!m_srcdbg_info->file_index_to_path(m_cur_src_index, &path))
 	{
-		return;
+		print_file_unavailable_error();
+		return false;
 	}
 	const char * local_path = path->local();
 	if (local_path == nullptr)
 	{
-		return;
+		print_file_open_error(*path);
+		return false;
 	}
 
 	std::error_condition err = m_displayed_src_file->open(local_path);
-	m_displayed_src_index = m_cur_src_index;
 	if (err)
 	{
-		return;
+		print_file_open_error(*path, err);
+		return false;
 	}
 
+	m_displayed_src_index = m_cur_src_index;
 	m_total.y = m_displayed_src_file->num_lines();
+	return true;
 }
 
 
@@ -130,11 +134,7 @@ void debug_view_sourcecode::view_update()
 	{
 		print_line(0, "Source-level debugging is not active", DCA_CHANGED);
 		print_line(1, "Specify option '" OPTION_SRCDBGINFO "' to enable", DCA_NORMAL);
-		for (u32 row = 2; row < m_visible.y; row++)
-		{
-			print_line(row, " ", DCA_NORMAL);
-		}
-		m_total.y = 2;
+		clear_from_row_onward(2);
 		return;
 	}
 
@@ -181,19 +181,8 @@ void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
 {
 	// Ensure the correct file is open.  First time view is displayed, this opens
 	// the top of file index 0
-	update_opened_file();
-
-	// Verify the open succeeded
-	const srcdbg_provider_base::source_file_path * path;
-	if (!m_srcdbg_info->file_index_to_path(m_cur_src_index, &path))
+	if (!update_opened_file())
 	{
-		// TODO: ERROR
-		return;
-	}
-
-	if (path->local() == nullptr || m_displayed_src_file->last_open_error())
-	{
-		print_file_open_error(*path);
 		return;
 	}
 
@@ -244,34 +233,62 @@ void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
 
 
 //-------------------------------------------------
+// clear_from_row_onward - Pad with empty space
+// from specified row to end of visible view
+//-------------------------------------------------
+
+void debug_view_sourcecode::clear_from_row_onward(s32 row_start)
+{
+	for (u32 row = row_start; row < m_visible.y; row++)
+	{
+		print_line(row, " ", DCA_NORMAL);
+	}
+	m_total.y = row_start;
+}
+
+
+//-------------------------------------------------
 // print_file_open_error - Helper to print
 // explanatory text when file opening fails
 //-------------------------------------------------
 
-void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::source_file_path & path)
+void debug_view_sourcecode::print_file_open_error(const srcdbg_provider_base::source_file_path & path, std::error_condition err)
 {
-	print_line(0, "Error opening file", DCA_CHANGED);
+	s32 row = 0;
+	print_line(row++, "Error opening file", DCA_CHANGED);
 	if (path.local() == nullptr)
 	{
-		print_line(1, "Could not find local file matching originally built source", DCA_CHANGED);
+		print_line(row++, "Could not find local file matching originally built source", DCA_CHANGED);
 	}
-	else
+	else if (err)
 	{
-		print_line(1, path.local(), DCA_CHANGED);
-		print_line(2, m_displayed_src_file->last_open_error().message().c_str(), DCA_CHANGED);
+		print_line(row++, path.local(), DCA_CHANGED);
+		print_line(row++, err.message().c_str(), DCA_CHANGED);
 	}
 
 	std::string s = util::string_format("Originally built source: %s", path.built());
-	print_line(3, s.c_str(), DCA_NORMAL);
+	print_line(row++, s.c_str(), DCA_NORMAL);
 	s = util::string_format("Source search path (%s): %s", OPTION_SRCDBGSEARCHPATH, machine().options().srcdbg_search_path());
-	print_line(4, s.c_str(), DCA_NORMAL);
+	print_line(row++, s.c_str(), DCA_NORMAL);
 	s = util::string_format("Source path prefix map (%s): %s", OPTION_SRCDBGPREFIXMAP, machine().options().srcdbg_prefix_map());
-	print_line(5, s.c_str(), DCA_NORMAL);
-	for (u32 row = 6; row < m_visible.y; row++)
-	{
-		print_line(row, " ", DCA_NORMAL);
-	}
-	m_total.y = 6;
+	print_line(row++, s.c_str(), DCA_NORMAL);
+	clear_from_row_onward(row);
+	m_total.y = row;
+}
+
+
+// -------------------------------------------------
+// print_file_unavailable_error - Helper to print
+// explanatory text when referenced file is not
+// in any enabled MDI
+// -------------------------------------------------
+
+void debug_view_sourcecode::print_file_unavailable_error()
+{
+	print_line(0, "The current source file does not appear", DCA_CHANGED);
+	print_line(1, "in enabled source debugging information.", DCA_CHANGED);
+	print_line(2, "Try running sdlist / sdenable to increase available debugging info.", DCA_CHANGED);
+	clear_from_row_onward(3);
 }
 
 

@@ -24,7 +24,6 @@
 //-------------------------------------------------
 
 line_indexed_file::line_indexed_file() :
-	m_err(),
 	m_data(),
 	m_line_starts()
 {
@@ -36,17 +35,17 @@ line_indexed_file::line_indexed_file() :
 // and initializes line index
 //-------------------------------------------------
 
-const std::error_condition & line_indexed_file::open(const char * file_path)
+std::error_condition line_indexed_file::open(const char * file_path)
 {
     // TODO: This should be configurable
     const u32 SPACES_PER_TAB_STOP = 4;
 
 	m_data.resize(0);
 	m_line_starts.resize(0);
-	m_err = util::core_file::load(file_path, m_data);
-	if (m_err)
+	std::error_condition err = util::core_file::load(file_path, m_data);
+	if (err)
 	{
-		return m_err;
+		return err;
 	}
 
 	u32 cur_line_start = 0;
@@ -85,7 +84,7 @@ const std::error_condition & line_indexed_file::open(const char * file_path)
 
 	m_line_starts.push_back(cur_line_start);
 	m_data.push_back('\0');
-	return m_err;
+	return std::error_condition();
 }
 
 // static 

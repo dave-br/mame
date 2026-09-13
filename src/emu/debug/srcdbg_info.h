@@ -25,13 +25,11 @@ class line_indexed_file
 public:
 	line_indexed_file();
 	~line_indexed_file() { };
-	const std::error_condition & open(const char * file_path);
-	const std::error_condition & last_open_error() { return m_err; };
+	std::error_condition open(const char * file_path);
 	u32 num_lines() { return m_line_starts.size(); };
 	const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
 
 private:
-	std::error_condition m_err;
 	std::vector<uint8_t> m_data;
 	std::vector<u32> m_line_starts;
 };

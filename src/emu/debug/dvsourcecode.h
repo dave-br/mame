@@ -52,11 +52,13 @@ private:
 	void viewdata_text_update(bool pc_changed, offs_t pc);
 	void print_line(u32 row, const char * text, u8 attrib) { print_line( row, std::optional<u32>(), text, attrib); };
 	void print_line(u32 row, std::optional<u32> line_number, const char * text, u8 attrib);
-	void print_file_open_error(const srcdbg_provider_base::source_file_path & path);
+	void print_file_open_error(const srcdbg_provider_base::source_file_path & path, std::error_condition err = std::error_condition());
+	void print_file_unavailable_error();
+	void clear_from_row_onward(s32 row_start);
 
 	u32 first_visible_line() { return m_topleft.y + 1; }
 	bool is_visible(u32 line) { return (first_visible_line() <= line && line < first_visible_line() + m_visible.y); }
-	void update_opened_file();
+	bool update_opened_file();
 	void update_visible_lines(offs_t pc);
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
