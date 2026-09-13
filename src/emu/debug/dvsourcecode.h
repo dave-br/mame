@@ -47,7 +47,6 @@ protected:
 	// view overrides
 	virtual void set_source(const debug_view_source &source) override;
 	virtual void view_update() override;
-	// virtual void view_notify(debug_view_notification type) override;
 
 private:
 	void viewdata_text_update(bool pc_changed, offs_t pc);

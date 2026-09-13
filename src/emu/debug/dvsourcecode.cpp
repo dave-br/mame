@@ -123,8 +123,6 @@ void debug_view_sourcecode::set_source(const debug_view_source &source)
 // source code view
 //-------------------------------------------------
 
-// TODO: flush_osd_updates should be unnecessary.  Some
-// of this perhaps moves to view_notify override
 void debug_view_sourcecode::view_update()
 {
 	// Show explanatory text if source-level debugging is not active
@@ -148,8 +146,6 @@ void debug_view_sourcecode::view_update()
 		pc_changed = update_previous_pc(pc);
 	}
 
-	// bool do_flush_osd_updates = false;
-
 	if (m_srcdbg_info && m_srcdbg_info->update_view_needs_full_refresh())
 	{
 		// The update actually did something, so reset state given that the list
@@ -160,7 +156,6 @@ void debug_view_sourcecode::view_update()
 		m_line_for_cur_pc = std::optional<u32>();
 		pc_changed = true;
 		m_gui_needs_full_refresh = true;
-		// do_flush_osd_updates = true;
 	}
 
 	// If pc has changed, find its file & line number if possible
@@ -179,11 +174,6 @@ void debug_view_sourcecode::view_update()
 	}
 
 	viewdata_text_update(pc_changed, pc);
-
-	// if (do_flush_osd_updates)
-	// {
-	// 	flush_osd_updates();
-	// }
 }
 
 
@@ -388,27 +378,6 @@ void debug_view_sourcecode::print_line(u32 row, std::optional<u32> line_number, 
 	}
 }
 
-//-------------------------------------------------
-//  view_notify - If cursor changed, source-code
-//	file may have changed as well
-//-------------------------------------------------
-
-// void debug_view_sourcecode::view_notify(debug_view_notification type)
-// {
-// 	if (type == VIEW_NOTIFY_CURSOR_CHANGED)
-// 	{
-// 		if (update_gui_needs_full_refresh())
-// 		{
-// 			this->v
-// 			populate_source_file_combo();
-// 			return;
-// 		}
-
-// 	}
-// 		adjust_visible_y_for_cursor();
-
-// 	debug_view_disasm::view_notify(type)
-// }
 
 //-------------------------------------------------
 // set_src_index - Called when user selects a
