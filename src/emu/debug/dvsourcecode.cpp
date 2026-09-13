@@ -148,7 +148,7 @@ void debug_view_sourcecode::view_update()
 		pc_changed = update_previous_pc(pc);
 	}
 
-	bool do_flush_osd_updates = false;
+	// bool do_flush_osd_updates = false;
 
 	if (m_srcdbg_info && m_srcdbg_info->update_view_needs_full_refresh())
 	{
@@ -160,7 +160,7 @@ void debug_view_sourcecode::view_update()
 		m_line_for_cur_pc = std::optional<u32>();
 		pc_changed = true;
 		m_gui_needs_full_refresh = true;
-		do_flush_osd_updates = true;
+		// do_flush_osd_updates = true;
 	}
 
 	// If pc has changed, find its file & line number if possible
@@ -180,10 +180,10 @@ void debug_view_sourcecode::view_update()
 
 	viewdata_text_update(pc_changed, pc);
 
-	if (do_flush_osd_updates)
-	{
-		flush_osd_updates();
-	}
+	// if (do_flush_osd_updates)
+	// {
+	// 	flush_osd_updates();
+	// }
 }
 
 
