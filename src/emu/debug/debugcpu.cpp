@@ -2236,8 +2236,9 @@ device_debug::tracer::~tracer()
 
 void device_debug::tracer::update(offs_t pc)
 {
-	// TODO: dvdisasm uses DEFAULT_DASM_WIDTH=50, which seems excessive.  Could we make
-	// this customizable by CPU?
+	// debug_view_disasm sets m_dasm_width to DEFAULT_DASM_WIDTH=50,
+	// and provides a mutator for m_dasm_width (but is unused).
+	// 50 seems excessive for a trace file, using 20 here.
 	static constexpr int DASM_PAD_TO_LENGTH = 20;
 
 	// are we in trace over mode and in a subroutine?
