@@ -26,6 +26,7 @@ namespace osd::debugger::win {
 
 sourceview_info::sourceview_info(debugger_windows_interface &debugger, debugwin_info &owner, HWND parent) :
 	disasmview_info(debugger, owner, parent, true /* source_code_debugging */)
+	, m_combownd(nullptr)
 {
 }
 
@@ -65,6 +66,7 @@ HWND sourceview_info::create_source_file_combobox(HWND parent, LONG_PTR userdata
 		smart_show_window(result, false);
 	}
 
+	m_combownd = result;			// Cache a non-owning reference to update as PC changes
 	return result;
 }
 
