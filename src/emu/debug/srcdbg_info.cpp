@@ -4,7 +4,9 @@
 
     srcdbg_info.cpp
 
-    TODO
+    Implementation of srcdbg_provider_base (the interface to
+	source-debugging info consumed by the debugger) which
+	aggregates 1 or more loaded source-debugging files.
 
 ***************************************************************************/
 
@@ -18,74 +20,6 @@
 
 #include <filesystem>
 
-
-//-------------------------------------------------
-// line_indexed_file - constructor
-//-------------------------------------------------
-
-line_indexed_file::line_indexed_file() :
-	m_data(),
-	m_line_starts()
-{
-}
-
-
-//-------------------------------------------------
-// open - Reads full contents of text file,
-// and initializes line index
-//-------------------------------------------------
-
-std::error_condition line_indexed_file::open(const char * file_path)
-{
-    // TODO: This should be configurable
-    const u32 SPACES_PER_TAB_STOP = 4;
-
-	m_data.resize(0);
-	m_line_starts.resize(0);
-	std::error_condition err = util::core_file::load(file_path, m_data);
-	if (err)
-	{
-		return err;
-	}
-
-	u32 cur_line_start = 0;
-    for (u32 i = 0; i < m_data.size() - 1; i++)                 // Ignore final char, enable [i+1] in body
-	{
-		// Replace tabs with spaces for more consistent alignment
-		if (m_data[i] == '\t')
-		{
-            u32 col = i - cur_line_start;
-            s32 num_spaces_until_next_tab_stop = SPACES_PER_TAB_STOP - (col % SPACES_PER_TAB_STOP);
-            m_data[i] = ' ';									// Tab char -> first space
-			for (s32 j = 0; j < num_spaces_until_next_tab_stop - 1; j++)
-			{
-                m_data.insert(m_data.cbegin() + i, ' ');		// Insert remaining spaces
-			}
-            i += num_spaces_until_next_tab_stop - 1;			// Skip over inserted spaces
-			continue;
-		}
-		
-		// Check for line endings
-		bool crlf = (m_data[i] == '\r' && m_data[i+1] == '\n');
-		bool line_end = crlf || (m_data[i] == '\n');
-		if (!line_end)
-		{
-			continue;
-		}
-
-		m_data[i] = '\0';                                       // Terminate line
-		m_line_starts.push_back(cur_line_start);                // Record line's starting index
-		if (crlf)
-		{
-			i++;                                                // Skip \n in \r\n
-		}
-		cur_line_start = i+1;                                   // Prepare for next line
-	}
-
-	m_line_starts.push_back(cur_line_start);
-	m_data.push_back('\0');
-	return std::error_condition();
-}
 
 // static 
 std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &machine)

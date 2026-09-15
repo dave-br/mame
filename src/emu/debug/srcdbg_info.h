@@ -4,13 +4,15 @@
 
     srcdbg_info.h
 
-    TODO
+    Implementation of srcdbg_provider_base (the interface to
+	source-debugging info consumed by the debugger) which
+	aggregates 1 or more loaded source-debugging files.
 
 ***************************************************************************/
 
 
-#ifndef MAME_EMU_DEBUG_SRCDBG_PROVIDER_AGGREGATOR_H
-#define MAME_EMU_DEBUG_SRCDBG_PROVIDER_AGGREGATOR_H
+#ifndef MAME_EMU_DEBUG_SRCDBG_INFO_H
+#define MAME_EMU_DEBUG_SRCDBG_INFO_H
 
 #pragma once
 
@@ -115,4 +117,4 @@ private:
 };
 
 
-#endif // MAME_EMU_DEBUG_SRCDBG_PROVIDER_AGGREGATOR_H
+#endif // MAME_EMU_DEBUG_SRCDBG_INFO_H
