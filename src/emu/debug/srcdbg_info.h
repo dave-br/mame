@@ -19,26 +19,16 @@
 #include "srcdbg_provider.h"
 
 
-// TODO: This might better belong somewhere in util lib
-// Helper class to encapsulate the contents of a text file, indexed
-// by line number.  The view is populated with data from this class.
-class line_indexed_file
-{
-public:
-	line_indexed_file();
-	~line_indexed_file() { };
-	std::error_condition open(const char * file_path);
-	u32 num_lines() { return m_line_starts.size(); };
-	const char * get_line_text(u32 n) { return (const char *) &m_data[m_line_starts[n-1]]; };
-
-private:
-	std::vector<uint8_t> m_data;
-	std::vector<u32> m_line_starts;
-};
-
+// Concrete implementation of srcdbg_provider_base used by the debugger
+// to access source-file-level debugging information.
+//
+// When multiple source-file-level debugging information files are loaded
+// (e.g., to support MMU-aware debugging), this aggregates all those
+// infos, and keeps track of which are enabled / disabled.
 class srcdbg_info : public srcdbg_provider_base
 {
 public:
+	// A single info aggregated by srcdbg_info
 	class srcdbg_provider_entry
 	{
 		friend class srcdbg_info;
@@ -73,11 +63,15 @@ public:
 		bool m_enabled;
 	};
 
+	// Factory to instantiate srcdbg_info, which in turn calls factories that
+	// load individual srcdbg info files and instantiate their 
+	// srcdbg_provider_base implementations
 	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
 
 	srcdbg_info(const running_machine& machine);
 	~srcdbg_info() { }
 
+	// TODO:
 	// robin all, change params so caller creates the tables,
 	// and callees just populate them
 	void get_srcdbg_symbols(
@@ -104,6 +98,7 @@ private:
 	void coalesce();
 	bool file_index_to_provider_files(u32 file_index, std::vector<std::pair<std::size_t, u32>> & ret) const;
 
+	// TODO: replace pairs with structs
 	// agg file index to list of pairs of provider index + local file index
 	// [agg_file] = { (provider_idx, local_file_idx), ... }
 	std::vector<std::vector<std::pair<std::size_t, u32>>>  m_agg_file_to_provider_files;

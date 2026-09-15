@@ -21,17 +21,24 @@
 #include <filesystem>
 
 
+// Factory to instantiate srcdbg_info, which in turn calls factories that
+// load individual srcdbg info files and instantiate their 
+// srcdbg_provider_base implementations
+//
 // static 
 std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &machine)
 {
+	// Get paths to all srcdbg info files specified on command line
 	const char * di_paths = machine.options().srcdbginfo();
 	if (di_paths[0] == 0)
 	{
 		return nullptr;
 	}
 
+	// Instantiate aggregator to return
 	std::unique_ptr<srcdbg_info> ret = std::make_unique<srcdbg_info>(machine);
 
+	// Load each file
 	path_iterator path_it(di_paths);
 	std::string di_path;
 	while (path_it.next(di_path))
@@ -51,6 +58,8 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 	// TODO: verify ~srcdbg_info called if return null
 	return ret;
 }
+
+// TODO: add funciton header comments everywhere
 
 srcdbg_info::srcdbg_info(const running_machine& machine)
 	: m_agg_file_to_provider_files()
