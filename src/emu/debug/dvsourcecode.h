@@ -66,7 +66,7 @@ private:
 	srcdbg_info *                                     m_srcdbg_info;           // Interface to the loaded debugging info file, can be null!
 	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
 	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
-	std::unique_ptr<line_indexed_file>                m_displayed_src_file;    // File object currently printed to the view
+	std::unique_ptr<util::line_indexed_file>          m_displayed_src_file;    // File object currently printed to the view
 	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
 	bool                                              m_gui_needs_full_refresh;
 };

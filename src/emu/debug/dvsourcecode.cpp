@@ -14,6 +14,7 @@
 #include "srcdbg_info.h"
 #include "srcdbg_provider.h"
 #include "emuopts.h"
+#include "line_idx_file.h"
 
 
 //-------------------------------------------------
@@ -26,7 +27,7 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 	m_srcdbg_info(machine.debugger().get_srcdbg_info()),
 	m_cur_src_index(0),
 	m_displayed_src_index(-1),
-	m_displayed_src_file(std::make_unique<line_indexed_file>()),
+	m_displayed_src_file(std::make_unique<util::line_indexed_file>()),
 	m_line_for_cur_pc(),
 	m_gui_needs_full_refresh(true)
 {
@@ -152,7 +153,7 @@ void debug_view_sourcecode::view_update()
 		// of enabled providers has changed.
 		m_cur_src_index = 0;
 		m_displayed_src_index = -1;
-		m_displayed_src_file = std::make_unique<line_indexed_file>();
+		m_displayed_src_file = std::make_unique<util::line_indexed_file>();
 		m_line_for_cur_pc = std::optional<u32>();
 		pc_changed = true;
 		m_gui_needs_full_refresh = true;
