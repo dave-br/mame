@@ -189,6 +189,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_SRCDBGSEARCHPATH,                           nullptr,     core_options::option_type::MULTIPATH,  "search path for source files referenced by source-level debugging information" },
 	{ OPTION_SRCDBGPREFIXMAP,                            nullptr,     core_options::option_type::MULTIPATH,  "map of source file path prefixes from those built into source-level debugging information to those found on the local machine" },
 	{ OPTION_SRCDBGOFFSET,                               "0",         core_options::option_type::INTEGER,    "initial offset to apply to all addresses found in source-level debugging information" },
+	{ OPTION_SRCDBGSPACESPERTAB,                         "4",         core_options::option_type::INTEGER,    "number of spaces to display in source debugging view and trace files for each tab stop from source files" },
 
 
 	// comm options

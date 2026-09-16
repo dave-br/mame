@@ -30,11 +30,8 @@ line_indexed_file::line_indexed_file() :
 // and initializes line index
 //-------------------------------------------------
 
-std::error_condition line_indexed_file::open(const char * file_path)
+std::error_condition line_indexed_file::open(const char * file_path, int spaces_per_tab)
 {
-    // TODO: This should be configurable
-    const unsigned int SPACES_PER_TAB_STOP = 4;
-
 	m_data.resize(0);
 	m_line_starts.resize(0);
 	std::error_condition err = util::core_file::load(file_path, m_data);
@@ -50,7 +47,7 @@ std::error_condition line_indexed_file::open(const char * file_path)
 		if (m_data[i] == '\t')
 		{
             unsigned int col = i - cur_line_start;
-            int num_spaces_until_next_tab_stop = SPACES_PER_TAB_STOP - (col % SPACES_PER_TAB_STOP);
+            int num_spaces_until_next_tab_stop = spaces_per_tab - (col % spaces_per_tab);
             m_data[i] = ' ';									// Tab char -> first space
 			for (int j = 0; j < num_spaces_until_next_tab_stop - 1; j++)
 			{

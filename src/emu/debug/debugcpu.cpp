@@ -2337,7 +2337,8 @@ void device_debug::tracer::get_srcdbg_line(offs_t pc, std::string & srcdbg_line)
 			return;
 		}
 
-		std::error_condition err = m_opened_srcdbg_file->open(local_path);
+		int spaces_per_tab = m_debug.device().machine().options().srcdbg_spaces_per_tab();
+		std::error_condition err = m_opened_srcdbg_file->open(local_path, spaces_per_tab);
 		m_opened_srcdbg_file_index = loc.file_index();
 		if (err)
 		{

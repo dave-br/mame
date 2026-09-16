@@ -27,7 +27,7 @@ class line_indexed_file
 public:
 	line_indexed_file();
 	~line_indexed_file() { };
-	std::error_condition open(const char * file_path);
+	std::error_condition open(const char * file_path, int spaces_per_tab);
 	int num_lines() { return m_line_starts.size(); };
 	const char * get_line_text(unsigned int n) { return (const char *) &m_data[m_line_starts[n-1]]; };
 

@@ -166,6 +166,7 @@
 #define OPTION_SRCDBGSEARCHPATH     "src_debug_search_path"
 #define OPTION_SRCDBGPREFIXMAP      "src_debug_prefix_map"
 #define OPTION_SRCDBGOFFSET         "src_debug_offset"
+#define OPTION_SRCDBGSPACESPERTAB   "src_debug_spaces_per_tab"
 
 
 // core misc options
@@ -454,6 +455,7 @@ public:
 	const char *srcdbg_search_path() const { return value(OPTION_SRCDBGSEARCHPATH); }
 	const char *srcdbg_prefix_map() const { return value(OPTION_SRCDBGPREFIXMAP); }
 	int srcdbg_offset() const { return int_value(OPTION_SRCDBGOFFSET); }
+	int srcdbg_spaces_per_tab() const { return int_value(OPTION_SRCDBGSPACESPERTAB); }
 
 	// core misc options
 	bool drc() const { return bool_value(OPTION_DRC); }

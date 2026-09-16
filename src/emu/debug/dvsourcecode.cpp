@@ -99,7 +99,8 @@ bool debug_view_sourcecode::update_opened_file()
 		return false;
 	}
 
-	std::error_condition err = m_displayed_src_file->open(local_path);
+	int spaces_per_tab = machine().options().srcdbg_spaces_per_tab();
+	std::error_condition err = m_displayed_src_file->open(local_path, spaces_per_tab);
 	if (err)
 	{
 		print_file_open_error(*path, err);
