@@ -61,7 +61,6 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 	return ret;
 }
 
-// TODO: add funciton header comments everywhere
 
 //-------------------------------------------------
 // srcdbg_info constructor
@@ -301,14 +300,20 @@ bool srcdbg_info::address_to_file_line(offs_t address, file_line & loc) const
 }
 
 
-// TODO: Can this be moved entirely onto dvsourcecode?
+//-------------------------------------------------
+// srcdbg_info - update_view_needs_full_refresh
+// Returns and then resets bool indicating whether 
+// debug_view_sourcecode needs a full refresh
+// (e.g., b/c a source-debugging info was enabled
+// or disabled during MMU-aware debugging)
+//-------------------------------------------------
+
 bool srcdbg_info::update_view_needs_full_refresh()
 {
 	bool ret = m_view_needs_full_refresh;
 	m_view_needs_full_refresh = false;
 	return ret;
 }
-
 
 
 //-------------------------------------------------
@@ -400,30 +405,25 @@ void srcdbg_info::coalesce()
 // this srcdbg_info.  Useful for MMU-aware debugging
 //-------------------------------------------------
 
-bool srcdbg_info::disenable_provider(u64 index, bool enable, std::string & error)
+srcdbg_info::disenable_retcode srcdbg_info::disenable_provider(u64 index, bool enable)
 {
 	// std::vector<srcdbg_info::srcdbg_provider_entry> & providers = srcdbg->providers();
 	if (index >= m_providers.size())
 	{
-		// TODO: srcdbg_info shouldn't be providing error messages specific to debugcmd.
-		// Should return an error code with enough info that debugcmd can craft
-		// a complete message itself.
-		error = util::string_format(
-			"Invalid source-debugging info number: %X\n"
-			"Run sdlist for a list of valid source-debugging info numbers.\n",
-			index);
-		return false;
+		return disenable_retcode::BAD_IDX;
 	}
 
 	srcdbg_info::srcdbg_provider_entry & sp = m_providers[index];
 	if (sp.enabled() == enable)
 	{
-		error = util::string_format(
-			"Source-debugging info %X is already %s\n", index, enable ? "enabled" : "disabled");
-		return false;
+		return disenable_retcode::NO_CHANGE;
 	}
 
 	sp.set_enabled(enable);
+
+	// Next time debug_view_sourcecode updates itself, it
+	// should do a full refresh
 	m_view_needs_full_refresh = true;
-	return true;
+
+	return disenable_retcode::SUCCESS;
 }

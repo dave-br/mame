@@ -1363,15 +1363,30 @@ void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std
 	if (!m_console.validate_number_parameter(params[0], index))
 		return;
 
-	std::string error;
-	if (!srcdbg->disenable_provider(index, enable, error))
+	srcdbg_info::disenable_retcode ret = srcdbg->disenable_provider(index, enable);
+	switch (ret)
 	{
-		m_console.printf(error.c_str());
-		return;
-	}
+	case srcdbg_info::disenable_retcode::SUCCESS:
+		m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disabled");
+		m_machine.debug_view().update_all(DVT_SOURCE);
+		break;
 
-	m_console.printf("Source-debugging info %X is now %s\n", index, enable ? "enabled" : "disabled");
-	m_machine.debug_view().update_all(DVT_SOURCE);
+	case srcdbg_info::disenable_retcode::BAD_IDX:
+		m_console.printf(
+			"Invalid source-debugging info number: %X\n"
+			"Run sdlist for a list of valid source-debugging info numbers.\n",
+			index);
+		break;
+
+	case srcdbg_info::disenable_retcode::NO_CHANGE:
+		m_console.printf(
+			"Source-debugging info %X is already %s\n", index, enable ? "enabled" : "disabled");
+		break;
+
+	default:
+		assert(!"Unrecognized srcdbg_info::disenable_retcode");
+		break;
+	}
 }
 
 /*-------------------------------------------------

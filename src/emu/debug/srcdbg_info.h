@@ -63,6 +63,8 @@ public:
 		bool m_enabled;
 	};
 
+	enum class disenable_retcode { SUCCESS, BAD_IDX, NO_CHANGE };
+
 	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
 
 	srcdbg_info(const running_machine& machine);
@@ -86,7 +88,7 @@ public:
 	const std::vector<srcdbg_provider_entry> & c_providers() const { return m_providers; }
 	std::vector<srcdbg_provider_entry> & providers() { return m_providers; }
 	bool update_view_needs_full_refresh();
-	bool disenable_provider(u64 index, bool enable, std::string & error);
+	disenable_retcode disenable_provider(u64 index, bool enable);
 
 private:
 	// Pairs a provider index with a file index (scoped to the provider)
