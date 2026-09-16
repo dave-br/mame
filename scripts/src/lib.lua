@@ -102,6 +102,8 @@ end
 		MAME_DIR .. "src/lib/util/jedparse.h",
 		MAME_DIR .. "src/lib/util/language.cpp",
 		MAME_DIR .. "src/lib/util/language.h",
+		MAME_DIR .. "src/lib/util/line_idx_file.cpp",
+		MAME_DIR .. "src/lib/util/line_idx_file.h",
 		MAME_DIR .. "src/lib/util/lrucache.h",
 		MAME_DIR .. "src/lib/util/md5.cpp",
 		MAME_DIR .. "src/lib/util/md5.h",
