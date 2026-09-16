@@ -56,8 +56,6 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 	}
 
 	ret->coalesce();
-
-	// TODO: verify ~srcdbg_info called if return null
 	return ret;
 }
 

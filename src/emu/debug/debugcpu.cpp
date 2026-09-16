@@ -30,6 +30,7 @@
 #include "corestr.h"
 #include "osdepend.h"
 #include "xmlfile.h"
+#include "line_idx_file.h"
 
 #include <cstdio>
 
@@ -2211,7 +2212,7 @@ device_debug::tracer::tracer(device_debug &debug, std::unique_ptr<std::ostream> 
 	, m_trace_over(trace_over)
 	, m_trace_over_target(~0)
 	, m_opened_srcdbg_file_index(-1)
-	, m_opened_srcdbg_file(std::make_unique<line_indexed_file>())
+	, m_opened_srcdbg_file(std::make_unique<util::line_indexed_file>())
 
 {
 	memset(m_history, 0, sizeof(m_history));
