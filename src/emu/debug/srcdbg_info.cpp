@@ -20,11 +20,13 @@
 
 #include <filesystem>
 
-
-// Factory to instantiate srcdbg_info, which in turn calls factories that
+//-------------------------------------------------
+// create_debug_info - Factory
+// to instantiate srcdbg_info, which in turn calls factories that
 // load individual srcdbg info files and instantiate their 
 // srcdbg_provider_base implementations
-//
+//-------------------------------------------------
+
 // static 
 std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &machine)
 {
@@ -61,6 +63,10 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 
 // TODO: add funciton header comments everywhere
 
+//-------------------------------------------------
+// srcdbg_info constructor
+//-------------------------------------------------
+
 srcdbg_info::srcdbg_info(const running_machine& machine)
 	: m_agg_file_to_provider_files()
 	, m_provider_file_to_agg_file()
@@ -69,6 +75,13 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 	, m_view_needs_full_refresh(true)
 {
 }
+
+
+//-------------------------------------------------
+// srcdbg_info - get_srcdbg_symbols
+// Returns symbol_table objects populated with
+// globals and locals from srcdbg info
+//-------------------------------------------------
 
 void srcdbg_info::get_srcdbg_symbols(
 		symbol_table * symtable_srcdbg_globals,
@@ -119,6 +132,14 @@ void srcdbg_info::get_srcdbg_symbols(
 	}
 }
 
+
+//-------------------------------------------------
+// srcdbg_info - complete_local_relative_initialization
+// Called later during startup, after device_state_interfaces
+// are available. Generates expressions required to implement
+// local relative symbol evaluation rules.
+//-------------------------------------------------
+
 void srcdbg_info::complete_local_relative_initialization()
 {
 	for (srcdbg_provider_entry & sp : m_providers)
@@ -132,11 +153,11 @@ void srcdbg_info::complete_local_relative_initialization()
 	}
 }
 
-u32 srcdbg_info::num_files() const
-{
-	return m_agg_file_to_provider_files.size();
-}
 
+//-------------------------------------------------
+// srcdbg_info - file_index_to_path
+// Returns path associated with aggregated file index
+//-------------------------------------------------
 
 bool srcdbg_info::file_index_to_path(u32 file_index, const source_file_path ** path) const
 { 
@@ -162,6 +183,15 @@ bool srcdbg_info::file_index_to_path(u32 file_index, const source_file_path ** p
 }
 
 
+
+//-------------------------------------------------
+// srcdbg_info - file_path_to_index
+// Looks up source file path in aggregated srcdbg
+// info.  Returns the associated aggregated
+// file index, or no value if no such path
+// exists (e.g., b/c the owning provider is disabled)
+//-------------------------------------------------
+
 std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 {
 	// Find first enabled provider who claims this path, to look up
@@ -185,8 +215,13 @@ std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 }
 
 
+
+//-------------------------------------------------
+// srcdbg_info - file_index_to_provider_files
 // Private helper to look up aggregated file index, and return list of
 // (provider, local index) pairs
+//-------------------------------------------------
+
 bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<provider_file> & ret) const
 {
 	if (file_index >= m_agg_file_to_provider_files.size())
@@ -198,6 +233,14 @@ bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<provi
 	return true;
 }
 
+
+
+//-------------------------------------------------
+// srcdbg_info - file_line_to_address_ranges
+// Looks up an aggregated file index & line number,
+// and returns a list of address_range instances
+// corresponding to that source line.
+//-------------------------------------------------
 
 void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
@@ -226,7 +269,15 @@ void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, s
 	}
 }
 
-bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
+
+//-------------------------------------------------
+// srcdbg_info - address_to_file_line
+// Looks up an address and returns the aggregated
+// source file index & line number corresponding
+// to that address
+//-------------------------------------------------
+
+bool srcdbg_info::address_to_file_line(offs_t address, file_line & loc) const
 {
 	for (offs_t provider_idx = 0; provider_idx < m_providers.size(); provider_idx++)
 	{
@@ -249,6 +300,8 @@ bool srcdbg_info::address_to_file_line (offs_t address, file_line & loc) const
 	return false;
 }
 
+
+// TODO: Can this be moved entirely onto dvsourcecode?
 bool srcdbg_info::update_view_needs_full_refresh()
 {
 	bool ret = m_view_needs_full_refresh;
@@ -256,6 +309,13 @@ bool srcdbg_info::update_view_needs_full_refresh()
 	return ret;
 }
 
+
+
+//-------------------------------------------------
+// srcdbg_info - coalesce
+// Private helper called on startup to build maps
+// between aggregated indices and provider-local indices.
+//-------------------------------------------------
 
 void srcdbg_info::coalesce()
 {
@@ -332,6 +392,13 @@ void srcdbg_info::coalesce()
 		}
 	}
 }
+
+
+//-------------------------------------------------
+// srcdbg_info - disenable_provider
+// Enable / disable a given provider aggregated by
+// this srcdbg_info.  Useful for MMU-aware debugging
+//-------------------------------------------------
 
 bool srcdbg_info::disenable_provider(u64 index, bool enable, std::string & error)
 {

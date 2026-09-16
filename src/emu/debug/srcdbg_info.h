@@ -74,7 +74,7 @@ public:
 		const device_state_interface * state) const;
 
 	virtual void complete_local_relative_initialization() override;
-	virtual u32 num_files() const override;
+	virtual u32 num_files() const override { m_agg_file_to_provider_files.size(); }
 	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const override;
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
 	virtual void file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const override;
