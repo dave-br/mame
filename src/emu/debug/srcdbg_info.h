@@ -63,17 +63,11 @@ public:
 		bool m_enabled;
 	};
 
-	// Factory to instantiate srcdbg_info, which in turn calls factories that
-	// load individual srcdbg info files and instantiate their 
-	// srcdbg_provider_base implementations
 	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
 
 	srcdbg_info(const running_machine& machine);
 	~srcdbg_info() { }
 
-	// TODO:
-	// robin all, change params so caller creates the tables,
-	// and callees just populate them
 	void get_srcdbg_symbols(
 		symbol_table * symtable_srcdbg_globals,
 		symbol_table * symtable_srcdbg_locals,
@@ -95,16 +89,28 @@ public:
 	bool disenable_provider(u64 index, bool enable, std::string & error);
 
 private:
-	void coalesce();
-	bool file_index_to_provider_files(u32 file_index, std::vector<std::pair<std::size_t, u32>> & ret) const;
+	// Pairs a provider index with a file index (scoped to the provider)
+	struct provider_file
+	{
+		provider_file(std::size_t provider_idx, u32 file_idx)
+		{
+			m_provider_idx = provider_idx;
+			m_file_idx = file_idx;
+		}
 
-	// TODO: replace pairs with structs
+		std::size_t		m_provider_idx;
+		u32				m_file_idx;
+	};
+
+	void coalesce();
+	bool file_index_to_provider_files(u32 file_index, std::vector<provider_file> & ret) const;
+
 	// agg file index to list of pairs of provider index + local file index
 	// [agg_file] = { (provider_idx, local_file_idx), ... }
-	std::vector<std::vector<std::pair<std::size_t, u32>>>  m_agg_file_to_provider_files;
+	std::vector<std::vector<provider_file>>  m_agg_file_to_provider_files;
 	
 	// provider index + local file index to agg file index
-	// [provider_idx] = [local_file_idx] = agg_file
+	// [provider_idx[local_file_idx]] = agg_file
 	std::vector<std::vector<u32>>             m_provider_file_to_agg_file;
 	std::vector<srcdbg_provider_entry>        m_providers;
 	s32                                       m_offset;

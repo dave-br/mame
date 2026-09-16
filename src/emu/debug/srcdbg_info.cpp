@@ -140,21 +140,21 @@ u32 srcdbg_info::num_files() const
 
 bool srcdbg_info::file_index_to_path(u32 file_index, const source_file_path ** path) const
 { 
-	std::vector<std::pair<std::size_t, u32>> provider_files;
+	std::vector<provider_file> provider_files;
 	if (!file_index_to_provider_files(file_index, provider_files))
 	{
 		return false;
 	}
 
-	for (const std::pair<std::size_t, u32> & pf : provider_files)
+	for (const provider_file & pf : provider_files)
 	{
-		std::size_t prov_idx = pf.first;
+		std::size_t prov_idx = pf.m_provider_idx;
 		if (!m_providers[prov_idx].enabled())
 		{
 			continue;
 		}
 
-		u32 local_file_idx = pf.second;
+		u32 local_file_idx = pf.m_file_idx;
 		return m_providers[prov_idx].c_provider()->file_index_to_path(local_file_idx, path);
 	}
 
@@ -187,7 +187,7 @@ std::optional<u32> srcdbg_info::file_path_to_index(const char * file_path) const
 
 // Private helper to look up aggregated file index, and return list of
 // (provider, local index) pairs
-bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<std::pair<std::size_t, u32>> & ret) const
+bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<provider_file> & ret) const
 {
 	if (file_index >= m_agg_file_to_provider_files.size())
 	{
@@ -201,7 +201,7 @@ bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<std::
 
 void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
 {
-	std::vector<std::pair<std::size_t, u32>> provider_files;	
+	std::vector<provider_file> provider_files;	
 	if (!file_index_to_provider_files(file_index, provider_files))
 	{
 		return;
@@ -211,14 +211,14 @@ void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, s
 	// knows about this line
 	for (u32 i = 0; i < provider_files.size(); i++)
 	{
-		std::size_t provider_idx = provider_files[i].first;
+		std::size_t provider_idx = provider_files[i].m_provider_idx;
 		const srcdbg_provider_entry & provider = m_providers[provider_idx];
 		if (!provider.enabled())
 		{
 			continue;
 		}
 
-		provider.c_provider()->file_line_to_address_ranges(provider_files[i].second, line_number, ranges);
+		provider.c_provider()->file_line_to_address_ranges(provider_files[i].m_file_idx, line_number, ranges);
 		if (ranges.size() > 0)
 		{
 			return;
@@ -265,7 +265,17 @@ void srcdbg_info::coalesce()
 	m_agg_file_to_provider_files.clear();
 
 	// Keep track of duplicate file paths.
-	std::vector<std::pair<const char *, u32>> path_and_agg_idxs;
+	struct path_and_agg_idx
+	{
+		path_and_agg_idx(const char * path, u32 agg_idx)
+		{
+			m_path = path;
+			m_agg_idx = agg_idx;
+		}
+		const char *	m_path;
+		u32				m_agg_idx;
+	};
+	std::vector<path_and_agg_idx> path_and_agg_idxs;
 
 	// Ensure m_provider_file_to_agg_file is pre-sized so as we encounter
 	// each provider, we'll always have an entry ready for it
@@ -294,14 +304,14 @@ void srcdbg_info::coalesce()
 			// reuse the same aggregated file index
 			u32 agg_file_idx = u32(-1);
 			
-			for (const std::pair<const char *, u32> & path_agg : path_and_agg_idxs)
+			for (const path_and_agg_idx & path_agg : path_and_agg_idxs)
 			{
 				std::error_code err;
-				bool ret = fs::equivalent(path_agg.first, sfp->local(), err);
+				bool ret = fs::equivalent(path_agg.m_path, sfp->local(), err);
 				if (!err && ret)
 				{
 					// Already seen.  Reuse its aggregated file index
-					agg_file_idx = path_agg.second;
+					agg_file_idx = path_agg.m_agg_idx;
 					break;
 				}
 			}
@@ -310,16 +320,15 @@ void srcdbg_info::coalesce()
 			{
 				// New.  Use the next available aggregated index
 				agg_file_idx = m_agg_file_to_provider_files.size();
-				m_agg_file_to_provider_files.push_back(std::vector<std::pair<std::size_t, u32>>());
-				path_and_agg_idxs.push_back(std::pair<const char *, u32>(sfp->local(), agg_file_idx));
+				m_agg_file_to_provider_files.push_back(std::vector<provider_file>());
+				path_and_agg_idxs.push_back(path_and_agg_idx(sfp->local(), agg_file_idx));
 			}
 
 			// (provider_idx, file_idx) maps to agg_file_idx
 			m_provider_file_to_agg_file[provider_idx].push_back(agg_file_idx);
 
 			// agg_file_idx maps to (provider_idx, file_idx)
-			// TODO: These pairs should be replaced with a struct
-			m_agg_file_to_provider_files[agg_file_idx].push_back(std::pair(provider_idx, file_idx));
+			m_agg_file_to_provider_files[agg_file_idx].push_back(provider_file(provider_idx, file_idx));
 		}
 	}
 }
