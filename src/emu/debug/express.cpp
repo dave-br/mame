@@ -597,6 +597,7 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 
 
 //-------------------------------------------------
+//  add - add a new local-fixed symbol
 //-------------------------------------------------
 
 symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
@@ -606,6 +607,7 @@ symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_
 
 
 //-------------------------------------------------
+//  add - add a new local-relative symbol
 //-------------------------------------------------
 
 symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values)
