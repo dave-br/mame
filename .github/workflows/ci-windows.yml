@@ -2,8 +2,6 @@ name: CI (Windows)
 
 on:
   push:
-    branches-ignore:
-      - 'pr-sd3-cleanup'
     paths:
     - '.github/workflows/**'
     - '3rdparty/**'
@@ -19,7 +17,6 @@ on:
     - 'src/**'
     - 'COPYING'
     - 'makefile'
-  workflow_dispatch:
 
 permissions:
   contents: read

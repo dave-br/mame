@@ -2,8 +2,6 @@ name: XML/JSON validation
 
 on:
   push:
-    branches-ignore:
-      - 'pr-sd3-cleanup'
     paths:
     - '.github/workflows/**'
     - 'ctrlr/*'

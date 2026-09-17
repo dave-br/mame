@@ -2,8 +2,6 @@ name: Build documentation
 
 on:
   push:
-    branches-ignore:
-      - 'pr-sd3-cleanup'
     paths:
     - '.github/workflows/**'
     - 'docs/**'
