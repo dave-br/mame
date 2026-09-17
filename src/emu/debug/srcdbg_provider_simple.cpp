@@ -325,6 +325,11 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 		{
 			// TODO: use this to get the shortname
 			state->device().type().shortname();
+			// or this to get the type I can compare with
+			// DECLARE_DEVICE_TYPE(MC6809, mc6809_device)
+			// DECLARE_DEVICE_TYPE(MC6809E, mc6809e_device)
+			// DECLARE_DEVICE_TYPE(M6809, m6809_device)
+			state->device().type();
 
 			// Create expression string that adds the register to the offset.
 			// - 'ns\' forces interpretation of register name to use the built-in
