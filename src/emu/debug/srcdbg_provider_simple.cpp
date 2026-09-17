@@ -16,7 +16,9 @@
 #include "emuopts.h"
 #include "fileio.h"
 #include "path.h"
+#include "../../devices/cpu/m6809/m6809.h"
 #include "debugger.h"
+#include "srcdbg_api.h"
 #include "srcdbg_info.h"
 
 #include "corestr.h"
@@ -83,6 +85,52 @@ static bool suffix_match(const char * full_string, const char * suffix, bool cas
 	}
 
 	return core_stricmp(full_string + full_string_length - suffix_length, suffix) == 0;
+}
+
+// Given a MAME_SRCDBG_REGISTER_* id, use the specified device_state_interface
+// to return the symbol for that register, usable in a debugger expression
+static bool symbol_from_reg_id(const device_state_interface * state, char reg_id, const char *& symbol)
+{
+	device_type dt = state->device().type();
+	if (dt == MC6809 || dt == MC6809E || dt == M6809)
+	{
+		struct m6809_reg_id_entry
+		{
+			char srcdbg_reg_id;
+			int m6809_reg_id;
+		};
+		m6809_reg_id_entry srcdbg_reg_id_to_m6809_reg_id[] =
+		{
+			{ MAME_SRCDBG_REGISTER_6809_PC, M6809_PC },
+			{ MAME_SRCDBG_REGISTER_6809_SP, M6809_S },
+			{ MAME_SRCDBG_REGISTER_6809_CC, M6809_CC },
+			{ MAME_SRCDBG_REGISTER_6809_A, 	M6809_A },
+			{ MAME_SRCDBG_REGISTER_6809_B, 	M6809_B },
+			{ MAME_SRCDBG_REGISTER_6809_D, 	M6809_D },
+			{ MAME_SRCDBG_REGISTER_6809_U, 	M6809_U },
+			{ MAME_SRCDBG_REGISTER_6809_X, 	M6809_X },
+			{ MAME_SRCDBG_REGISTER_6809_Y, 	M6809_Y },
+			{ MAME_SRCDBG_REGISTER_6809_DP, M6809_DP },
+		};
+
+		for (u32 i = 0; i < _countof(srcdbg_reg_id_to_m6809_reg_id); i++)
+		{
+			if (srcdbg_reg_id_to_m6809_reg_id[i].srcdbg_reg_id == reg_id)
+			{
+				symbol = state->state_find_entry(
+					srcdbg_reg_id_to_m6809_reg_id[i].m6809_reg_id)->symbol();
+				return true;
+			}
+		}
+	}
+	// else if (...)
+	// If new CPUs get srcdbg enabled, they can get their own else if clauses
+	// below.  Though if enough CPUs participate, it might make more sense
+	// to replace all this with a new override on device_state_interface
+	// which takes the srcdbg reg id and returns the symbol.  That data
+	// could be fed by calls to a new state_add overload.
+
+	return false;
 }
 
 
@@ -316,21 +364,13 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 {
 	assert (m_local_relative_symbols.empty());
 
-	device_state_interface * state = device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
+	const device_state_interface * state = device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
 
 	for (local_relative_symbol_internal sym_internal : m_local_relative_symbols_internal)
 	{
 		std::vector<symbol_table::local_range_expression> values;
 		for (local_relative_eval_rule_internal & eval_rule_internal : sym_internal.m_eval_rules)
 		{
-			// TODO: use this to get the shortname
-			state->device().type().shortname();
-			// or this to get the type I can compare with
-			// DECLARE_DEVICE_TYPE(MC6809, mc6809_device)
-			// DECLARE_DEVICE_TYPE(MC6809E, mc6809e_device)
-			// DECLARE_DEVICE_TYPE(M6809, m6809_device)
-			state->device().type();
-
 			// Create expression string that adds the register to the offset.
 			// - 'ns\' forces interpretation of register name to use the built-in
 			//   symbol, and not any conflicting source-level debugging symbols
@@ -339,23 +379,26 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 			//   cases on whether we need to subtract abs(reg offset) or just
 			//   add it.
 			// - Expression evaluator defaults to hex, so explicitly use # for decimal
-			std::string expr = util::string_format(
-				"(ns\\%s %s #%d)",
-				// TODO: AT THIS POINT, eval_rule_internal.m_reg is a srcdbg reg index
-				// Use state to convert that to the correct string
-				// Something like:
-				// state->state_find_entry_from_srcdbg if the onus is on state
-				// if the onus remains here, we'd need to *know* what cpu
-				// state is for, and switch off of that.
-				state->state_find_entry(eval_rule_internal.m_reg)->symbol(),
-				(eval_rule_internal.m_reg_offset < 0 ? "-" : "+"),
-				abs(eval_rule_internal.m_reg_offset));
-			symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
-			values.push_back(std::move(value));
+			const char * symbol;
+			// TODO: log warning somewher eif this returns fales?
+			if (symbol_from_reg_id(state, eval_rule_internal.m_reg, symbol))
+			{
+				std::string expr = util::string_format(
+					"(ns\\%s %s #%d)",
+					symbol,
+					(eval_rule_internal.m_reg_offset < 0 ? "-" : "+"),
+					abs(eval_rule_internal.m_reg_offset));
+				symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
+				values.push_back(std::move(value));
+			}
 		}
 
-		srcdbg_provider_base::local_relative_symbol sym(sym_internal.m_name, std::move(values));
-		m_local_relative_symbols.push_back(std::move(sym));
+		// Add the symbol if at least one eval rule was successfully generated
+		if (!values.empty())
+		{
+			srcdbg_provider_base::local_relative_symbol sym(sym_internal.m_name, std::move(values));
+			m_local_relative_symbols.push_back(std::move(sym));
+		}
 	}
 
 	m_local_relative_symbols_internal.clear();
