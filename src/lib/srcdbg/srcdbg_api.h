@@ -89,6 +89,15 @@ extern "C" {
 // TODO: MAME symbol evaluation assumes these values match those of each
 // enum under devices\cpu.  What is the best way to ensure this?  Should
 // those enums be lifted out into headers like this intended for 3rd-party tools?
+// Should have conversion occur in srcdbg_provider_simple::complete_local_relative_initialization
+// tho it would need to switch off of the current CPU type (tag?) to convert from above
+// defs to M6809_* enums from C:\GitHub\mame\src\devices\cpu\m6809\m6809.h
+//
+// or...
+// no reason we can't always ensure external defs match device enums
+// specifically cuz that's how mame evals device state.  Just add asserts
+// to run on startup, with comments in C:\GitHub\mame\src\devices\cpu\m6809\m6809.h
+// stating they have to match
 
 
 /*********************************************************************
