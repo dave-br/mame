@@ -675,11 +675,13 @@ void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info)
 		symbol_table::SRCDBG_LOCALS,
 		m_symtable_srcdbg_globals.get(),
 		&m_device);
+	m_symtable = m_symtable_srcdbg_locals.get();
+
+	// Populate the globals & locals symbol tables
 	srcdbg_info.get_srcdbg_symbols(
 		m_symtable_srcdbg_globals.get(),
 		m_symtable_srcdbg_locals.get(),
 		m_state);
-	m_symtable = m_symtable_srcdbg_locals.get();
 }
 
 
