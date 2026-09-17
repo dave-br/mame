@@ -74,30 +74,19 @@ extern "C" {
 #endif
 
 /* For tools targeting 6809, these values are for the reg parameter to
-   mame_srcdbg_simp_add_local_relative_symbol() */
-
-#define MAME_SRCDBG_REGISTER_6809_PC    -1
-#define MAME_SRCDBG_REGISTER_6809_SP    0
-#define MAME_SRCDBG_REGISTER_6809_CC    1
-#define MAME_SRCDBG_REGISTER_6809_A     2
-#define MAME_SRCDBG_REGISTER_6809_B     3
-#define MAME_SRCDBG_REGISTER_6809_D     4
-#define MAME_SRCDBG_REGISTER_6809_U     5
-#define MAME_SRCDBG_REGISTER_6809_X     6
-#define MAME_SRCDBG_REGISTER_6809_Y     7
-#define MAME_SRCDBG_REGISTER_6809_DP    8
-// TODO: MAME symbol evaluation assumes these values match those of each
-// enum under devices\cpu.  What is the best way to ensure this?  Should
-// those enums be lifted out into headers like this intended for 3rd-party tools?
-// Should have conversion occur in srcdbg_provider_simple::complete_local_relative_initialization
-// tho it would need to switch off of the current CPU type (tag?) to convert from above
-// defs to M6809_* enums from C:\GitHub\mame\src\devices\cpu\m6809\m6809.h
-//
-// or...
-// no reason we can't always ensure external defs match device enums
-// specifically cuz that's how mame evals device state.  Just add asserts
-// to run on startup, with comments in C:\GitHub\mame\src\devices\cpu\m6809\m6809.h
-// stating they have to match
+   mame_srcdbg_simp_add_local_relative_symbol().
+   Note: Where there is register overlap with existing Motorola embedded
+   processor ABIs, numbers are kept the same   */
+#define MAME_SRCDBG_REGISTER_6809_A     0
+#define MAME_SRCDBG_REGISTER_6809_B     1
+#define MAME_SRCDBG_REGISTER_6809_D     3
+#define MAME_SRCDBG_REGISTER_6809_X     7
+#define MAME_SRCDBG_REGISTER_6809_Y     8
+#define MAME_SRCDBG_REGISTER_6809_U     14
+#define MAME_SRCDBG_REGISTER_6809_SP    15
+#define MAME_SRCDBG_REGISTER_6809_PC    16
+#define MAME_SRCDBG_REGISTER_6809_CC    17
+#define MAME_SRCDBG_REGISTER_6809_DP    31
 
 
 /*********************************************************************
