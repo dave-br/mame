@@ -26,6 +26,12 @@
 #include <filesystem>
 #include <sstream>
 
+#define LOG_WARNING		(1U << 1)
+// need to set LOG_OUTPUT_FUNC or LOG_OUTPUT_STREAM because there's no logerror outside devices
+#define LOG_OUTPUT_FUNC	osd_printf_verbose
+#define VERBOSE			(0)
+#include "logmacro.h"
+
 
 // ------------------------------------------------------------------------------------
 // Static helpers
@@ -380,7 +386,6 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 			//   add it.
 			// - Expression evaluator defaults to hex, so explicitly use # for decimal
 			const char * symbol;
-			// TODO: log warning somewher eif this returns fales?
 			if (symbol_from_reg_id(state, eval_rule_internal.m_reg, symbol))
 			{
 				std::string expr = util::string_format(
@@ -391,6 +396,14 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 				symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
 				values.push_back(std::move(value));
 			}
+			else
+			{
+				LOGMASKED(
+					LOG_WARNING,
+					"Local relative '%s' warning: cannot find register ID %d\n",
+					sym_internal.m_name,
+					eval_rule_internal.m_reg);
+			}
 		}
 
 		// Add the symbol if at least one eval rule was successfully generated
@@ -398,6 +411,13 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 		{
 			srcdbg_provider_base::local_relative_symbol sym(sym_internal.m_name, std::move(values));
 			m_local_relative_symbols.push_back(std::move(sym));
+		}
+		else
+		{
+			LOGMASKED(
+				LOG_WARNING,
+				"Local relative '%s' warning: symbol will be omitted; no scopes with a valid register ID found\n",
+				sym_internal.m_name);
 		}
 	}
 
