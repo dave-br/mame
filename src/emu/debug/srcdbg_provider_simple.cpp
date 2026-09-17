@@ -333,6 +333,12 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 			// - Expression evaluator defaults to hex, so explicitly use # for decimal
 			std::string expr = util::string_format(
 				"(ns\\%s %s #%d)",
+				// TODO: AT THIS POINT, eval_rule_internal.m_reg is a srcdbg reg index
+				// Use state to convert that to the correct string
+				// Something like:
+				// state->state_find_entry_from_srcdbg if the onus is on state
+				// if the onus remains here, we'd need to *know* what cpu
+				// state is for, and switch off of that.
 				state->state_find_entry(eval_rule_internal.m_reg)->symbol(),
 				(eval_rule_internal.m_reg_offset < 0 ? "-" : "+"),
 				abs(eval_rule_internal.m_reg_offset));
