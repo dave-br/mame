@@ -29,6 +29,10 @@
 #include <algorithm>
 
 
+// ------------------------------------------------------------------------------------
+// Static helpers
+// ------------------------------------------------------------------------------------
+
 // Simple wrapper around std::find
 template<typename T>
 static std::size_t find(const std::vector<T> & vec, const T & elem)
@@ -58,10 +62,13 @@ static std::size_t find_or_push_back(std::vector<std::string> & vec, const char 
 }
 
 
-
+// ------------------------------------------------------------------------------------
+// writer_importer
 // Implementation of srcdbg_format_reader_callback used when the writer needs
 // to import a previously-written MDI (mame_srcdbg_simp_import API), e.g., to
 // facilitate linking
+// ------------------------------------------------------------------------------------
+
 class writer_importer : public srcdbg_format_reader_callback
 {
 public:
@@ -305,6 +312,8 @@ int srcdbg_simple_generator::add_local_relative_symbol(const char * symbol_name,
 	return MAME_SRCDBG_E_SUCCESS;
 }
 
+// Import a previously generated debugging information file into the file
+// we're currently writing
 int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, short offset, char * error_details, unsigned int num_bytes_error_details)
 {
 	std::string error;
@@ -355,10 +364,9 @@ int srcdbg_simple_generator::import(const char * srcdbg_file_path_to_import, sho
 	// Unreachable
 }
 
+// Write all buffered contents to file
 int srcdbg_simple_generator::close()
 {
-	// Write all buffered contents to file
-
 	// Header
 	m_header.source_file_paths_size = little_endianize_int32(m_header.source_file_paths_size);
 	m_header.num_line_mappings = little_endianize_int32(m_header.num_line_mappings);

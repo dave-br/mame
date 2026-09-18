@@ -28,8 +28,8 @@ public:
 	line_indexed_file();
 	~line_indexed_file() { };
 	std::error_condition open(const char * file_path, int spaces_per_tab);
-	int num_lines() { return m_line_starts.size(); };
-	const char * get_line_text(unsigned int n) { return (const char *) &m_data[m_line_starts[n-1]]; };
+	int num_lines() const { return m_line_starts.size(); };
+	const char * get_line_text(unsigned int n) const { return (const char *) &m_data[m_line_starts[n-1]]; };
 
 private:
 	std::vector<uint8_t> m_data;

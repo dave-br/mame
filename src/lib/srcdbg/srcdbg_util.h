@@ -34,9 +34,9 @@ using osd::s64;
 // Like sprintf, but for std::string
 void srcdbg_sprintf(std::string & out, const char * format, ...);
 
-// osdcomm.h macros take arch-friendly numbers and convert
+// osdcomm.h macros take host-arch-friendly numbers and convert
 // them to big / little endian.  These convert a known
-// endian (little) to arch-friendly numbers.
+// endian (little) to host-arch-friendly numbers.
 #ifdef LSB_FIRST
 constexpr u16 from_little_endian16(u16 x) { return x; }
 constexpr u32 from_little_endian32(u32 x) { return x; }

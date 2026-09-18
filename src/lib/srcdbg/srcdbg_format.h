@@ -27,6 +27,33 @@
 
 #pragma pack(push, 1)
 
+
+/*
+    mame_debug_info_simple format is composed from structs below as follows:
+
+    mame_debug_info_simple_header   header
+    char                            source_file_paths[][]
+    srcdbg_line_mapping             line_mappings[num_line_mappings]
+    char                            symbol_names[][]
+    global_fixed_symbol_value       global_fixed_symbol_values[num_global_fixed_symbol_values]
+    local_fixed_symbol_value        local_fixed_symbol_values[]
+    local_relative_symbol_value     local_relative_symbol_values[]
+
+    Description:
+    - Each source_file_paths[i] is a null-terminated string path to a source file.  The
+      first dimension index fits into an unsigned int.
+    - line_mappings need not be in any order
+    - There may be 0, 1, or more line_mappings entries per source file / line number pair,
+      and only for line numbers corresponding to the first byte of a range of machine-language instructions.
+    - No two line_mappings entries should have intersecting address ranges.
+    - A symbol name may not appear in multiple global_fixed_symbol_values entries, or in
+        both a global_fixed_symbol_values entry and one of the local_* entries.
+    - A symbol name may appear in multiple entries of local_fixed_symbol_values[] and
+        local_relative_symbol_values[], but not with intersecting scope address ranges.
+    - There is no compiler padding in these structures
+*/
+
+
 /* All mame debug info headers start with this */
 typedef struct
 {
@@ -145,7 +172,7 @@ typedef struct
 	/* Address range for which this eval rule is valid */
 	address_range range;
 
-	/* Register identifier this symbol is offset from.  See list of MAME_DBGSRC_REGISTER_*
+	/* Register identifier this symbol is offset from.  See list of MAME_SRCDBG_REGISTER_*
 	   values from srcdbg_api.h */
 	unsigned char reg;
 
@@ -165,31 +192,6 @@ typedef struct
 	/* Evaluation rules for calculating this symbol's values */
 	local_relative_eval_rule local_relative_eval_rules[0];     /* Actual array length should be num_local_relative_eval_rules */
 } local_relative_symbol_value;
-
-/*
-    mame_debug_info_simple format is composed from above structs as follows:
-
-    mame_debug_info_simple_header   header
-    char                            source_file_paths[][]
-    srcdbg_line_mapping             line_mappings[num_line_mappings]
-    char                            symbol_names[][]
-    global_fixed_symbol_value       global_fixed_symbol_values[num_global_fixed_symbol_values]
-    local_fixed_symbol_value        local_fixed_symbol_values[]
-    local_relative_symbol_value     local_relative_symbol_values[]
-
-    Description:
-    - Each source_file_paths[i] is a null-terminated string path to a source file.  The
-      first dimension index fits into an unsigned int.
-    - line_mappings need not be in any order
-    - There may be 0, 1, or more line_mappings entries per source file / line number pair,
-      and only for line numbers corresponding to the first byte of a range of machine-language instructions.
-    - No two line_mappings entries should have intersecting address ranges.
-    - A symbol name may not appear in multiple global_fixed_symbol_values entries, or in
-        both a global_fixed_symbol_values entry and one of the local_* entries.
-    - A symbol name may appear in multiple entries of local_fixed_symbol_values[] and
-        local_relative_symbol_values[], but not with intersecting scope address ranges.
-    - There is no compiler padding in these structures
-*/
 
 #pragma pack(pop)
 

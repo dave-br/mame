@@ -163,7 +163,7 @@ end
 
 -- Static & shared library to help assemblers / compilers generate
 -- MAME source-level debugging information files.
--- Note: These needs to be self-contained, with no reliance on other
+-- Note: These need to be self-contained, with no reliance on other
 -- libraries (except C/C++ std libs) for easy consumption by external tools
 
 -- Bump this for breaking changes (avoid!)
