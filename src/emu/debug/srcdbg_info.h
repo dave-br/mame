@@ -65,7 +65,7 @@ public:
 
 	enum class disenable_retcode { SUCCESS, BAD_IDX, NO_CHANGE };
 
-	static std::unique_ptr<srcdbg_info> create_debug_info(running_machine &machine);
+	static srcdbg_info * create_debug_info(running_machine &machine);
 
 	srcdbg_info(const running_machine& machine);
 	~srcdbg_info() { }

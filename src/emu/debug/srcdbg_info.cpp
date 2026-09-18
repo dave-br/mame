@@ -28,7 +28,7 @@
 //-------------------------------------------------
 
 // static 
-std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &machine)
+srcdbg_info * srcdbg_info::create_debug_info(running_machine &machine)
 {
 	// Get paths to all srcdbg info files specified on command line
 	const char * di_paths = machine.options().srcdbginfo();
@@ -38,7 +38,7 @@ std::unique_ptr<srcdbg_info> srcdbg_info::create_debug_info(running_machine &mac
 	}
 
 	// Instantiate aggregator to return
-	std::unique_ptr<srcdbg_info> ret = std::make_unique<srcdbg_info>(machine);
+	srcdbg_info * ret = new srcdbg_info(machine);
 
 	// Load each file
 	path_iterator path_it(di_paths);
