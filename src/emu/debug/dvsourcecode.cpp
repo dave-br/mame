@@ -9,10 +9,12 @@
 ***************************************************************************/
 
 #include "emu.h"
+
 #include "dvsourcecode.h"
 #include "debugger.h"
 #include "srcdbg_info.h"
 #include "srcdbg_provider.h"
+
 #include "emuopts.h"
 #include "line_idx_file.h"
 
@@ -45,6 +47,7 @@ debug_view_sourcecode::debug_view_sourcecode(running_machine &machine, debug_vie
 debug_view_sourcecode::~debug_view_sourcecode()
 {
 }
+
 
 //-------------------------------------------------
 //  selected_address - return the PC of the
@@ -114,17 +117,6 @@ bool debug_view_sourcecode::update_opened_file()
 
 
 //-------------------------------------------------
-// set_source - Update m_state with the
-// specified debug_view_source
-//-------------------------------------------------
-
-void debug_view_sourcecode::set_source(const debug_view_source &source)
-{
-	source.device()->interface(m_state);
-}
-
-
-//-------------------------------------------------
 // view_update - update the contents of the
 // source code view
 //-------------------------------------------------
@@ -178,6 +170,11 @@ void debug_view_sourcecode::view_update()
 	viewdata_text_update(pc_changed, pc);
 }
 
+
+//-------------------------------------------------
+// viewdata_text_update - Helper for view_update
+// to do the actual printing of the source file 
+//-------------------------------------------------
 
 void debug_view_sourcecode::viewdata_text_update(bool pc_changed, offs_t pc)
 {
@@ -418,6 +415,14 @@ void debug_view_sourcecode::set_src_index(u16 new_src_index)
 	// No need to call view_notify()
 	end_update();
 }
+
+
+//-------------------------------------------------
+// update_gui_needs_full_refresh - Returns tracked bool
+// indicating whether OSD GUI should do a full refresh
+// (including repopulating the source file combo box),
+// then resets the tracked bool.
+//-------------------------------------------------
 
 bool debug_view_sourcecode::update_gui_needs_full_refresh()
 {

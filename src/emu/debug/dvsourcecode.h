@@ -45,7 +45,6 @@ protected:
 	virtual ~debug_view_sourcecode();
 
 	// view overrides
-	virtual void set_source(const debug_view_source &source) override;
 	virtual void view_update() override;
 
 private:
@@ -62,13 +61,13 @@ private:
 	void update_visible_lines(offs_t pc);
 	bool exists_bp_for_line(u16 src_index, u32 line);
 
-	const device_state_interface *                    m_state;                 // state interface, if present
-	srcdbg_info *                                     m_srcdbg_info;           // Interface to the loaded debugging info file, can be null!
-	u16                                               m_cur_src_index;         // Identifies which source file we should now show / switch to
-	u16                                               m_displayed_src_index;   // Identifies which source file is currently shown
-	std::unique_ptr<util::line_indexed_file>          m_displayed_src_file;    // File object currently printed to the view
-	std::optional<u32>                                m_line_for_cur_pc;       // Line number to be highlighted
-	bool                                              m_gui_needs_full_refresh;
+	const device_state_interface *                    m_state;                  // state interface, if present
+	srcdbg_info *                                     m_srcdbg_info;            // Interface to the loaded debugging info files, can be null!
+	u16                                               m_cur_src_index;          // Identifies which source file we should now show / switch to
+	u16                                               m_displayed_src_index;    // Identifies which source file is currently shown
+	std::unique_ptr<util::line_indexed_file>          m_displayed_src_file;     // File object currently printed to the view
+	std::optional<u32>                                m_line_for_cur_pc;        // Line number to be highlighted
+	bool                                              m_gui_needs_full_refresh; // Internal bool tracking whether OSD GUI needs to do a full refresh
 };
 
 #endif // MAME_EMU_DEBUG_DVSOURCE_H

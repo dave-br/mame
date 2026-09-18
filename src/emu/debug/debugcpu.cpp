@@ -500,12 +500,13 @@ device_debug::device_debug(device_t &device)
 	, m_disasm(nullptr)
 	, m_flags(0)
 	, m_symtable_device(nullptr)
-	, m_symtable_srcdbg_globals()
-	, m_symtable_srcdbg_locals()
+	, m_symtable_srcdbg_globals(nullptr)
+	, m_symtable_srcdbg_locals(nullptr)
+	, m_symtable(nullptr)
 	, m_stepaddr(0)
 	, m_stepsleft(0)
 	, m_delay_steps(0)
-	, m_step_source_start()
+	, m_step_source_start(nullptr)
 	, m_outs_encountered_return(false)
 	, m_stopaddr(0)
 	, m_stoptime(attotime::zero)
@@ -551,8 +552,6 @@ device_debug::device_debug(device_t &device)
 				m_notifiers.emplace_back();
 	}
 
-	m_symtable = m_symtable_device.get();
-
 	// set up state-related stuff
 	if (m_state != nullptr)
 	{
@@ -591,7 +590,8 @@ device_debug::device_debug(device_t &device)
 							[&space = m_memory->space(AS_OPCODES)] (u64 value) { return space.set_log_unmap(bool(value)); });
 			}
 
-			// Add symbols from source-level debugging information file
+			// If there are symbols from source-level debugging information, add them
+			// at the front of the chain and reposition m_symtable
 			if (strcmp(m_device.basetag(), "maincpu") == 0 &&
 				(m_device.machine().debugger().get_srcdbg_info() != nullptr))
 			{
@@ -2311,6 +2311,12 @@ void device_debug::tracer::update(offs_t pc)
 	m_history[m_nextdex] = pc;
 	m_file->flush();
 }
+
+
+//-------------------------------------------------
+//  get_srcdbg_line - given a pc, find the
+//	corresponding source line
+//-------------------------------------------------
 
 void device_debug::tracer::get_srcdbg_line(offs_t pc, std::string & srcdbg_line)
 {

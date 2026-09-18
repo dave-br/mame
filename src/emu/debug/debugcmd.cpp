@@ -18,7 +18,6 @@
 #include "debugvw.h"
 #include "express.h"
 #include "points.h"
-// #include "srcdbg_provider.h"
 #include "srcdbg_info.h"
 
 #include "debugger.h"
@@ -1333,6 +1332,12 @@ void debugger_commands::execute_srcdbg_set_offset(const std::vector<std::string_
 	m_console.printf("Offset successfully applied\n");
 }
 
+//-------------------------------------------------
+//  execute_srcdbg_provider_list - execute the
+//  source-level debugging sdlist command to show
+// 	all loaded srcdbg providers
+//-------------------------------------------------
+
 void debugger_commands::execute_srcdbg_provider_list(const std::vector<std::string_view> &)
 {
 	srcdbg_info * srcdbg = m_machine.debugger().get_srcdbg_info();
@@ -1349,6 +1354,14 @@ void debugger_commands::execute_srcdbg_provider_list(const std::vector<std::stri
 		m_console.printf("%c%4X : %s\n", sp.enabled() ? ' ' : 'D', provider_idx, sp.name());
 	}
 }
+
+//-------------------------------------------------
+//  execute_srcdbg_provider_list - execute the
+//  source-level debugging sdenable / sddisable
+//  commands to selectively enable or disable a
+//	loaded srcdbg provider, to allow for
+//	MMU-aware debugging
+//-------------------------------------------------
 
 void debugger_commands::execute_srcdbg_provider_disenable(bool enable, const std::vector<std::string_view> &params)
 {
