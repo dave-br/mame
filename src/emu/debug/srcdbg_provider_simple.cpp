@@ -43,6 +43,7 @@
 #define PATH_PREFIX_COMPARE strncmp
 #endif
 
+// Normalize path separators for easier comparisons
 static void normalize_path_separators(std::string & path)
 {
 	strreplace(path, "/", PATH_SEPARATOR);

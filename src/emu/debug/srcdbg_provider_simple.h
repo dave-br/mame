@@ -79,7 +79,7 @@ private:
 };
 
 
-// Callbacks implementation for reading the "simple" source-debugging
+// Implementation of callbacks for reading the "simple" source-debugging
 // information file format, and importing it into srcdbg_provider_simple
 class srcdbg_import : public srcdbg_format_reader_callback
 {
