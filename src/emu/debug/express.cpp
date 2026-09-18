@@ -288,7 +288,6 @@ private:
 	symbol_table::getter_func m_get_pc;
 	const std::vector<std::pair<offs_t,offs_t>> & m_scope_ranges;
 	u64 m_value_integer;
-	std::string m_value_expression;
 };
 
 
