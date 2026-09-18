@@ -119,7 +119,7 @@ static bool symbol_from_reg_id(const device_state_interface * state, char reg_id
 			{ MAME_SRCDBG_REGISTER_6809_DP, M6809_DP },
 		};
 
-		for (u32 i = 0; i < _countof(srcdbg_reg_id_to_m6809_reg_id); i++)
+		for (u32 i = 0; i < std::size(srcdbg_reg_id_to_m6809_reg_id); i++)
 		{
 			if (srcdbg_reg_id_to_m6809_reg_id[i].srcdbg_reg_id == reg_id)
 			{
