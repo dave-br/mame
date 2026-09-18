@@ -107,7 +107,7 @@ private:
 	void coalesce();
 	bool file_index_to_provider_files(u32 file_index, std::vector<provider_file> & ret) const;
 
-	// agg file index to list of pairs of provider index + local file index
+	// agg file index to list of (provider index, local file index) pairs
 	// [agg_file] = { (provider_idx, local_file_idx), ... }
 	std::vector<std::vector<provider_file>>  m_agg_file_to_provider_files;
 	

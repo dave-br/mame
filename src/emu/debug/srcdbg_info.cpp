@@ -390,7 +390,7 @@ void srcdbg_info::coalesce()
 			// (provider_idx, file_idx) maps to agg_file_idx
 			m_provider_file_to_agg_file[provider_idx].push_back(agg_file_idx);
 
-			// agg_file_idx maps to (provider_idx, file_idx)
+			// To the agg_file_idx list, append (provider_idx, file_idx)
 			m_agg_file_to_provider_files[agg_file_idx].push_back(provider_file(provider_idx, file_idx));
 		}
 	}

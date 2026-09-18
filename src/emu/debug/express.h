@@ -188,6 +188,7 @@ public:
 						   // (also used for tables outside debugger: lua scripts, cheat engine)
 	};
 
+	// local_range_expression pairs an expression with an address range
 	class local_range_expression
 	{
 	public:
