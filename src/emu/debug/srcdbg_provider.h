@@ -60,7 +60,7 @@ private:
 };
 
 
-// Each source-debugging information file format derives from this
+// Each source-debugging information file format provider derives from this
 // abstract base class to provide debugging information to the rest of
 // the debugger
 class srcdbg_provider_base
@@ -69,7 +69,7 @@ public:
 	// Represents a single source file to be debugged.  Includes the original
 	// "built" path (as output by the assembler / compiler that generated the
 	// source-debugging information file), and a "local" path as it appears on
-	// the MAME user's system.  These can be different when the debugged
+	// the MAME user's host system.  These can be different when the debugged
 	// program was built on a different system from the one in which MAME runs
 	class source_file_path
 	{
@@ -91,7 +91,7 @@ public:
 
 	// Represents a global fixed symbol to the rest of the debugger.  Such symbols
 	// are not limited to a scope, and represent a single value (such as a
-	// single variable address)
+	// single variable address or label)
 	class global_fixed_symbol
 	{
 	public:
@@ -158,16 +158,18 @@ public:
 		std::vector<symbol_table::local_range_expression> m_ranges;
 	};
 
+	
 	typedef std::pair<offs_t,offs_t> address_range;
+
 
 	// ------------------------------------------------------------------------
 	// Base implementation
 	// ------------------------------------------------------------------------
 
 
-	// Helper called by the public create_debug_info to create potentially
-	// many srcdbg_provider_base instances, based on how many MDI files
-	// are specified by the user
+	// Factory called by srcdbg_info::create_debug_info to read a debugging
+	// information file and construct an instance of a concrete subclass
+	// of srcdbg_provider_base from it
 	static srcdbg_provider_base * create_debug_info(running_machine &machine, const std::string & di_path);
 
 	srcdbg_provider_base();

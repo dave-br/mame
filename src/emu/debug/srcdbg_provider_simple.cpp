@@ -51,6 +51,8 @@ static void normalize_path_separators(std::string & path)
 }
 
 
+// This normalizes the path map (which maps built paths to local paths)
+// by normalizing each member path
 static void normalize_path_map(std::string & path_map)
 {
 	if (path_map.empty())
@@ -133,7 +135,7 @@ static bool symbol_from_reg_id(const device_state_interface * state, char reg_id
 	// else if (...)
 	// If new CPUs get srcdbg enabled, they can get their own else if clauses
 	// below.  Though if enough CPUs participate, it might make more sense
-	// to replace all this with a new override on device_state_interface
+	// to replace all this with a new virtual on device_state_interface
 	// which takes the srcdbg reg id and returns the symbol.  That data
 	// could be fed by calls to a new state_add overload.
 
@@ -143,6 +145,8 @@ static bool symbol_from_reg_id(const device_state_interface * state, char reg_id
 
 // ------------------------------------------------------------------------------------
 // srcdbg_import class (callbacks) implementation
+// An instance of this is passed to srcdbg_format_simp_read to populate
+// srcdbg_provider_simple with contents from the debugging info file
 // ------------------------------------------------------------------------------------
 
 
@@ -281,7 +285,7 @@ bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_sym
 
 // Helper to take the source file's "built" path (as output by the assembler / compiler
 // that generated the source-debugging information file), and find the local path
-// on the MAME user's system where the source file can be found.
+// on the MAME user's host system where the source file can be found.
 // Makes use of (1) the source prefix map (specified by the user, which replaces a
 // left substring of a built path with a local-friendly substring, e.g., to change
 // drive letters or parent folders), and (2) a source file search path (set of
