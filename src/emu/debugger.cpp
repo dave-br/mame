@@ -66,7 +66,7 @@ debugger_manager::debugger_manager(running_machine &machine)
 	/* initialize the submodules */
 	m_cpu = std::make_unique<debugger_cpu>(machine);
 	m_console = std::make_unique<debugger_console>(machine);
-	m_debug_info = std::make_unique<srcdbg_info>(srcdbg_info::create_debug_info(machine));
+	m_debug_info = std::unique_ptr<srcdbg_info>(srcdbg_info::create_debug_info(machine));
 	m_commands = std::make_unique<debugger_commands>(machine, cpu(), console());
 
 	g_machine = &machine;

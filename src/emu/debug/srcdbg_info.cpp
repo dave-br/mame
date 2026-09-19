@@ -21,10 +21,12 @@
 #include <filesystem>
 
 //-------------------------------------------------
-// create_debug_info - Factory
-// to instantiate srcdbg_info, which in turn calls factories that
+// create_debug_info - Factory to instantiate
+// srcdbg_info, which in turn calls factories that
 // load individual srcdbg info files and instantiate their 
-// srcdbg_provider_base implementations
+// srcdbg_provider_base implementations.  This
+// returns nullptr if there's an error or the user
+// is not running with source-debugging enabled.
 //-------------------------------------------------
 
 // static 
