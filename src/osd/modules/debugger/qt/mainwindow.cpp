@@ -681,5 +681,4 @@ ProcessorDockWidget::~ProcessorDockWidget()
 {
 }
 
-
 } // namespace osd::debugger::qt
