@@ -68,7 +68,7 @@ private:
 	void open_image_file(device_image_interface &device);
 	void create_image_file(device_image_interface &device);
 	bool get_softlist_info(device_image_interface &img);
-	bool show_src_window();
+	void show_src_window();
 	void hide_src_window();
 
 	device_t *m_current_cpu;

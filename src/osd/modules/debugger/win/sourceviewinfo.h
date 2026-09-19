@@ -15,8 +15,9 @@
 
 namespace osd::debugger::win {
 
-// Manages GUI half of source code view.  Shares code with disasmview_info, especially
-// for breakpoint handling, but with some customizations
+// view_info class for managing source-code-level debugging.  Shares
+// code with disasmview_info, especially for breakpoint handling,
+// but with some customizations
 class sourceview_info : public disasmview_info
 {
 public:

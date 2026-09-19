@@ -209,6 +209,4 @@ int main(int argc, char *argv[])
 		assert(!"Unexpected source-level debugging information file format");
 		return 1;
 	}
-
-	// return 0;
 }

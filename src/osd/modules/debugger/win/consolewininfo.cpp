@@ -230,9 +230,10 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	m_views[VIEW_IDX_SOURCE].reset(new sourceview_info(debugger, *this, window()));
 	if (!m_views[VIEW_IDX_SOURCE]->is_valid())
 		goto cleanup;
-	m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
+	// m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
 	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->
 		create_source_file_combobox(window(), (LONG_PTR)this);
+
 	{
 		// add image menu only if image devices exist
 		image_interface_enumerator iter(machine().root_device());
@@ -301,7 +302,9 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	// mark the edit box as the default focus and set it
 	editwin_info::set_default_focus();
 
+	// Show disassembly view on startup
 	hide_src_window();
+
 	return;
 
 cleanup:
@@ -316,6 +319,9 @@ consolewin_info::~consolewin_info()
 {
 }
 
+
+// When routing messages, calculating sizes, etc., use the view that's
+// visible (disassembly vs. source)
 int consolewin_info::expression_view_index() const
 {
 	return
@@ -388,8 +394,8 @@ void consolewin_info::recompute_children()
 	conrect.left = regrect.right + (EDGE_WIDTH * 2);
 	conrect.right = parent.right - EDGE_WIDTH;
 
-	// Source-level debugging occupies same space as disassembly
-	// source file combo box gets full width
+	// Source-level debugging occupies same space as disassembly.
+	// Source file combo box gets full width
 	RECT comborect;
 	comborect.top = disrect.top + EDGE_WIDTH;
 	comborect.bottom = comborect.top + metrics().debug_font_height() + 4;
@@ -611,11 +617,9 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 			debugger().set_color_theme(debugger_preferences::THEME_DARK_BACKGROUND);
 			return true;
 		case ID_SHOW_SOURCE:
-			if (show_src_window())
-			{
-				m_views[VIEW_IDX_DISASM]->hide();
-				machine().debug_view().update_all(DVT_SOURCE);
-			}
+			show_src_window();
+			m_views[VIEW_IDX_DISASM]->hide();
+			machine().debug_view().update_all(DVT_SOURCE);
 			return true;
 		case ID_SHOW_DISASM:
 			hide_src_window();
@@ -643,7 +647,6 @@ bool consolewin_info::handle_command(WPARAM wparam, LPARAM lparam)
 		return true;
 	}
 	}
-
 	return disasmbasewin_info::handle_command(wparam, lparam);
 }
 
@@ -653,14 +656,13 @@ bool consolewin_info::source_stepping_active()
 		m_views[VIEW_IDX_SOURCE]->is_visible();
 }
 
-bool consolewin_info::show_src_window()
+void consolewin_info::show_src_window()
 {
 	m_views[VIEW_IDX_SOURCE]->show();
 	if (machine().debugger().get_srcdbg_info() != nullptr)
 	{
 		smart_show_window(m_filecombownd, true);
 	}
-	return true;
 }
 
 void consolewin_info::hide_src_window()

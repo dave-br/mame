@@ -374,6 +374,7 @@ ui_metrics const & debugview_info::metrics() const
 	 return m_owner.metrics(); 
 }
 
+
 void debugview_info::add_items_to_context_menu(HMENU menu)
 {
 	AppendMenu(menu, MF_ENABLED, ID_CONTEXT_COPY_VISIBLE, TEXT("Copy Visible"));

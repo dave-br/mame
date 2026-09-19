@@ -150,7 +150,6 @@ protected:
 
 	virtual void save_configuration_to_node(util::xml::data_node &node);
 
-
 	std::unique_ptr<debugview_info>    m_views[MAX_VIEWS];
 
 private:
