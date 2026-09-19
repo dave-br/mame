@@ -45,6 +45,7 @@ protected:
 	virtual ~debug_view_sourcecode();
 
 	// view overrides
+	virtual void set_source(const debug_view_source &source) override;
 	virtual void view_update() override;
 
 private:

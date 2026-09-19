@@ -230,7 +230,11 @@ consolewin_info::consolewin_info(debugger_windows_interface &debugger) :
 	m_views[VIEW_IDX_SOURCE].reset(new sourceview_info(debugger, *this, window()));
 	if (!m_views[VIEW_IDX_SOURCE]->is_valid())
 		goto cleanup;
-	// m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
+
+	// Allow debug_view_sourcecode to init its reference to the visible device_state_interface
+	m_views[VIEW_IDX_SOURCE]->set_source_for_visible_cpu();
+
+	// Create source-debugging source-file selector combo box
 	m_filecombownd = downcast<sourceview_info *>(m_views[VIEW_IDX_SOURCE].get())->
 		create_source_file_combobox(window(), (LONG_PTR)this);
 

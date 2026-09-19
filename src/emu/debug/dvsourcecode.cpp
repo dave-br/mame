@@ -117,6 +117,17 @@ bool debug_view_sourcecode::update_opened_file()
 
 
 //-------------------------------------------------
+// set_source - Update m_state with the
+// specified debug_view_source
+//-------------------------------------------------
+
+void debug_view_sourcecode::set_source(const debug_view_source &source)
+{
+	source.device()->interface(m_state);
+}
+
+
+//-------------------------------------------------
 // view_update - update the contents of the
 // source code view
 //-------------------------------------------------
