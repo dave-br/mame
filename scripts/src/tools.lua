@@ -841,10 +841,15 @@ if _OPTIONS["SEPARATE_BIN"]~="1" then
 end
 
 links {
-	"utils",
-	"mame_srcdbg_static",
-	"ocore_" .. _OPTIONS["osd"],
-	ext_lib("utf8proc"),
+    "utils",
+    "mame_srcdbg_static",
+    "7z",
+    "ocore_" .. _OPTIONS["osd"],
+    ext_lib("expat"),
+    ext_lib("zlib"),
+    ext_lib("zstd"),
+    ext_lib("flac"),
+    ext_lib("utf8proc"),
 }
 
 includedirs {
@@ -856,6 +861,9 @@ includedirs {
 files {
 	MAME_DIR .. "src/tools/srcdbgdump.cpp",
 }
+
+configuration { "mingw*" or "vs*" }
+	targetextension ".exe"
 
 configuration { }
 
