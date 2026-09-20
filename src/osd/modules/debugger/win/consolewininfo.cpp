@@ -343,6 +343,7 @@ void consolewin_info::set_cpu(device_t &device)
 		m_current_cpu = &device;
 
 		// first set all the views to the new cpu number
+		m_views[VIEW_IDX_SOURCE]->set_source_for_device(device);
 		m_views[VIEW_IDX_DISASM]->set_source_for_device(device);
 		m_views[VIEW_IDX_STATE]->set_source_for_device(device);
 
