@@ -3958,9 +3958,16 @@ Core Communication Options
 
 .. _mame-commandline-srcdbginfo:
 
-**-src_debug_info** *<path>*
+**-src_debug_info** *<paths>*
 
-    Enable :ref:`source-level debugging <srcdbg>`.  *<path>* is a path to the :ref:`MAME Debugging Information File <srcdbg_mdi>`
+    Enable :ref:`source-level debugging <srcdbg>`.  *<paths>* is a
+    semicolon-separated list of one or more
+    paths to :ref:`MAME Debugging Information Files <srcdbg_mdi>`.  Typically only
+    one path is needed, but if the debugged application employs bank-switching on
+    an emulated memory management unit to swap code in and out of the logical address
+    space, specifying multiple paths here can make debugging that scenario more
+    convenient.  See :ref:`Bank switching and MMU-aware debugging <srcdbg_mmuaware>`
+    for more information.
 
     By default, source-level debugging is disabled.
 
@@ -4031,6 +4038,24 @@ Core Communication Options
         .. code-block:: bash
 
             mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_offset 57344
+
+.. _mame-commandline-srcdbgtabs:
+
+**-src_debug_spaces_per_tab** *<value>*
+
+    If :ref:`source-level debugging <srcdbg>` is enabled, tab characters
+    from the source file are replaced with spaces to form equally-spaced
+    tab stops when the
+    source file is displayed in the source-level debugging view, and when lines
+    from the source file are printed to the trace file.  This option customizes
+    the number of spaces per tab stop.
+
+    The default is 4.
+
+    Example:
+        .. code-block:: bash
+
+            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_spaces_per_tab 8
 
 .. _mame-commandline-miscoptions:
 

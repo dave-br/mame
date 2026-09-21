@@ -43,6 +43,12 @@ General Debugger Commands
     read commands from file and executes them one by one
 :ref:`debugger-command-time`
     prints the current machine time to the console
+:ref:`debugger-command-sdlist`
+    lists all source-level debugging information files loaded on startup
+:ref:`debugger-command-sdenable`
+    enables the specified source-level debugging information file
+:ref:`debugger-command-sddisable`
+    disables the specified source-level debugging information file
 :ref:`debugger-command-sdoffset`
     sets the address offset to be used by source-level debugging
 :ref:`debugger-command-quit`
@@ -572,6 +578,55 @@ Examples:
 Back to :ref:`debugger-general-list`
 
 
+.. _debugger-command-sdlist:
+
+sdlist
+------
+
+Lists all :ref:`source-level debugging information files <srcdbg_mdi>`
+loaded on startup, along with their indices.
+
+Example:
+
+``sdlist``
+
+Back to :ref:`debugger-general-list`
+
+.. _debugger-command-sdenable:
+
+sdenable
+--------
+
+Enables the :ref:`source-level debugging information file <srcdbg_mdi>`
+with the specified index.
+This is intended for use during :ref:`MMU-aware debugging <srcdbg_mmuaware>`
+of an application that bank-switches its code in and out of the logical address space.
+
+Example:
+
+``sdenable 3``
+    Enable the debugging information file with index 3.
+
+Back to :ref:`debugger-general-list`
+
+.. _debugger-command-sddisable:
+
+sddisable
+---------
+
+Disables the specified :ref:`source-level debugging information file <srcdbg_mdi>`
+with the specified index.
+This is intended for use during :ref:`MMU-aware debugging <srcdbg_mmuaware>`
+of an application that bank-switches its code in and out of the logical address space.
+
+Example:
+
+``sddisable 0``
+    Disable the debugging information file with index 0.
+
+Back to :ref:`debugger-general-list`
+
+
 .. _debugger-command-sdoffset:
 
 sdoffset
@@ -580,7 +635,7 @@ sdoffset
 Sets the :ref:`address offset <srcdbg_offsets>` to be used by
 :ref:`source-level debugging <srcdbg>`
 
-Examples:
+Example:
 
 ``sdoffset E000``
     Apply an offset of $E000 to all addresses present
