@@ -660,8 +660,8 @@ device_debug::~device_debug()
 
 void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info)
 {
-	m_symtable_srcdbg_globals.reset();
-	m_symtable_srcdbg_locals.reset();
+	// m_symtable_srcdbg_globals.reset();
+	// m_symtable_srcdbg_locals.reset();
 
 	// Establish the following symbol table parent chain:
 	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device
