@@ -95,19 +95,19 @@ public:
 	class global_fixed_symbol
 	{
 	public:
-		global_fixed_symbol(const std::string & name, offs_t value, u32 flags)
-			: m_name(name)
-			, m_value(value)
+		global_fixed_symbol(offs_t value, u32 flags)
+			// : m_name(name)
+			: m_value(value)
 			, m_flags(flags)
 		{
 		}
 
-		const char * name() const { return m_name.c_str(); };
+		// const char * name() const { return m_name.c_str(); };
 		offs_t value() const { return m_value; };
 		u32 flags() const { return m_flags; };
 
 	private:
-		std::string m_name;
+		// std::string m_name;
 		offs_t m_value;
 		u32 m_flags;
 	};
@@ -200,12 +200,12 @@ public:
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
 	// Return lists of various types of symbols
-	const std::vector<global_fixed_symbol> & global_fixed_symbols() const { return m_global_fixed_symbols; }
+	const std::unordered_map<std::string, global_fixed_symbol> & global_fixed_symbols() const { return m_global_fixed_symbols; }
 	const std::vector<local_fixed_symbol> & local_fixed_symbols() const { return m_local_fixed_symbols; }
 	const std::vector<local_relative_symbol> & local_relative_symbols() const { return m_local_relative_symbols; }
 
 protected:
-	std::vector<global_fixed_symbol>            m_global_fixed_symbols;
+	std::unordered_map<std::string, global_fixed_symbol>  m_global_fixed_symbols;
 	std::vector<local_fixed_symbol>             m_local_fixed_symbols;
 	std::vector<local_relative_symbol>          m_local_relative_symbols;
 };

@@ -264,6 +264,61 @@ u64 function_symbol_entry::execute(int numparams, const u64 *paramlist)
 }
 
 
+//**************************************************************************
+//  GLOBAL FIXED SYMBOL ENTRY
+//**************************************************************************
+
+// a symbol entry representing a global symbol obtained from
+// source-debugging info.  Value is fixed (independent of PC)
+class global_fixed_symbol_entry : public symbol_entry
+{
+public:
+	// construction/destruction
+	global_fixed_symbol_entry(symbol_table &table, const char *name, const srcdbg_info & srcdbg);
+
+	// symbol access
+	virtual bool is_lval() const override { return false; }
+	virtual u64 value() const override;
+	virtual void set_value(u64 newvalue) override;
+
+private:
+	// internal state
+	const srcdbg_info & m_srcdbg;
+};
+
+
+//-------------------------------------------------
+//  global_fixed_symbol_entry - constructor
+//-------------------------------------------------
+
+global_fixed_symbol_entry::global_fixed_symbol_entry(symbol_table &table, const char *name, const srcdbg_info & srcdbg)
+	: symbol_entry(table, SMT_INTEGER, name, "")
+	, m_srcdbg(srcdbg)
+{
+}
+
+//-------------------------------------------------
+//  value - calls into srcdbg_info to get value
+//-------------------------------------------------
+
+u64 global_fixed_symbol_entry::value() const
+{
+	return m_srcdbg.get_global_fixed_sym_value(m_name.c_str());
+}
+
+
+//-------------------------------------------------
+//  set_value - Disallowed, read-only
+//-------------------------------------------------
+
+void global_fixed_symbol_entry::set_value(u64 newvalue)
+{
+	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
+}
+
+
+
+
 
 //**************************************************************************
 //  LOCAL FIXED SYMBOL ENTRY
@@ -592,6 +647,17 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 {
 	m_symlist.erase(name);
 	return *m_symlist.emplace(name, std::make_unique<function_symbol_entry>(*this, name, minparams, maxparams, execute)).first->second;
+}
+
+
+//-------------------------------------------------
+//  add - add a new global-fixed symbol
+//-------------------------------------------------
+
+symbol_entry &symbol_table::add(const char *name, const srcdbg_info & srcdbg)
+{
+	m_symlist.erase(name);
+	return *m_symlist.emplace(name, std::make_unique<global_fixed_symbol_entry>(*this, name, srcdbg)).first->second;
 }
 
 
