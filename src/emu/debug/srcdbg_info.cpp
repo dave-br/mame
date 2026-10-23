@@ -117,6 +117,39 @@ u64 srcdbg_info::get_global_fixed_sym_value(const char * name) const
 }
 
 
+u64 srcdbg_info::get_local_fixed_sym_value(const char * name) const
+{
+	for (const srcdbg_provider_entry & sp : m_providers)
+	{
+		if (!sp.enabled())
+		{
+			continue;
+		}
+
+		const std::unordered_map<std::string, srcdbg_provider_base::global_fixed_symbol> & srcdbg_local_symbols = 
+			sp.c_provider()->local_fixed_symbols();
+		auto entry = srcdbg_local_symbols.find(name);
+		if (entry == srcdbg_local_symbols.cend())
+		{
+			continue;
+		}
+
+		const srcdbg_provider_base::global_fixed_symbol & sym = entry->second;
+
+		// Apply offset to symbol when appropriate
+		offs_t value = sym.value();
+		if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
+		{
+			value += m_offset;
+		}
+
+		return value;
+	}
+
+	return 0;
+}
+
+
 //-------------------------------------------------
 // srcdbg_info - get_srcdbg_symbols
 // Returns symbol_table objects populated with
@@ -147,7 +180,8 @@ void srcdbg_info::get_srcdbg_symbols(
 			sp.c_provider()->local_fixed_symbols();
 		for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
 		{
-			symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
+			symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), *this);
+			// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
 		}
 
 		// Local "relative" symbols (values are offsets to a register)
