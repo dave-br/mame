@@ -75,6 +75,15 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 {
 }
 
+
+//-------------------------------------------------
+// srcdbg_info - get_global_fixed_sym_value
+// Called by a global fixed value symbol table
+// entry to get the value of the symbol.  If any
+// source-debugging address offset was specified,
+// it will be applied to the returned value.
+//-------------------------------------------------
+
 u64 srcdbg_info::get_global_fixed_sym_value(const char * name) const
 {
 	for (const srcdbg_provider_entry & sp : m_providers)
