@@ -75,6 +75,10 @@ public:
 		symbol_table * symtable_srcdbg_locals,
 		const device_state_interface * state) const;
 	u64 get_global_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::global_fixed_symbol & sym) const;
+	bool is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const;
+	u64 get_local_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const;
+	bool is_local_relative_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const;
+	u64 get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const;
 
 
 	virtual void complete_local_relative_initialization() override;
@@ -118,6 +122,7 @@ private:
 	std::vector<std::vector<u32>>             m_provider_file_to_agg_file;
 	std::vector<srcdbg_provider_entry>        m_providers;
 	s32                                       m_offset;
+	const running_machine&                    m_machine;
 	bool                                      m_view_needs_full_refresh;
 };
 

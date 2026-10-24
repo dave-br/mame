@@ -71,6 +71,7 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 	, m_provider_file_to_agg_file()
 	, m_providers()
 	, m_offset(machine.options().srcdbg_offset())
+	, m_machine(machine)
 	, m_view_needs_full_refresh(true)
 {
 }
@@ -100,38 +101,104 @@ u64 srcdbg_info::get_global_fixed_sym_value(const srcdbg_provider_entry & sp, co
 }
 
 
-// u64 srcdbg_info::get_local_fixed_sym_value(const char * name) const
-// {
-	// for (const srcdbg_provider_entry & sp : m_providers)
-	// {
-	// 	if (!sp.enabled())
-	// 	{
-	// 		continue;
-	// 	}
+bool srcdbg_info::is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const
+{
+	if (!sp.enabled())
+	{
+		return false;
+	}
 
-	// 	const std::unordered_map<std::string, srcdbg_provider_base::global_fixed_symbol> & srcdbg_local_symbols = 
-	// 		sp.c_provider()->local_fixed_symbols();
-	// 	auto entry = srcdbg_local_symbols.find(name);
-	// 	if (entry == srcdbg_local_symbols.cend())
-	// 	{
-	// 		continue;
-	// 	}
+	const device_state_interface * state = 
+		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
 
-	// 	const srcdbg_provider_base::global_fixed_symbol & sym = entry->second;
+	u64 pc = state->state_find_entry(STATE_GENPC)->value();
+	for (local_fixed_symbol_range val : sym.ranges())
+	{
+		if (val.range().first <= pc && pc <= val.range().second)
+		{
+			return true;
+		}
+	}
 
-	// 	// Apply offset to symbol when appropriate
-	// 	offs_t value = sym.value();
-	// 	if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
-	// 	{
-	// 		value += m_offset;
-	// 	}
+	return false;
+}
 
-	// 	return value;
-	// }
 
-// 	return 0;
-// }
+u64 srcdbg_info::get_local_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const
+{
+	// is_in_scope gates this from getting called
+	assert(sp.enabled());
 
+	const device_state_interface * state = 
+		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
+
+	u64 pc = state->state_find_entry(STATE_GENPC)->value();
+	for (local_fixed_symbol_range val : sym.ranges())
+	{
+		if (val.range().first <= pc && pc <= val.range().second)
+		{
+			// Apply offset to symbol when appropriate
+			offs_t value = val.value();
+			if ((val.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
+			{
+				value += m_offset;
+			}
+
+			return value;
+		}
+	}
+
+	// is_in_scope gates the calling of this function
+	assert (false && "get_local_fixed_sym_value called when out of scope");
+}
+
+
+bool srcdbg_info::is_local_relative_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const
+{
+	if (!sp.enabled())
+	{
+		return false;
+	}
+
+	const device_state_interface * state = 
+		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
+
+	u64 pc = state->state_find_entry(STATE_GENPC)->value();
+	for (local_range_expression val : sym.ranges())
+	{
+		if (val.address_range().first <= pc && pc <= val.address_range().second)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const
+{
+	// is_in_scope gates the calling of this function
+	assert(sp.enabled());
+
+	const device_state_interface * state = 
+		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
+
+	u64 pc = state->state_find_entry(STATE_GENPC)->value();
+	for (local_range_expression val : sym.ranges())
+	{
+		if (val.address_range().first <= pc && pc <= val.address_range().second)
+		{
+			return parsed_expression(
+				m_machine.root_device().debug()->symtable(),
+				val.expression()).execute();
+		}
+	}
+
+	// is_in_scope gates the calling of this function
+	assert (false && "get_local_fixed_sym_value called when out of scope");
+	return 0;
+}
 
 //-------------------------------------------------
 // srcdbg_info - get_srcdbg_symbols
@@ -147,40 +214,43 @@ void srcdbg_info::get_srcdbg_symbols(
 	for (const srcdbg_provider_entry & sp : m_providers)
 	{
 		// Global fixed symbols
-		const std::unordered_map<std::string, srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
+		const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
 			sp.c_provider()->global_fixed_symbols();
 		for (auto & sym : srcdbg_global_symbols)
 		{
-			// auto get_value = [this, sym]() { }
-			// sym.second
 			symtable_srcdbg_globals->add(
-				sym.first.c_str(),
+				sym.name(),
 				// is_in_scope() if the provider of the symbol is enabled
 				[&sp]() { return sp.enabled(); },		
 				// value() defers to get_global_fixed_sym_value
-				[this, &sym, &sp]() { return this->get_global_fixed_sym_value(sp, sym.second); });
+				[this, &sp, &sym]() { return this->get_global_fixed_sym_value(sp, sym); });
 		}
 
-		// Local symbols require a PC getter function so they can test if they're
-		// currently in scope
-		// auto pc_getter_binding = std::bind(&device_state_entry::value, state->state_find_entry(STATE_GENPC));
+		// Local fixed symbols
+		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
+			sp.c_provider()->local_fixed_symbols();
+		for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
+		{
+			symtable_srcdbg_locals->add(
+				sym.name(),
+				// is_in_scope() defers to is_local_fixed_sym_in_scope
+				[this, &sp, &sym]() { return this->is_local_fixed_sym_in_scope(sp, sym); },
+				// value() defers to get_local_fixed_sym_value
+				[this, &sp, &sym]() { return this->get_local_fixed_sym_value(sp, sym); });
+		}
 
-		// // Local fixed symbols
-		// const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
-		// 	sp.c_provider()->local_fixed_symbols();
-		// for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
-		// {
-		// 	// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), *this);
-		// 	// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
-		// }
-
-		// // Local "relative" symbols (values are offsets to a register)
-		// const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
-		// 	sp.c_provider()->local_relative_symbols();
-		// for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
-		// {
-		// 	// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
-		// }
+		// Local "relative" symbols (values are offsets to a register)
+		const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
+			sp.c_provider()->local_relative_symbols();
+		for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
+		{
+			symtable_srcdbg_locals->add(
+				sym.name(),
+				// is_in_scope() defers to is_local_relative_sym_in_scope
+				[this, &sp, &sym]() { return this->is_local_relative_sym_in_scope(sp, sym); },
+				// value() defers to get_local_relative_sym_value
+				[this, &sp, &sym]() { return this->get_local_relative_sym_value(sp, sym); });
+		}
 	}
 }
 

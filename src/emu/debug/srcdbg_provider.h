@@ -97,16 +97,19 @@ public:
 	class global_fixed_symbol
 	{
 	public:
-		global_fixed_symbol(offs_t value, u32 flags)
-			: m_value(value)
+		global_fixed_symbol(const std::string & name, offs_t value, u32 flags)
+			: m_name(name)
+			, m_value(value)
 			, m_flags(flags)
 		{
 		}
 
+		const char * name() const { return m_name.c_str(); };
 		offs_t value() const { return m_value; };
 		u32 flags() const { return m_flags; };
 
 	private:
+		std::string m_name;
 		offs_t m_value;
 		u32 m_flags;
 	};
@@ -126,6 +129,7 @@ public:
 		{
 		}
 
+		address_range range() const { return m_address_range; }
 		offs_t value() const { return m_value; };
 		u32 flags() const { return m_flags; };
 
@@ -153,25 +157,42 @@ public:
 	};
 
 
-	// Represents a local relative symbol to the rest of the debugger.  Such symbols
+	// These represent a local relative symbol to the rest of the debugger.  Such symbols
 	// are limited to ranges of addresses (scopes), and represent a value calculated
 	// as an offset to a register (such as an offset to a stack or frame register).
 	// Each scope has its own, potentially different, register-offset calculation
 	// to determine the symbol's value.
+	// local_range_expression pairs an expression with an address range
+
+	class local_range_expression
+	{
+	public:
+		local_range_expression(std::pair<offs_t,offs_t> && address_range, std::string && expression)
+			: m_address_range(std::move(address_range))
+			, m_expression(std::move(expression))
+		{}
+		const std::pair<offs_t,offs_t> & address_range() const { return m_address_range; };
+		const std::string & expression() const { return m_expression; };
+
+	private:
+		std::pair<offs_t,offs_t> m_address_range;
+		std::string m_expression;
+	};
+
 	class local_relative_symbol
 	{
 	public:
-		local_relative_symbol(const std::string & name, std::vector<symbol_table::local_range_expression> && ranges)
+		local_relative_symbol(const std::string & name, std::vector<local_range_expression> && ranges)
 			: m_name(name)
 			, m_ranges(std::move(ranges))
 		{
 		}
 		const char * name() const { return m_name.c_str(); };
-		const std::vector<symbol_table::local_range_expression> & ranges() const { return m_ranges; };
+		const std::vector<local_range_expression> & ranges() const { return m_ranges; };
 
 	private:
 		std::string m_name;
-		std::vector<symbol_table::local_range_expression> m_ranges;
+		std::vector<local_range_expression> m_ranges;
 	};
 
 	
@@ -213,12 +234,12 @@ public:
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
 	// Return lists of various types of symbols
-	const std::unordered_map<std::string, global_fixed_symbol> & global_fixed_symbols() const { return m_global_fixed_symbols; }
+	const std::vector<global_fixed_symbol> & global_fixed_symbols() const { return m_global_fixed_symbols; }
 	const std::vector<local_fixed_symbol> & local_fixed_symbols() const { return m_local_fixed_symbols; }
 	const std::vector<local_relative_symbol> & local_relative_symbols() const { return m_local_relative_symbols; }
 
 protected:
-	std::unordered_map<std::string, global_fixed_symbol>  m_global_fixed_symbols;
+	std::vector<global_fixed_symbol>            m_global_fixed_symbols;
 	std::vector<local_fixed_symbol>             m_local_fixed_symbols;
 	std::vector<local_relative_symbol>          m_local_relative_symbols;
 };

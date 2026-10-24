@@ -237,10 +237,8 @@ bool srcdbg_import::on_read_symbol_name(u32 symbol_name_index, std::string && sy
 
 bool srcdbg_import::on_read_global_fixed_symbol_value(const global_fixed_symbol_value & value)
 {
-	m_srcdbg_simple.m_global_fixed_symbols.emplace(
-		std::make_pair(
-			m_symbol_names[value.symbol_name_index],
-			srcdbg_provider_base::global_fixed_symbol(value.symbol_value, value.symbol_flags)));
+	srcdbg_provider_base::global_fixed_symbol sym(m_symbol_names[value.symbol_name_index], value.symbol_value, value.symbol_flags);
+	m_srcdbg_simple.m_global_fixed_symbols.push_back(std::move(sym));
 	return true;
 }
 
@@ -260,11 +258,10 @@ bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_va
 		ranges.push_back(std::move(range));
 	}
 
-	srcdbg_provider_base::local_fixed_symbol sym(
-		m_symbol_names[value.symbol_name_index],
-		std::move(ranges));
-
-	m_srcdbg_simple.m_local_fixed_symbols.push_back(std::move(sym));
+	m_srcdbg_simple.m_local_fixed_symbols.push_back(
+		srcdbg_provider_base::local_fixed_symbol(
+			m_symbol_names[value.symbol_name_index],
+			std::move(ranges)));
 
 	return true;
 }
@@ -386,7 +383,7 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 
 	for (local_relative_symbol_internal sym_internal : m_local_relative_symbols_internal)
 	{
-		std::vector<symbol_table::local_range_expression> values;
+		std::vector<local_range_expression> values;
 		for (local_relative_eval_rule_internal & eval_rule_internal : sym_internal.m_eval_rules)
 		{
 			// Create expression string that adds the register to the offset.
@@ -405,7 +402,7 @@ void srcdbg_provider_simple::complete_local_relative_initialization()
 					symbol,
 					(eval_rule_internal.m_reg_offset < 0 ? "-" : "+"),
 					abs(eval_rule_internal.m_reg_offset));
-				symbol_table::local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
+				local_range_expression value(std::move(eval_rule_internal.m_range), std::move(expr));
 				values.push_back(std::move(value));
 			}
 			else
