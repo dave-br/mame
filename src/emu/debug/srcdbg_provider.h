@@ -66,6 +66,8 @@ private:
 class srcdbg_provider_base
 {
 public:
+	typedef std::pair<offs_t,offs_t> address_range;
+
 	// Represents a single source file to be debugged.  Includes the original
 	// "built" path (as output by the assembler / compiler that generated the
 	// source-debugging information file), and a "local" path as it appears on
@@ -110,27 +112,44 @@ public:
 	};
 
 
-	// Represents a local fixed symbol to the rest of the debugger.  Such symbols
-	// are limited to ranges of addresses (scopes), and represent a single value
+	// These represent a local fixed symbol to the rest of the debugger.  Such symbols
+	// are limited to ranges of addresses (scopes), and represent a fixed value
 	// (such as a single variable address).
+
+	class local_fixed_symbol_range
+	{
+	public:
+		local_fixed_symbol_range(address_range && address_range, offs_t value, u32 flags)
+			: m_address_range(std::move(address_range))
+			, m_value(value)
+			, m_flags(flags)
+		{
+		}
+
+		offs_t value() const { return m_value; };
+		u32 flags() const { return m_flags; };
+
+	private:
+		address_range m_address_range;
+		offs_t m_value;
+		u32 m_flags;
+	};
+
 	class local_fixed_symbol
 	{
 	public:
-		local_fixed_symbol(const std::string & name, std::vector<std::pair<offs_t,offs_t>> && ranges, offs_t value)
+		local_fixed_symbol(const std::string & name, std::vector<local_fixed_symbol_range> && ranges)
 			: m_name(name)
 			, m_ranges(std::move(ranges))
-			, m_value_integer(value)
 		{
 		}
 
 		const char * name() const { return m_name.c_str(); };
-		const std::vector<std::pair<offs_t,offs_t>> & ranges() const { return m_ranges; };
-		offs_t value() const { return m_value_integer; };
+		const std::vector<local_fixed_symbol_range> & ranges() const { return m_ranges; };
 
 	private:
 		std::string m_name;
-		std::vector<std::pair<offs_t,offs_t>> m_ranges;
-		offs_t m_value_integer;
+		std::vector<local_fixed_symbol_range> m_ranges;
 	};
 
 
@@ -156,9 +175,6 @@ public:
 	};
 
 	
-	typedef std::pair<offs_t,offs_t> address_range;
-
-
 	// ------------------------------------------------------------------------
 	// Base implementation
 	// ------------------------------------------------------------------------

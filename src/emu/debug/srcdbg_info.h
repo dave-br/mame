@@ -74,7 +74,8 @@ public:
 		symbol_table * symtable_srcdbg_globals,
 		symbol_table * symtable_srcdbg_locals,
 		const device_state_interface * state) const;
-	u64 get_global_fixed_sym_value(const char * name) const;
+	u64 get_global_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::global_fixed_symbol & sym) const;
+
 
 	virtual void complete_local_relative_initialization() override;
 	virtual u32 num_files() const override { return m_agg_file_to_provider_files.size(); }

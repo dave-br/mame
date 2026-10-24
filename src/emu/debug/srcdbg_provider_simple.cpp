@@ -247,17 +247,22 @@ bool srcdbg_import::on_read_global_fixed_symbol_value(const global_fixed_symbol_
 
 bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_value & value)
 {
-	std::vector<std::pair<offs_t,offs_t>> ranges;
+	std::vector<srcdbg_provider_base::local_fixed_symbol_range> ranges;
 	for (u32 i = 0; i < value.num_address_ranges; i++)
 	{
-		ranges.push_back(
-			std::pair<offs_t,offs_t>(value.ranges[i].address_first, value.ranges[i].address_last));
+		srcdbg_provider_base::local_fixed_symbol_range range(
+			srcdbg_provider_base::address_range(
+				value.local_fixed_address_ranges[i].range.address_first,
+				value.local_fixed_address_ranges[i].range.address_last
+			),
+			value.local_fixed_address_ranges[i].symbol_value,
+			value.local_fixed_address_ranges[i].symbol_flags);
+		ranges.push_back(std::move(range));
 	}
 
 	srcdbg_provider_base::local_fixed_symbol sym(
 		m_symbol_names[value.symbol_name_index],
-		std::move(ranges),
-		value.symbol_value);
+		std::move(ranges));
 
 	m_srcdbg_simple.m_local_fixed_symbols.push_back(std::move(sym));
 

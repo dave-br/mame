@@ -84,70 +84,53 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 // it will be applied to the returned value.
 //-------------------------------------------------
 
-u64 srcdbg_info::get_global_fixed_sym_value(const char * name) const
+u64 srcdbg_info::get_global_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::global_fixed_symbol & sym) const
 {
-	for (const srcdbg_provider_entry & sp : m_providers)
+	// is_in_scope prevents this from getting called for a disabled provider
+	assert (sp.enabled());
+
+	// Apply offset to symbol when appropriate
+	offs_t value = sym.value();
+	if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
 	{
-		if (!sp.enabled())
-		{
-			continue;
-		}
-
-		const std::unordered_map<std::string, srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
-			sp.c_provider()->global_fixed_symbols();
-		auto entry = srcdbg_global_symbols.find(name);
-		if (entry == srcdbg_global_symbols.cend())
-		{
-			continue;
-		}
-
-		const srcdbg_provider_base::global_fixed_symbol & sym = entry->second;
-
-		// Apply offset to symbol when appropriate
-		offs_t value = sym.value();
-		if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
-		{
-			value += m_offset;
-		}
-
-		return value;
+		value += m_offset;
 	}
 
-	return 0;
+	return value;
 }
 
 
-u64 srcdbg_info::get_local_fixed_sym_value(const char * name) const
-{
-	for (const srcdbg_provider_entry & sp : m_providers)
-	{
-		if (!sp.enabled())
-		{
-			continue;
-		}
+// u64 srcdbg_info::get_local_fixed_sym_value(const char * name) const
+// {
+	// for (const srcdbg_provider_entry & sp : m_providers)
+	// {
+	// 	if (!sp.enabled())
+	// 	{
+	// 		continue;
+	// 	}
 
-		const std::unordered_map<std::string, srcdbg_provider_base::global_fixed_symbol> & srcdbg_local_symbols = 
-			sp.c_provider()->local_fixed_symbols();
-		auto entry = srcdbg_local_symbols.find(name);
-		if (entry == srcdbg_local_symbols.cend())
-		{
-			continue;
-		}
+	// 	const std::unordered_map<std::string, srcdbg_provider_base::global_fixed_symbol> & srcdbg_local_symbols = 
+	// 		sp.c_provider()->local_fixed_symbols();
+	// 	auto entry = srcdbg_local_symbols.find(name);
+	// 	if (entry == srcdbg_local_symbols.cend())
+	// 	{
+	// 		continue;
+	// 	}
 
-		const srcdbg_provider_base::global_fixed_symbol & sym = entry->second;
+	// 	const srcdbg_provider_base::global_fixed_symbol & sym = entry->second;
 
-		// Apply offset to symbol when appropriate
-		offs_t value = sym.value();
-		if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
-		{
-			value += m_offset;
-		}
+	// 	// Apply offset to symbol when appropriate
+	// 	offs_t value = sym.value();
+	// 	if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
+	// 	{
+	// 		value += m_offset;
+	// 	}
 
-		return value;
-	}
+	// 	return value;
+	// }
 
-	return 0;
-}
+// 	return 0;
+// }
 
 
 //-------------------------------------------------
@@ -168,29 +151,36 @@ void srcdbg_info::get_srcdbg_symbols(
 			sp.c_provider()->global_fixed_symbols();
 		for (auto & sym : srcdbg_global_symbols)
 		{
-			symtable_srcdbg_globals->add(sym.first.c_str(), *this);
+			// auto get_value = [this, sym]() { }
+			// sym.second
+			symtable_srcdbg_globals->add(
+				sym.first.c_str(),
+				// is_in_scope() if the provider of the symbol is enabled
+				[&sp]() { return sp.enabled(); },		
+				// value() defers to get_global_fixed_sym_value
+				[this, &sym, &sp]() { return this->get_global_fixed_sym_value(sp, sym.second); });
 		}
 
 		// Local symbols require a PC getter function so they can test if they're
 		// currently in scope
-		auto pc_getter_binding = std::bind(&device_state_entry::value, state->state_find_entry(STATE_GENPC));
+		// auto pc_getter_binding = std::bind(&device_state_entry::value, state->state_find_entry(STATE_GENPC));
 
-		// Local fixed symbols
-		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
-			sp.c_provider()->local_fixed_symbols();
-		for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
-		{
-			symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), *this);
-			// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
-		}
+		// // Local fixed symbols
+		// const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
+		// 	sp.c_provider()->local_fixed_symbols();
+		// for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
+		// {
+		// 	// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), *this);
+		// 	// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges(), sym.value());
+		// }
 
-		// Local "relative" symbols (values are offsets to a register)
-		const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
-			sp.c_provider()->local_relative_symbols();
-		for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
-		{
-			symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
-		}
+		// // Local "relative" symbols (values are offsets to a register)
+		// const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
+		// 	sp.c_provider()->local_relative_symbols();
+		// for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
+		// {
+		// 	// symtable_srcdbg_locals->add(sym.name(), pc_getter_binding, sym.ranges());
+		// }
 	}
 }
 

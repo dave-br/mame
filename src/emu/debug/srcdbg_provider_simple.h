@@ -48,12 +48,12 @@ private:
 	class local_relative_eval_rule_internal
 	{
 	public:
-		local_relative_eval_rule_internal(std::pair<offs_t,offs_t> && range, char reg, s32 reg_offset)
+		local_relative_eval_rule_internal(address_range && range, char reg, s32 reg_offset)
 			: m_range(std::move(range))
 			, m_reg(reg)
 			, m_reg_offset(reg_offset)
 		{}
-		std::pair<offs_t,offs_t> m_range;
+		address_range m_range;
 		char m_reg;
 		s32 m_reg_offset;
 	};

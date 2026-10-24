@@ -270,48 +270,57 @@ u64 function_symbol_entry::execute(int numparams, const u64 *paramlist)
 
 // a symbol entry representing a global symbol obtained from
 // source-debugging info.  Value is fixed (independent of PC)
-class global_fixed_symbol_entry : public symbol_entry
+class srcdbg_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	global_fixed_symbol_entry(symbol_table &table, const char *name, const srcdbg_info & srcdbg);
+	srcdbg_symbol_entry(symbol_table &table, const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64()> value_fcn);
 
 	// symbol access
 	virtual bool is_lval() const override { return false; }
 	virtual u64 value() const override;
 	virtual void set_value(u64 newvalue) override;
+	virtual bool is_in_scope() const override;
 
 private:
 	// internal state
-	const srcdbg_info & m_srcdbg;
+	std::function<bool()> m_is_in_scope_fcn;
+	std::function<u64()> m_value_fcn;
 };
-
 
 //-------------------------------------------------
 //  global_fixed_symbol_entry - constructor
 //-------------------------------------------------
 
-global_fixed_symbol_entry::global_fixed_symbol_entry(symbol_table &table, const char *name, const srcdbg_info & srcdbg)
+srcdbg_symbol_entry::srcdbg_symbol_entry(symbol_table &table, const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64()> value_fcn)
 	: symbol_entry(table, SMT_INTEGER, name, "")
-	, m_srcdbg(srcdbg)
+	, m_is_in_scope_fcn(is_in_scope_fcn)
+	, m_value_fcn(value_fcn)
 {
+}
+
+
+bool srcdbg_symbol_entry::is_in_scope() const
+{
+	return m_is_in_scope_fcn();
 }
 
 //-------------------------------------------------
 //  value - calls into srcdbg_info to get value
 //-------------------------------------------------
 
-u64 global_fixed_symbol_entry::value() const
+u64 srcdbg_symbol_entry::value() const
 {
-	return m_srcdbg.get_global_fixed_sym_value(m_name.c_str());
+	return m_value_fcn();
 }
+
 
 
 //-------------------------------------------------
 //  set_value - Disallowed, read-only
 //-------------------------------------------------
 
-void global_fixed_symbol_entry::set_value(u64 newvalue)
+void srcdbg_symbol_entry::set_value(u64 newvalue)
 {
 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
 }
@@ -320,159 +329,159 @@ void global_fixed_symbol_entry::set_value(u64 newvalue)
 
 
 
-//**************************************************************************
-//  LOCAL FIXED SYMBOL ENTRY
-//**************************************************************************
+// //**************************************************************************
+// //  LOCAL FIXED SYMBOL ENTRY
+// //**************************************************************************
 
-// a symbol entry representing a lexically-scoped local symbol obtained from
-// source-debugging info.  Value is fixed (independent of PC)
-class local_fixed_symbol_entry : public symbol_entry
-{
-public:
-	// construction/destruction
-	local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
+// // a symbol entry representing a lexically-scoped local symbol obtained from
+// // source-debugging info.  Value is fixed (independent of PC)
+// class local_fixed_symbol_entry : public symbol_entry
+// {
+// public:
+// 	// construction/destruction
+// 	local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value);
 
-	// symbol access
-	virtual bool is_lval() const override { return false; }
-	virtual u64 value() const override { return m_value_integer; };
-	virtual void set_value(u64 newvalue) override;
-	virtual bool is_in_scope() const override;
+// 	// symbol access
+// 	virtual bool is_lval() const override { return false; }
+// 	virtual u64 value() const override { return m_value_integer; };
+// 	virtual void set_value(u64 newvalue) override;
+// 	virtual bool is_in_scope() const override;
 
-private:
-	// internal state
-	symbol_table::getter_func m_get_pc;
-	const std::vector<std::pair<offs_t,offs_t>> & m_scope_ranges;
-	u64 m_value_integer;
-};
-
-
-//-------------------------------------------------
-//  local_fixed_symbol_entry - constructor
-//-------------------------------------------------
-
-local_fixed_symbol_entry::local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
-	: symbol_entry(table, SMT_INTEGER, name, "")
-	, m_get_pc(get_pc)
-	, m_scope_ranges(scope_ranges)
-	, m_value_integer(value)
-{
-}
+// private:
+// 	// internal state
+// 	symbol_table::getter_func m_get_pc;
+// 	const std::vector<std::pair<offs_t,offs_t>> & m_scope_ranges;
+// 	u64 m_value_integer;
+// };
 
 
-//-------------------------------------------------
-//  set_value - Disallowed, read-only
-//-------------------------------------------------
+// //-------------------------------------------------
+// //  local_fixed_symbol_entry - constructor
+// //-------------------------------------------------
 
-void local_fixed_symbol_entry::set_value(u64 newvalue)
-{
-	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
-}
-
-
-//-------------------------------------------------
-//  is_in_scope - Determines if symbol is
-//  currently in scope
-//-------------------------------------------------
-
-bool local_fixed_symbol_entry::is_in_scope() const
-{
-	u64 pc = m_get_pc();
-	for (std::pair<offs_t, offs_t> range : m_scope_ranges)
-	{
-		if (range.first <= pc && pc <= range.second)
-		{
-			return true;
-		}
-	}
-	return false;
-}
+// local_fixed_symbol_entry::local_fixed_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+// 	: symbol_entry(table, SMT_INTEGER, name, "")
+// 	, m_get_pc(get_pc)
+// 	, m_scope_ranges(scope_ranges)
+// 	, m_value_integer(value)
+// {
+// }
 
 
-//**************************************************************************
-//  LOCAL RELATIVE SYMBOL ENTRY
-//**************************************************************************
+// //-------------------------------------------------
+// //  set_value - Disallowed, read-only
+// //-------------------------------------------------
 
-// a symbol entry representing a lexically-scoped local symbol obtained from
-// source-debugging info.  Value determined by an offset to a register
-class local_relative_symbol_entry : public symbol_entry
-{
-public:
-	// construction/destruction
-	local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values);
-
-	// symbol access
-	virtual bool is_lval() const override { return false; }
-	virtual u64 value() const override;
-	virtual void set_value(u64 newvalue) override;
-	virtual bool is_in_scope() const override;
-
-private:
-	// internal state
-	symbol_table::getter_func m_get_pc;
-	const std::vector<symbol_table::local_range_expression> & m_local_range_expressions;
-};
+// void local_fixed_symbol_entry::set_value(u64 newvalue)
+// {
+// 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
+// }
 
 
-//-------------------------------------------------
-//  local_relative_symbol_entry - constructor
-//-------------------------------------------------
+// //-------------------------------------------------
+// //  is_in_scope - Determines if symbol is
+// //  currently in scope
+// //-------------------------------------------------
 
-local_relative_symbol_entry::local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values)
-	: symbol_entry(table, SMT_INTEGER, name, "")
-	, m_get_pc(get_pc)
-	, m_local_range_expressions(scoped_values)
-{
-}
-
-
-//-------------------------------------------------
-//  value - Calculates value by evaluating
-//  expression in the form of a register offset
-//-------------------------------------------------
-
-u64 local_relative_symbol_entry::value() const
-{
-	u64 pc = m_get_pc();
-	for (symbol_table::local_range_expression val : m_local_range_expressions)
-	{
-		if (val.address_range().first <= pc && pc <= val.address_range().second)
-		{
-			return parsed_expression(m_table, val.expression()).execute();
-		}
-	}
-
-	assert(false && "local_relative_symbol_entry::value() called when not in scope");
-	return 0;
-}
+// bool local_fixed_symbol_entry::is_in_scope() const
+// {
+// 	u64 pc = m_get_pc();
+// 	for (std::pair<offs_t, offs_t> range : m_scope_ranges)
+// 	{
+// 		if (range.first <= pc && pc <= range.second)
+// 		{
+// 			return true;
+// 		}
+// 	}
+// 	return false;
+// }
 
 
-//-------------------------------------------------
-//  set_value - Disallowed, read-only
-//-------------------------------------------------
+// //**************************************************************************
+// //  LOCAL RELATIVE SYMBOL ENTRY
+// //**************************************************************************
 
-void local_relative_symbol_entry::set_value(u64 newvalue)
-{
-	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
-}
+// // a symbol entry representing a lexically-scoped local symbol obtained from
+// // source-debugging info.  Value determined by an offset to a register
+// class local_relative_symbol_entry : public symbol_entry
+// {
+// public:
+// 	// construction/destruction
+// 	local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values);
+
+// 	// symbol access
+// 	virtual bool is_lval() const override { return false; }
+// 	virtual u64 value() const override;
+// 	virtual void set_value(u64 newvalue) override;
+// 	virtual bool is_in_scope() const override;
+
+// private:
+// 	// internal state
+// 	symbol_table::getter_func m_get_pc;
+// 	const std::vector<symbol_table::local_range_expression> & m_local_range_expressions;
+// };
 
 
-//-------------------------------------------------
-//  is_in_scope - Determines if symbol is
-//  currently in scope
-//-------------------------------------------------
+// //-------------------------------------------------
+// //  local_relative_symbol_entry - constructor
+// //-------------------------------------------------
 
-bool local_relative_symbol_entry::is_in_scope() const
-{
-	u64 pc = m_get_pc();
-	for (symbol_table::local_range_expression val : m_local_range_expressions)
-	{
-		if (val.address_range().first <= pc && pc <= val.address_range().second)
-		{
-			return true;
-		}
-	}
-	return false;
-}
+// local_relative_symbol_entry::local_relative_symbol_entry(symbol_table &table, const char *name, symbol_table::getter_func get_pc, const std::vector<symbol_table::local_range_expression> & scoped_values)
+// 	: symbol_entry(table, SMT_INTEGER, name, "")
+// 	, m_get_pc(get_pc)
+// 	, m_local_range_expressions(scoped_values)
+// {
+// }
+
+
+// //-------------------------------------------------
+// //  value - Calculates value by evaluating
+// //  expression in the form of a register offset
+// //-------------------------------------------------
+
+// u64 local_relative_symbol_entry::value() const
+// {
+// 	u64 pc = m_get_pc();
+// 	for (symbol_table::local_range_expression val : m_local_range_expressions)
+// 	{
+// 		if (val.address_range().first <= pc && pc <= val.address_range().second)
+// 		{
+// 			return parsed_expression(m_table, val.expression()).execute();
+// 		}
+// 	}
+
+// 	assert(false && "local_relative_symbol_entry::value() called when not in scope");
+// 	return 0;
+// }
+
+
+// //-------------------------------------------------
+// //  set_value - Disallowed, read-only
+// //-------------------------------------------------
+
+// void local_relative_symbol_entry::set_value(u64 newvalue)
+// {
+// 	throw emu_fatalerror("Symbol '%s' is the location of a local variable, and is read-only", m_name);
+// }
+
+
+// //-------------------------------------------------
+// //  is_in_scope - Determines if symbol is
+// //  currently in scope
+// //-------------------------------------------------
+
+// bool local_relative_symbol_entry::is_in_scope() const
+// {
+// 	u64 pc = m_get_pc();
+// 	for (symbol_table::local_range_expression val : m_local_range_expressions)
+// 	{
+// 		if (val.address_range().first <= pc && pc <= val.address_range().second)
+// 		{
+// 			return true;
+// 		}
+// 	}
+// 	return false;
+// }
 
 
 
@@ -651,34 +660,34 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 
 
 //-------------------------------------------------
-//  add - add a new global-fixed symbol
+//  add - add a new srcdbg symbol
 //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, const srcdbg_info & srcdbg)
+symbol_entry &symbol_table::add(const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64()> value_fcn)
 {
 	m_symlist.erase(name);
-	return *m_symlist.emplace(name, std::make_unique<global_fixed_symbol_entry>(*this, name, srcdbg)).first->second;
+	return *m_symlist.emplace(name, std::make_unique<srcdbg_symbol_entry>(*this, name, is_in_scope_fcn, value_fcn)).first->second;
 }
 
 
-//-------------------------------------------------
-//  add - add a new local-fixed symbol
-//-------------------------------------------------
+// //-------------------------------------------------
+// //  add - add a new local-fixed symbol
+// //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
-{
-	return *m_symlist.emplace(name, std::make_unique<local_fixed_symbol_entry>(*this, name, get_pc, scope_ranges, value)).first->second;
-}
+// symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<std::pair<offs_t,offs_t>> & scope_ranges, u64 value)
+// {
+// 	return *m_symlist.emplace(name, std::make_unique<local_fixed_symbol_entry>(*this, name, get_pc, scope_ranges, value)).first->second;
+// }
 
 
-//-------------------------------------------------
-//  add - add a new local-relative symbol
-//-------------------------------------------------
+// //-------------------------------------------------
+// //  add - add a new local-relative symbol
+// //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values)
-{
-	return *m_symlist.emplace(name, std::make_unique<local_relative_symbol_entry>(*this, name, get_pc, scoped_values)).first->second;
-}
+// symbol_entry &symbol_table::add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values)
+// {
+// 	return *m_symlist.emplace(name, std::make_unique<local_relative_symbol_entry>(*this, name, get_pc, scoped_values)).first->second;
+// }
 
 
 //-------------------------------------------------
