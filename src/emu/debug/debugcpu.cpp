@@ -596,7 +596,6 @@ device_debug::device_debug(device_t &device)
 				(m_device.machine().debugger().get_srcdbg_info() != nullptr))
 			{
 				srcdbg_info & srcdbg_info = *m_device.machine().debugger().get_srcdbg_info();
-				srcdbg_info.complete_local_relative_initialization();
 				update_symbols_from_srcdbg(srcdbg_info);
 			}
 		}

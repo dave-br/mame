@@ -77,6 +77,24 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 }
 
 
+bool srcdbg_info::is_global_fixed_sym_in_scope(const char * name) const
+{
+	auto entry = m_provider_globals.find(name);
+	assert (entry != m_provider_globals.cend());
+
+	for (const provider_global & pg : entry->second)
+	{
+		if (!pg.m_sp.enabled() || !pg.m_sp.c_provider()->is_global_fixed_sym_in_scope(pg.m_global_idx))
+		{
+			continue;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 //-------------------------------------------------
 // srcdbg_info - get_global_fixed_sym_value
 // Called by a global fixed value symbol table
@@ -85,19 +103,24 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 // it will be applied to the returned value.
 //-------------------------------------------------
 
-u64 srcdbg_info::get_global_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::global_fixed_symbol & sym) const
+u64 srcdbg_info::get_global_fixed_sym_value(const char * name) const
 {
-	// is_in_scope prevents this from getting called for a disabled provider
-	assert (sp.enabled());
+	auto entry = m_provider_globals.find(name);
+	assert (entry != m_provider_globals.cend());
 
-	// Apply offset to symbol when appropriate
-	offs_t value = sym.value();
-	if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
+	for (const provider_global & pg : entry->second)
 	{
-		value += m_offset;
+		if (!pg.m_sp.enabled() || !pg.m_sp.c_provider()->is_global_fixed_sym_in_scope(pg.m_global_idx))
+		{
+			continue;
+		}
+
+		return pg.m_sp.c_provider()->get_global_fixed_sym_value(pg.m_global_idx);
 	}
 
-	return value;
+	// is_in_scope gates the calling of this function
+	assert (false && "get_global_fixed_sym_value called for disabled global");
+	return 0;
 }
 
 
@@ -108,23 +131,25 @@ u64 srcdbg_info::get_global_fixed_sym_value(const srcdbg_provider_entry & sp, co
 // in scope
 //-------------------------------------------------
 
-bool srcdbg_info::is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const
+bool srcdbg_info::is_local_sym_in_scope(const char * name) const
 {
-	if (!sp.enabled())
-	{
-		return false;
-	}
+	auto entry = m_provider_locals.find(name);
+	assert (entry != m_provider_locals.cend());
 
-	const device_state_interface * state = 
-		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
-
-	u64 pc = state->state_find_entry(STATE_GENPC)->value();
-	for (local_fixed_symbol_range val : sym.ranges())
+	for (const provider_local & pg : entry->second)
 	{
-		if (val.range().first <= pc && pc <= val.range().second)
+		if (!pg.m_sp.enabled())
 		{
-			return true;
+			continue;
 		}
+
+		if (!pg.m_sp.c_provider()->is_local_fixed_sym_in_scope(pg.m_local_fixed_idx) &&
+			!pg.m_sp.c_provider()->is_local_relative_sym_in_scope(pg.m_local_relative_idx))
+		{
+			continue;
+		}
+
+		return true;
 	}
 
 	return false;
@@ -139,35 +164,33 @@ bool srcdbg_info::is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, 
 // it will be applied to the returned value.
 //-------------------------------------------------
 
-u64 srcdbg_info::get_local_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const
+u64 srcdbg_info::get_local_sym_value(const char * name, symbol_table & symtable) const
 {
-	// is_in_scope gates this from getting called
-	assert(sp.enabled());
+	auto entry = m_provider_locals.find(name);
+	assert (entry != m_provider_locals.cend());
 
-	const device_state_interface * state = 
-		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
-
-	u64 pc = state->state_find_entry(STATE_GENPC)->value();
-	for (local_fixed_symbol_range val : sym.ranges())
+	for (const provider_local & pg : entry->second)
 	{
-		if (val.range().first <= pc && pc <= val.range().second)
+		if (!pg.m_sp.enabled())
 		{
-			// Apply offset to symbol when appropriate
-			offs_t value = val.value();
-			if ((val.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
-			{
-				value += m_offset;
-			}
+			continue;
+		}
 
-			return value;
+		if (pg.m_sp.c_provider()->is_local_fixed_sym_in_scope(pg.m_local_fixed_idx))
+		{
+			return pg.m_sp.c_provider()->get_local_fixed_sym_value(pg.m_local_fixed_idx);
+		}
+
+		if (pg.m_sp.c_provider()->is_local_relative_sym_in_scope(pg.m_local_fixed_idx))
+		{
+			return pg.m_sp.c_provider()->get_local_relative_sym_value(pg.m_local_fixed_idx, symtable);
 		}
 	}
 
 	// is_in_scope gates the calling of this function
-	assert (false && "get_local_fixed_sym_value called when out of scope");
+	assert (false && "get_local_sym_value called when out of scope");
 	return 0;
 }
-
 
 //-------------------------------------------------
 // srcdbg_info - is_local_relative_sym_in_scope
@@ -176,55 +199,15 @@ u64 srcdbg_info::get_local_fixed_sym_value(const srcdbg_provider_entry & sp, con
 // in scope
 //-------------------------------------------------
 
-bool srcdbg_info::is_local_relative_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const
-{
-	if (!sp.enabled())
-	{
-		return false;
-	}
 
-	const device_state_interface * state = 
-		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
 
-	u64 pc = state->state_find_entry(STATE_GENPC)->value();
-	for (local_range_expression val : sym.ranges())
-	{
-		if (val.address_range().first <= pc && pc <= val.address_range().second)
-		{
-			return true;
-		}
-	}
 
-	return false;
-}
 
 //-------------------------------------------------
 // srcdbg_info - get_local_relative_sym_value
 // Called during symbol resolution to calculate
 // value of a local relative symbol
 //-------------------------------------------------
-
-u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym, symbol_table & symtable) const
-{
-	// is_in_scope gates the calling of this function
-	assert(sp.enabled());
-
-	const device_state_interface * state = 
-		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
-
-	u64 pc = state->state_find_entry(STATE_GENPC)->value();
-	for (local_range_expression val : sym.ranges())
-	{
-		if (val.address_range().first <= pc && pc <= val.address_range().second)
-		{
-			return parsed_expression(symtable, val.expression()).execute();
-		}
-	}
-
-	// is_in_scope gates the calling of this function
-	assert (false && "get_local_fixed_sym_value called when out of scope");
-	return 0;
-}
 
 //-------------------------------------------------
 // srcdbg_info - get_srcdbg_symbols
@@ -235,41 +218,74 @@ u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, 
 void srcdbg_info::get_srcdbg_symbols(
 		symbol_table * symtable_srcdbg_globals,
 		symbol_table * symtable_srcdbg_locals,
-		const device_state_interface * state) const
+		const device_state_interface * state)
 {
 	for (const srcdbg_provider_entry & sp : m_providers)
 	{
 		// Global fixed symbols
 		const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
 			sp.c_provider()->global_fixed_symbols();
-		for (auto & sym : srcdbg_global_symbols)
+		for (u32 i=0; i < srcdbg_global_symbols.size(); i++)
 		{
+			const srcdbg_provider_base::global_fixed_symbol & sym = srcdbg_global_symbols[i];
+			auto entry = m_provider_globals.find(sym.name());
+			if (entry == m_provider_globals.cend())
+			{
+				m_provider_globals.emplace(sym.name(), std::move(std::vector<provider_global>()));
+				entry = m_provider_globals.find(sym.name());
+			}
+			provider_global pg(sp, i);
+			entry->second.push_back(std::move(pg));
+
 			symtable_srcdbg_globals->add(
 				sym.name(),
-				// is_in_scope() if the provider of the symbol is enabled
-				[&sp]() { return sp.enabled(); },		
-				// value() defers to get_global_fixed_sym_value
-				[this, &sp, &sym](symbol_table &) { return this->get_global_fixed_sym_value(sp, sym); });
+				[this, &sym]() { return this->is_global_fixed_sym_in_scope(sym.name()); },		
+				[this, &sym](symbol_table &) { return this->get_global_fixed_sym_value(sym.name()); });
 		}
 
 		// Local fixed symbols
 		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
 			sp.c_provider()->local_fixed_symbols();
-		for (const srcdbg_provider_base::local_fixed_symbol & sym : srcdbg_local_fixed_symbols)
+		for (u32 i=0; i < srcdbg_local_fixed_symbols.size(); i++)
 		{
-			symtable_srcdbg_locals->add(
-				sym.name(),
-				// is_in_scope() defers to is_local_fixed_sym_in_scope
-				[this, &sp, &sym]() { return this->is_local_fixed_sym_in_scope(sp, sym); },
-				// value() defers to get_local_fixed_sym_value
-				[this, &sp, &sym](symbol_table &) { return this->get_local_fixed_sym_value(sp, sym); });
+			const srcdbg_provider_base::local_fixed_symbol & sym = srcdbg_local_fixed_symbols[i];
+			auto entry = m_provider_locals.find(sym.name());
+			if (entry == m_provider_locals.cend())
+			{
+				m_provider_locals.emplace(sym.name(), std::move(std::vector<provider_local>()));
+				entry = m_provider_locals.find(sym.name());
+			}
+			provider_local pl(sp);
+			pl.m_local_fixed_idx = i;
+			entry->second.push_back(std::move(pl));
 		}
 
 		// Local "relative" symbols (values are offsets to a register)
 		const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
 			sp.c_provider()->local_relative_symbols();
+		for (u32 i=0; i < srcdbg_local_relative_symbols.size(); i++)
+		{
+			const srcdbg_provider_base::local_relative_symbol & sym = srcdbg_local_relative_symbols[i];
+			auto entry = m_provider_locals.find(sym.name());
+			if (entry == m_provider_locals.cend())
+			{
+				m_provider_locals.emplace(sym.name(), std::move(std::vector<provider_local>()));
+				entry = m_provider_locals.find(sym.name());
+			}
+			// TODO: JUST NOW: If curent provider already has entry for this name, it
+			// would be the last one.  Check if last entry of std::vector<provider_local>
+			// is the current provider.
+			provider_local pl(sp);
+			pl.m_local_relative_idx = i;
+			entry->second.push_back(std::move(pl));
+		}
+
 		for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
 		{
+			symtable_srcdbg_locals->add(
+				sym.name(),
+				[this, &sym]() { return this->is_local_fixed_sym_in_scope(sym.name()); },
+				[this, &sp, &sym](symbol_table &) { return this->get_local_fixed_sym_value(sp, sym); });
 			symtable_srcdbg_locals->add(
 				sym.name(),
 				// is_in_scope() defers to is_local_relative_sym_in_scope
@@ -282,32 +298,11 @@ void srcdbg_info::get_srcdbg_symbols(
 
 
 //-------------------------------------------------
-// srcdbg_info - complete_local_relative_initialization
-// Called later during startup, after device_state_interfaces
-// are available. Generates expressions required to implement
-// local relative symbol evaluation rules.
-//-------------------------------------------------
-
-void srcdbg_info::complete_local_relative_initialization()
-{
-	for (srcdbg_provider_entry & sp : m_providers)
-	{
-		if (!sp.enabled())
-		{
-			continue;
-		}
-
-		sp.provider()->complete_local_relative_initialization();
-	}
-}
-
-
-//-------------------------------------------------
 // srcdbg_info - file_index_to_path
 // Returns path associated with aggregated file index
 //-------------------------------------------------
 
-bool srcdbg_info::file_index_to_path(u32 file_index, const source_file_path ** path) const
+bool srcdbg_info::file_index_to_path(u32 file_index, const srcdbg_provider_base::source_file_path ** path) const
 { 
 	std::vector<provider_file> provider_files;
 	if (!file_index_to_provider_files(file_index, provider_files))
@@ -390,7 +385,7 @@ bool srcdbg_info::file_index_to_provider_files(u32 file_index, std::vector<provi
 // corresponding to that source line.
 //-------------------------------------------------
 
-void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<address_range> & ranges) const
+void srcdbg_info::file_line_to_address_ranges(u32 file_index, u32 line_number, std::vector<srcdbg_provider_base::address_range> & ranges) const
 {
 	std::vector<provider_file> provider_files;	
 	if (!file_index_to_provider_files(file_index, provider_files))
@@ -508,7 +503,7 @@ void srcdbg_info::coalesce()
 		m_provider_file_to_agg_file[provider_idx] = std::vector<u32>();
 		for (u32 file_idx = 0; file_idx < provider->num_files(); file_idx++)
 		{
-			const source_file_path * sfp = nullptr;
+			const srcdbg_provider_base::source_file_path * sfp = nullptr;
 			if (!provider->file_index_to_path(file_idx, &sfp))
 			{
 				break;
@@ -556,7 +551,6 @@ void srcdbg_info::coalesce()
 
 srcdbg_info::disenable_retcode srcdbg_info::disenable_provider(u64 index, bool enable)
 {
-	// std::vector<srcdbg_info::srcdbg_provider_entry> & providers = srcdbg->providers();
 	if (index >= m_providers.size())
 	{
 		return disenable_retcode::BAD_IDX;
