@@ -165,6 +165,7 @@ u64 srcdbg_info::get_local_fixed_sym_value(const srcdbg_provider_entry & sp, con
 
 	// is_in_scope gates the calling of this function
 	assert (false && "get_local_fixed_sym_value called when out of scope");
+	return 0;
 }
 
 
