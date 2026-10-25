@@ -101,6 +101,13 @@ u64 srcdbg_info::get_global_fixed_sym_value(const srcdbg_provider_entry & sp, co
 }
 
 
+//-------------------------------------------------
+// srcdbg_info - is_local_fixed_sym_in_scope
+// Called during symbol resolution to determine
+// if the specified local fixed symbol is
+// in scope
+//-------------------------------------------------
+
 bool srcdbg_info::is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const
 {
 	if (!sp.enabled())
@@ -123,6 +130,14 @@ bool srcdbg_info::is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, 
 	return false;
 }
 
+
+//-------------------------------------------------
+// srcdbg_info - get_local_fixed_sym_value
+// Called during symbol resolution to calculate
+// value of a local fixed symbol.  If any
+// source-debugging address offset was specified,
+// it will be applied to the returned value.
+//-------------------------------------------------
 
 u64 srcdbg_info::get_local_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const
 {
@@ -153,6 +168,13 @@ u64 srcdbg_info::get_local_fixed_sym_value(const srcdbg_provider_entry & sp, con
 }
 
 
+//-------------------------------------------------
+// srcdbg_info - is_local_relative_sym_in_scope
+// Called during symbol resolution to determine
+// if the specified local relative symbol is
+// in scope
+//-------------------------------------------------
+
 bool srcdbg_info::is_local_relative_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const
 {
 	if (!sp.enabled())
@@ -175,6 +197,11 @@ bool srcdbg_info::is_local_relative_sym_in_scope(const srcdbg_provider_entry & s
 	return false;
 }
 
+//-------------------------------------------------
+// srcdbg_info - get_local_relative_sym_value
+// Called during symbol resolution to calculate
+// value of a local relative symbol
+//-------------------------------------------------
 
 u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym, symbol_table & symtable) const
 {

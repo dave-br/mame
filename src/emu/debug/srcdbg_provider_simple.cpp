@@ -258,10 +258,11 @@ bool srcdbg_import::on_read_local_fixed_symbol_value(const local_fixed_symbol_va
 		ranges.push_back(std::move(range));
 	}
 
-	m_srcdbg_simple.m_local_fixed_symbols.push_back(
-		srcdbg_provider_base::local_fixed_symbol(
-			m_symbol_names[value.symbol_name_index],
-			std::move(ranges)));
+	srcdbg_provider_base::local_fixed_symbol sym(
+		m_symbol_names[value.symbol_name_index],
+		std::move(ranges));
+	
+	m_srcdbg_simple.m_local_fixed_symbols.push_back(std::move(sym));
 
 	return true;
 }

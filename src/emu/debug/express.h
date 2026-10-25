@@ -206,7 +206,6 @@ public:
 	symbol_entry &add(const char *name, getter_func getter, setter_func setter = nullptr, const std::string &format_string = "");
 	symbol_entry &add(const char *name, int minparams, int maxparams, execute_func execute);
 	symbol_entry &add(const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64(symbol_table &)> value_fcn);
-	// symbol_entry &add(const char *name, symbol_table::getter_func get_pc, const std::vector<local_range_expression> & scoped_values);
 	symbol_entry *find(const char *name) const { if (name) { auto search = m_symlist.find(name); if (search != m_symlist.end()) return search->second.get(); else return nullptr; } else return nullptr; }
 	symbol_entry *find_deep(const char *name, bool skip_srcdbg = false);
 

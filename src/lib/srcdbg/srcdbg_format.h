@@ -146,7 +146,7 @@ typedef struct
  * corresponding to a (potentially distinct) value.  For example, multiple
  * C "static" variables, in different scopes, with the same name, would
  * be considered the "same" local fixed symbol, though each variable would
- * have its own address.
+ * have its own value (i.e., address).
  */
 
 /* One address range (scope) of a local fixed symbol */
