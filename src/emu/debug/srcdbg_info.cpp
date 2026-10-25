@@ -176,7 +176,7 @@ bool srcdbg_info::is_local_relative_sym_in_scope(const srcdbg_provider_entry & s
 }
 
 
-u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const
+u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym, symbol_table & symtable) const
 {
 	// is_in_scope gates the calling of this function
 	assert(sp.enabled());
@@ -189,9 +189,7 @@ u64 srcdbg_info::get_local_relative_sym_value(const srcdbg_provider_entry & sp, 
 	{
 		if (val.address_range().first <= pc && pc <= val.address_range().second)
 		{
-			return parsed_expression(
-				m_machine.root_device().debug()->symtable(),
-				val.expression()).execute();
+			return parsed_expression(symtable, val.expression()).execute();
 		}
 	}
 
@@ -223,7 +221,7 @@ void srcdbg_info::get_srcdbg_symbols(
 				// is_in_scope() if the provider of the symbol is enabled
 				[&sp]() { return sp.enabled(); },		
 				// value() defers to get_global_fixed_sym_value
-				[this, &sp, &sym]() { return this->get_global_fixed_sym_value(sp, sym); });
+				[this, &sp, &sym](symbol_table &) { return this->get_global_fixed_sym_value(sp, sym); });
 		}
 
 		// Local fixed symbols
@@ -236,7 +234,7 @@ void srcdbg_info::get_srcdbg_symbols(
 				// is_in_scope() defers to is_local_fixed_sym_in_scope
 				[this, &sp, &sym]() { return this->is_local_fixed_sym_in_scope(sp, sym); },
 				// value() defers to get_local_fixed_sym_value
-				[this, &sp, &sym]() { return this->get_local_fixed_sym_value(sp, sym); });
+				[this, &sp, &sym](symbol_table &) { return this->get_local_fixed_sym_value(sp, sym); });
 		}
 
 		// Local "relative" symbols (values are offsets to a register)
@@ -249,7 +247,7 @@ void srcdbg_info::get_srcdbg_symbols(
 				// is_in_scope() defers to is_local_relative_sym_in_scope
 				[this, &sp, &sym]() { return this->is_local_relative_sym_in_scope(sp, sym); },
 				// value() defers to get_local_relative_sym_value
-				[this, &sp, &sym]() { return this->get_local_relative_sym_value(sp, sym); });
+				[this, &sp, &sym](symbol_table & symtable) { return this->get_local_relative_sym_value(sp, sym, symtable); });
 		}
 	}
 }

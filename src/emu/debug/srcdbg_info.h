@@ -78,7 +78,7 @@ public:
 	bool is_local_fixed_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const;
 	u64 get_local_fixed_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_fixed_symbol & sym) const;
 	bool is_local_relative_sym_in_scope(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const;
-	u64 get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym) const;
+	u64 get_local_relative_sym_value(const srcdbg_provider_entry & sp, const srcdbg_provider_base::local_relative_symbol & sym, symbol_table & symtable) const;
 
 
 	virtual void complete_local_relative_initialization() override;

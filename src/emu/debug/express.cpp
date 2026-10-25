@@ -274,7 +274,7 @@ class srcdbg_symbol_entry : public symbol_entry
 {
 public:
 	// construction/destruction
-	srcdbg_symbol_entry(symbol_table &table, const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64()> value_fcn);
+	srcdbg_symbol_entry(symbol_table &table, const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64(symbol_table &)> value_fcn);
 
 	// symbol access
 	virtual bool is_lval() const override { return false; }
@@ -285,14 +285,14 @@ public:
 private:
 	// internal state
 	std::function<bool()> m_is_in_scope_fcn;
-	std::function<u64()> m_value_fcn;
+	std::function<u64(symbol_table &)> m_value_fcn;
 };
 
 //-------------------------------------------------
 //  global_fixed_symbol_entry - constructor
 //-------------------------------------------------
 
-srcdbg_symbol_entry::srcdbg_symbol_entry(symbol_table &table, const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64()> value_fcn)
+srcdbg_symbol_entry::srcdbg_symbol_entry(symbol_table &table, const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64(symbol_table &)> value_fcn)
 	: symbol_entry(table, SMT_INTEGER, name, "")
 	, m_is_in_scope_fcn(is_in_scope_fcn)
 	, m_value_fcn(value_fcn)
@@ -311,7 +311,7 @@ bool srcdbg_symbol_entry::is_in_scope() const
 
 u64 srcdbg_symbol_entry::value() const
 {
-	return m_value_fcn();
+	return m_value_fcn(m_table);
 }
 
 
@@ -663,7 +663,7 @@ symbol_entry &symbol_table::add(const char *name, int minparams, int maxparams, 
 //  add - add a new srcdbg symbol
 //-------------------------------------------------
 
-symbol_entry &symbol_table::add(const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64()> value_fcn)
+symbol_entry &symbol_table::add(const char *name, std::function<bool()> is_in_scope_fcn, std::function<u64(symbol_table &)> value_fcn)
 {
 	m_symlist.erase(name);
 	return *m_symlist.emplace(name, std::make_unique<srcdbg_symbol_entry>(*this, name, is_in_scope_fcn, value_fcn)).first->second;
