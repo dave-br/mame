@@ -469,7 +469,10 @@ void srcdbg_provider_simple::file_line_to_address_ranges(u32 file_index, u32 lin
 // range of addresses that includes the specified address
 bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & loc) const
 {
-	assert(m_linemaps_by_address.size() > 0);
+	if (m_linemaps_by_address.size() == 0)
+	{
+		return false;
+	}
 
 	// Undo offset so lookup uses addresses originally present in debugging information file
 	s32 offset = get_offset();
