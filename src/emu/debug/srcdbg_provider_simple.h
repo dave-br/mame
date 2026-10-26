@@ -16,7 +16,7 @@
 #pragma once
 
 #include "srcdbg_provider.h"
-#include "srcdbg_format.h"
+#include "../../lib/srcdbg/srcdbg_format.h"
 #include "srcdbg_format_reader.h"
 
 class srcdbg_import;
@@ -59,7 +59,7 @@ private:
 	std::vector<srcdbg_line_mapping>            m_linemaps_by_address;    // a list of srcdbg_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>      m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 																		  // sorted by line, from file #i
-	std::vector<local_relative_symbol_internal> m_local_relative_symbols_internal;
+	std::vector<local_relative_symbol>          m_local_relative_symbols_internal;
 };
 
 

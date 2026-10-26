@@ -656,7 +656,7 @@ device_debug::~device_debug()
 //  source-level debugging
 //-------------------------------------------------
 
-void device_debug::update_symbols_from_srcdbg(const srcdbg_info & srcdbg_info)
+void device_debug::update_symbols_from_srcdbg(srcdbg_info & srcdbg_info)
 {
 	// Establish the following symbol table parent chain:
 	// m_symtable (new) = m_symtable_srcdbg_locals -> m_symtable_srcdbg_globals -> m_symtable (old) = m_symtable_device

@@ -15,6 +15,7 @@
 #pragma once
 
 #include "express.h"
+#include "../../lib/srcdbg/srcdbg_format.h"
 
 // Simple file index / line number pair
 class file_line

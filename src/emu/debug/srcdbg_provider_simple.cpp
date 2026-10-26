@@ -605,7 +605,7 @@ bool srcdbg_provider_simple::is_local_relative_sym_in_scope(u32 m_local_relative
 		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
 
 	u64 pc = state->state_find_entry(STATE_GENPC)->value();
-	for (const local_relative_eval_rule & val : m_local_relative_symbols[m_local_relative_idx].m_eval_rules)
+	for (const local_relative_eval_rule & val : m_local_relative_symbols[m_local_relative_idx].eval_rules())
 	{
 		if (val.range.address_first <= pc && pc <= val.range.address_last)
 		{
@@ -622,13 +622,13 @@ u64 srcdbg_provider_simple::get_local_relative_sym_value(u32 local_relative_idx,
 		device_interface_enumerator<device_state_interface>(m_machine.root_device()).first();
 
 	u64 pc = state->state_find_entry(STATE_GENPC)->value();
-	for (const local_relative_eval_rule & val : m_local_relative_symbols[local_relative_idx].m_eval_rules)
+	for (const local_relative_eval_rule & val : m_local_relative_symbols[local_relative_idx].eval_rules())
 	{
 		if (val.range.address_first <= pc && pc <= val.range.address_last)
 		{
 			return evaluate_local_relative_rule(
 				state,
-				m_local_relative_symbols[local_relative_idx].m_name.c_str(),
+				m_local_relative_symbols[local_relative_idx].name(),
 				val,
 				symtable);
 		}
@@ -659,12 +659,12 @@ u64 srcdbg_provider_simple::evaluate_local_relative_rule(const device_state_inte
 			abs(val.reg_offset));
 		return parsed_expression(symtable, expr).execute();
 	}
-	else
-	{
-		LOGMASKED(
-			LOG_WARNING,
-			"Local relative '%s' warning: cannot find register ID %d\n",
-			name,
-			val.reg);
-	}
+
+	LOGMASKED(
+		LOG_WARNING,
+		"Local relative '%s' warning: cannot find register ID %d\n",
+		name,
+		val.reg);
+
+	return 0;
 }

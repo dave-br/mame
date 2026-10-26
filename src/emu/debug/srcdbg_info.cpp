@@ -222,7 +222,7 @@ void srcdbg_info::get_srcdbg_symbols(
 {
 	for (const srcdbg_provider_entry & sp : m_providers)
 	{
-		// Global fixed symbols
+		// Global fixed symbols - each one encountered gets cached in m_provider_globals
 		const std::vector<srcdbg_provider_base::global_fixed_symbol> & srcdbg_global_symbols = 
 			sp.c_provider()->global_fixed_symbols();
 		for (u32 i=0; i < srcdbg_global_symbols.size(); i++)
@@ -236,14 +236,9 @@ void srcdbg_info::get_srcdbg_symbols(
 			}
 			provider_global pg(sp, i);
 			entry->second.push_back(std::move(pg));
-
-			symtable_srcdbg_globals->add(
-				sym.name(),
-				[this, &sym]() { return this->is_global_fixed_sym_in_scope(sym.name()); },		
-				[this, &sym](symbol_table &) { return this->get_global_fixed_sym_value(sym.name()); });
 		}
 
-		// Local fixed symbols
+		// Local fixed symbols - each one encountered gets cached in m_provider_locals
 		const std::vector<srcdbg_provider_base::local_fixed_symbol> & srcdbg_local_fixed_symbols = 
 			sp.c_provider()->local_fixed_symbols();
 		for (u32 i=0; i < srcdbg_local_fixed_symbols.size(); i++)
@@ -260,7 +255,8 @@ void srcdbg_info::get_srcdbg_symbols(
 			entry->second.push_back(std::move(pl));
 		}
 
-		// Local "relative" symbols (values are offsets to a register)
+		// Local "relative" symbols (values are offsets to a register) - each one
+		// encountered gets cached in m_provider_locals
 		const std::vector<srcdbg_provider_base::local_relative_symbol> & srcdbg_local_relative_symbols = 
 			sp.c_provider()->local_relative_symbols();
 		for (u32 i=0; i < srcdbg_local_relative_symbols.size(); i++)
@@ -272,27 +268,41 @@ void srcdbg_info::get_srcdbg_symbols(
 				m_provider_locals.emplace(sym.name(), std::move(std::vector<provider_local>()));
 				entry = m_provider_locals.find(sym.name());
 			}
-			// TODO: JUST NOW: If curent provider already has entry for this name, it
-			// would be the last one.  Check if last entry of std::vector<provider_local>
-			// is the current provider.
-			provider_local pl(sp);
-			pl.m_local_relative_idx = i;
-			entry->second.push_back(std::move(pl));
+			std::vector<provider_local> * pls_ptr = &entry->second;
+			if (pls_ptr->size() > 0 && (&(*pls_ptr)[pls_ptr->size()-1].m_sp) == &sp)
+			{
+				// This provider already has a provider_local for this name as a local
+				// fixed symbol, so use it instead of a new provider_local
+				provider_local & pl = (*pls_ptr)[pls_ptr->size()-1];
+				pl.m_local_relative_idx = i;
+			}
+			else
+			{
+				provider_local pl(sp);
+				pl.m_local_relative_idx = i;
+				entry->second.push_back(std::move(pl));
+			}
 		}
+	}
 
-		for (const srcdbg_provider_base::local_relative_symbol & sym : srcdbg_local_relative_symbols)
-		{
-			symtable_srcdbg_locals->add(
-				sym.name(),
-				[this, &sym]() { return this->is_local_fixed_sym_in_scope(sym.name()); },
-				[this, &sp, &sym](symbol_table &) { return this->get_local_fixed_sym_value(sp, sym); });
-			symtable_srcdbg_locals->add(
-				sym.name(),
-				// is_in_scope() defers to is_local_relative_sym_in_scope
-				[this, &sp, &sym]() { return this->is_local_relative_sym_in_scope(sp, sym); },
-				// value() defers to get_local_relative_sym_value
-				[this, &sp, &sym](symbol_table & symtable) { return this->get_local_relative_sym_value(sp, sym, symtable); });
-		}
+	// Now that globals are cached and grouped by name, and locals are cached and
+	// grouped by name, add each symbol to the corresponding symbol table
+	// (only once for each global name, and only once for each local name)
+	for (const auto & entry : m_provider_globals)
+	{
+		const char * const & name = entry.first.c_str();
+		symtable_srcdbg_globals->add(
+			name,
+			[this, name]() { return this->is_global_fixed_sym_in_scope(name); },
+			[this, name](symbol_table &) { return this->get_global_fixed_sym_value(name); });
+	}
+	for (const auto & entry : m_provider_locals)
+	{
+		const char * const & name = entry.first.c_str();
+		symtable_srcdbg_locals->add(
+			name,
+			[this, name]() { return this->is_local_sym_in_scope(name); },
+			[this, name](symbol_table & tbl) { return this->get_local_sym_value(name, tbl); });
 	}
 }
 
