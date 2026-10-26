@@ -108,6 +108,7 @@ private:
 		u32				m_file_idx;
 	};
 
+	// Pairs a provider with an index into its list of global syms
 	struct provider_global
 	{
 		provider_global(const srcdbg_provider_entry & sp, u32 global_idx)
@@ -120,6 +121,8 @@ private:
 		u32                           m_global_idx;
 	};
 
+	// Associates a provider with two indices: one into its list of local fixed
+	// syms, and one into its list of local-relative syms
 	struct provider_local
 	{
 		provider_local(const srcdbg_provider_entry & sp)
@@ -143,12 +146,15 @@ private:
 	
 	// provider index + local file index to agg file index
 	// [provider_idx[local_file_idx]] = agg_file
-	std::vector<std::vector<u32>>             m_provider_file_to_agg_file;
+	std::vector<std::vector<u32>>                                 m_provider_file_to_agg_file;
+
+	// these map a symbol name to a list of provider symbols with that name
 	std::unordered_map<std::string, std::vector<provider_global>> m_provider_globals;
-	std::unordered_map<std::string, std::vector<provider_local>> m_provider_locals;
-	std::vector<srcdbg_provider_entry>        m_providers;
-	s32                                       m_offset;
-	bool                                      m_view_needs_full_refresh;
+	std::unordered_map<std::string, std::vector<provider_local>>  m_provider_locals;
+	
+	std::vector<srcdbg_provider_entry>                            m_providers;
+	s32                                                           m_offset;
+	bool                                                          m_view_needs_full_refresh;
 };
 
 

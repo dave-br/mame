@@ -76,6 +76,12 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 }
 
 
+//-------------------------------------------------
+// srcdbg_info - is_global_fixed_sym_in_scope
+// Called by a global's is_in_scope at symbol resolution
+// time to call the right provider to get the answer
+//-------------------------------------------------
+
 bool srcdbg_info::is_global_fixed_sym_in_scope(const char * name) const
 {
 	auto entry = m_provider_globals.find(name);
@@ -94,12 +100,11 @@ bool srcdbg_info::is_global_fixed_sym_in_scope(const char * name) const
 	return false;
 }
 
+
 //-------------------------------------------------
 // srcdbg_info - get_global_fixed_sym_value
-// Called by a global fixed value symbol table
-// entry to get the value of the symbol.  If any
-// source-debugging address offset was specified,
-// it will be applied to the returned value.
+// Called by a global's value() at symbol resolution
+// time to call the right provider to get the answer
 //-------------------------------------------------
 
 u64 srcdbg_info::get_global_fixed_sym_value(const char * name) const
@@ -125,9 +130,9 @@ u64 srcdbg_info::get_global_fixed_sym_value(const char * name) const
 
 //-------------------------------------------------
 // srcdbg_info - is_local_fixed_sym_in_scope
-// Called during symbol resolution to determine
-// if the specified local fixed symbol is
-// in scope
+// Called during symbol resolution to find the
+// right provider to answer is_in_scope().  Handles
+// both fixed and relative locals.
 //-------------------------------------------------
 
 bool srcdbg_info::is_local_sym_in_scope(const char * name) const
@@ -160,11 +165,10 @@ bool srcdbg_info::is_local_sym_in_scope(const char * name) const
 
 
 //-------------------------------------------------
-// srcdbg_info - get_local_fixed_sym_value
-// Called during symbol resolution to calculate
-// value of a local fixed symbol.  If any
-// source-debugging address offset was specified,
-// it will be applied to the returned value.
+// srcdbg_info - get_local_sym_value
+// Called during symbol resolution to find the
+// right provider to answer value().  Handles
+// both fixed and relative locals.
 //-------------------------------------------------
 
 u64 srcdbg_info::get_local_sym_value(const char * name, symbol_table & symtable) const
@@ -197,22 +201,6 @@ u64 srcdbg_info::get_local_sym_value(const char * name, symbol_table & symtable)
 	return 0;
 }
 
-//-------------------------------------------------
-// srcdbg_info - is_local_relative_sym_in_scope
-// Called during symbol resolution to determine
-// if the specified local relative symbol is
-// in scope
-//-------------------------------------------------
-
-
-
-
-
-//-------------------------------------------------
-// srcdbg_info - get_local_relative_sym_value
-// Called during symbol resolution to calculate
-// value of a local relative symbol
-//-------------------------------------------------
 
 //-------------------------------------------------
 // srcdbg_info - get_srcdbg_symbols

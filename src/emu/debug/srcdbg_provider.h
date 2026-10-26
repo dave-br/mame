@@ -119,27 +119,6 @@ public:
 	// These represent a local fixed symbol to the rest of the debugger.  Such symbols
 	// are limited to ranges of addresses (scopes), and represent a fixed value
 	// (such as a single variable address).
-
-	// class local_fixed_symbol_range
-	// {
-	// public:
-	// 	local_fixed_symbol_range(address_range && address_range, offs_t value, u32 flags)
-	// 		: m_address_range(std::move(address_range))
-	// 		, m_value(value)
-	// 		, m_flags(flags)
-	// 	{
-	// 	}
-
-	// 	address_range range() const { return m_address_range; }
-	// 	offs_t value() const { return m_value; };
-	// 	u32 flags() const { return m_flags; };
-
-	// private:
-	// 	address_range m_address_range;
-	// 	offs_t m_value;
-	// 	u32 m_flags;
-	// };
-
 	class local_fixed_symbol
 	{
 	public:
@@ -183,36 +162,7 @@ public:
 	};
 
 
-	// class local_range_expression
-	// {
-	// public:
-	// 	local_range_expression(std::pair<offs_t,offs_t> && address_range) //, std::string && expression)
-	// 		: m_address_range(std::move(address_range))
-	// 		// , m_expression(std::move(expression))
-	// 	{}
-	// 	const std::pair<offs_t,offs_t> & address_range() const { return m_address_range; };
-	// 	// const std::string & expression() const { return m_expression; };
 
-	// private:
-	// 	std::pair<offs_t,offs_t> m_address_range;
-	// 	// std::string m_expression;
-	// };
-
-	// class local_relative_symbol
-	// {
-	// public:
-	// 	local_relative_symbol(const std::string & name, std::vector<local_range_expression> && ranges)
-	// 		: m_name(name)
-	// 		, m_ranges(std::move(ranges))
-	// 	{
-	// 	}
-	// 	const char * name() const { return m_name.c_str(); };
-	// 	const std::vector<local_range_expression> & ranges() const { return m_ranges; };
-
-	// private:
-	// 	std::string m_name;
-	// 	std::vector<local_range_expression> m_ranges;
-	// };
 
 	
 	// ------------------------------------------------------------------------
@@ -232,10 +182,6 @@ public:
 	// Interface implemented by derived classes
 	// ------------------------------------------------------------------------
 
-	// Called later during startup, after device_state_interfaces are available.
-	// Generates expressions required to implement local relative symbol evaluation rules.
-	// virtual void complete_local_relative_initialization() = 0;
-
 	// Returns the number of source file paths
 	virtual u32 num_files() const = 0;
 
@@ -252,6 +198,9 @@ public:
 	// to the specified address, or returns false if no such pair exists
 	virtual bool address_to_file_line (offs_t address, file_line & loc) const = 0;
 
+	// These are called by symbol table entries' is_in_scope() and value()
+	// for the different kinds of srcdbg symbols.  Index parameters correspond
+	// to the symbol vector fields on this class.
 	virtual bool is_global_fixed_sym_in_scope(u32 global_idx) const = 0;
 	virtual u64 get_global_fixed_sym_value(u32 global_idx) const = 0;
 	virtual bool is_local_fixed_sym_in_scope(u32 local_fixed_idx) const = 0;

@@ -172,7 +172,7 @@ typedef struct
 	/* Number of address ranges, or scopes, for which this symbol is valid */
 	unsigned int num_address_ranges;
 
-	/* PC address ranges, with the corresponding values, for this symbol */
+	/* PC address ranges (scopes), with the corresponding values, for this symbol */
 	local_fixed_address_range local_fixed_address_ranges[0];   /* Actual array length should be num_address_ranges */
 } local_fixed_symbol_value;
 

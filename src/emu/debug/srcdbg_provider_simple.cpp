@@ -360,6 +360,7 @@ srcdbg_provider_simple::srcdbg_provider_simple(const running_machine& machine)
 {
 }
 
+// Simple helper to get address offset (sdoffset) from srcdbg_info
 s32 srcdbg_provider_simple::get_offset() const
 {
 	return m_machine.debugger().get_srcdbg_info()->get_offset();
@@ -509,26 +510,7 @@ bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & l
 }
 
 
-//-------------------------------------------------
-// srcdbg_info - get_global_fixed_sym_value
-// Called by a global fixed value symbol table
-// entry to get the value of the symbol.  If any
-// source-debugging address offset was specified,
-// it will be applied to the returned value.
-//-------------------------------------------------
-
-// u64 srcdbg_provider_simple::get_global_fixed_sym_value(const global_fixed_symbol & sym) const
-// {
-// 	// Apply offset to symbol when appropriate
-// 	offs_t value = sym.value();
-// 	if ((sym.flags() & MAME_SRCDBG_SYMFLAG_CONSTANT) == 0)
-// 	{
-// 		value += get_addr_offset();
-// 	}
-
-// 	return value;
-// }
-
+// Called by value() for srcdbg global symbols.  Applies offset as necessary.
 u64 srcdbg_provider_simple::get_global_fixed_sym_value(u32 global_idx) const
 {
 	offs_t value = m_global_fixed_symbols[global_idx].value();
@@ -543,13 +525,7 @@ u64 srcdbg_provider_simple::get_global_fixed_sym_value(u32 global_idx) const
 }
 
 
-//-------------------------------------------------
-// srcdbg_info - is_local_fixed_sym_in_scope
-// Called during symbol resolution to determine
-// if the specified local fixed symbol is
-// in scope
-//-------------------------------------------------
-
+// Called by is_in_scope() for srcdbg local-fixed symbols.
 bool srcdbg_provider_simple::is_local_fixed_sym_in_scope(u32 local_fixed_idx) const
 {
 	const device_state_interface * state = 
@@ -568,14 +544,7 @@ bool srcdbg_provider_simple::is_local_fixed_sym_in_scope(u32 local_fixed_idx) co
 }
 
 
-//-------------------------------------------------
-// srcdbg_info - get_local_fixed_sym_value
-// Called during symbol resolution to calculate
-// value of a local fixed symbol.  If any
-// source-debugging address offset was specified,
-// it will be applied to the returned value.
-//-------------------------------------------------
-
+// Called by value() for srcdbg local-fixed symbols.  Applies offset as necessary.
 u64 srcdbg_provider_simple::get_local_fixed_sym_value(u32 local_fixed_idx) const
 {
 	const device_state_interface * state = 
@@ -602,6 +571,7 @@ u64 srcdbg_provider_simple::get_local_fixed_sym_value(u32 local_fixed_idx) const
 	return 0;
 }
 
+// Called by is_in_scope() for srcdbg local-relative symbols.
 bool srcdbg_provider_simple::is_local_relative_sym_in_scope(u32 m_local_relative_idx) const
 {
 	const device_state_interface * state = 
@@ -619,6 +589,7 @@ bool srcdbg_provider_simple::is_local_relative_sym_in_scope(u32 m_local_relative
 	return false;	
 }
 
+// Called by value() for srcdbg local-relative symbols.
 u64 srcdbg_provider_simple::get_local_relative_sym_value(u32 local_relative_idx, symbol_table & symtable) const
 {
 	const device_state_interface * state = 
@@ -642,6 +613,9 @@ u64 srcdbg_provider_simple::get_local_relative_sym_value(u32 local_relative_idx,
 	return 0;	
 }
 
+// Helper used by get_local_relative_sym_value() to generate a string
+// expression (a register + an offset) to be evaluated to determine the
+// local relative symbol's value
 u64 srcdbg_provider_simple::evaluate_local_relative_rule(const device_state_interface * state, const char * name, const local_relative_eval_rule & val, symbol_table & symtable) const
 {
 	// Create expression string that adds the register to the offset.

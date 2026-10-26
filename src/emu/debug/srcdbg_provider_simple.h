@@ -30,7 +30,6 @@ class srcdbg_provider_simple : public srcdbg_provider_base
 public:
 	srcdbg_provider_simple(const running_machine& machine);
 	~srcdbg_provider_simple() { }
-	// virtual void complete_local_relative_initialization() override;
 	virtual u32 num_files() const override { return m_source_file_paths.size(); }
 	virtual bool file_index_to_path(u32 file_index, const source_file_path ** path) const override { *path = m_source_file_paths.data()+file_index; return true;};
 	virtual std::optional<u32> file_path_to_index(const char * file_path) const override;
@@ -59,7 +58,6 @@ private:
 	std::vector<srcdbg_line_mapping>            m_linemaps_by_address;    // a list of srcdbg_line_mappings, sorted by address
 	std::vector<std::vector<address_line>>      m_linemaps_by_line;       // m_linemaps_by_line[i] is a list of address/line pairs,
 																		  // sorted by line, from file #i
-	// std::vector<local_relative_symbol>          m_local_relative_symbols_internal;
 };
 
 
