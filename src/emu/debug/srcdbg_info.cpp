@@ -71,7 +71,6 @@ srcdbg_info::srcdbg_info(const running_machine& machine)
 	, m_provider_file_to_agg_file()
 	, m_providers()
 	, m_offset(machine.options().srcdbg_offset())
-	, m_machine(machine)
 	, m_view_needs_full_refresh(true)
 {
 }
@@ -231,7 +230,7 @@ void srcdbg_info::get_srcdbg_symbols(
 			auto entry = m_provider_globals.find(sym.name());
 			if (entry == m_provider_globals.cend())
 			{
-				m_provider_globals.emplace(sym.name(), std::move(std::vector<provider_global>()));
+				m_provider_globals.emplace(sym.name(), std::vector<provider_global>());
 				entry = m_provider_globals.find(sym.name());
 			}
 			provider_global pg(sp, i);
@@ -247,7 +246,7 @@ void srcdbg_info::get_srcdbg_symbols(
 			auto entry = m_provider_locals.find(sym.name());
 			if (entry == m_provider_locals.cend())
 			{
-				m_provider_locals.emplace(sym.name(), std::move(std::vector<provider_local>()));
+				m_provider_locals.emplace(sym.name(), std::vector<provider_local>());
 				entry = m_provider_locals.find(sym.name());
 			}
 			provider_local pl(sp);
@@ -265,7 +264,7 @@ void srcdbg_info::get_srcdbg_symbols(
 			auto entry = m_provider_locals.find(sym.name());
 			if (entry == m_provider_locals.cend())
 			{
-				m_provider_locals.emplace(sym.name(), std::move(std::vector<provider_local>()));
+				m_provider_locals.emplace(sym.name(), std::vector<provider_local>());
 				entry = m_provider_locals.find(sym.name());
 			}
 			std::vector<provider_local> * pls_ptr = &entry->second;

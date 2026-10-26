@@ -147,7 +147,6 @@ private:
 	std::unordered_map<std::string, std::vector<provider_local>> m_provider_locals;
 	std::vector<srcdbg_provider_entry>        m_providers;
 	s32                                       m_offset;
-	const running_machine&                    m_machine;
 	bool                                      m_view_needs_full_refresh;
 };
 
