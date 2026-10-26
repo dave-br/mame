@@ -142,8 +142,12 @@ bool srcdbg_info::is_local_sym_in_scope(const char * name) const
 			continue;
 		}
 
-		if (!pg.m_sp.c_provider()->is_local_fixed_sym_in_scope(pg.m_local_fixed_idx) &&
-			!pg.m_sp.c_provider()->is_local_relative_sym_in_scope(pg.m_local_relative_idx))
+		if (
+				(!pg.m_local_fixed_idx.has_value() ||
+				!pg.m_sp.c_provider()->is_local_fixed_sym_in_scope(pg.m_local_fixed_idx.value())) &&
+				(!pg.m_local_relative_idx.has_value() ||
+				!pg.m_sp.c_provider()->is_local_relative_sym_in_scope(pg.m_local_relative_idx.value()))
+		   )
 		{
 			continue;
 		}
@@ -175,14 +179,16 @@ u64 srcdbg_info::get_local_sym_value(const char * name, symbol_table & symtable)
 			continue;
 		}
 
-		if (pg.m_sp.c_provider()->is_local_fixed_sym_in_scope(pg.m_local_fixed_idx))
+		if (pg.m_local_fixed_idx.has_value() &&
+			pg.m_sp.c_provider()->is_local_fixed_sym_in_scope(pg.m_local_fixed_idx.value()))
 		{
-			return pg.m_sp.c_provider()->get_local_fixed_sym_value(pg.m_local_fixed_idx);
+			return pg.m_sp.c_provider()->get_local_fixed_sym_value(pg.m_local_fixed_idx.value());
 		}
 
-		if (pg.m_sp.c_provider()->is_local_relative_sym_in_scope(pg.m_local_fixed_idx))
+		if (pg.m_local_relative_idx.has_value() &&
+			pg.m_sp.c_provider()->is_local_relative_sym_in_scope(pg.m_local_relative_idx.value()))
 		{
-			return pg.m_sp.c_provider()->get_local_relative_sym_value(pg.m_local_fixed_idx, symtable);
+			return pg.m_sp.c_provider()->get_local_relative_sym_value(pg.m_local_relative_idx.value(), symtable);
 		}
 	}
 

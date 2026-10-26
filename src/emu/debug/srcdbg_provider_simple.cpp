@@ -270,7 +270,7 @@ bool srcdbg_import::on_read_local_relative_symbol_value(const local_relative_sym
 	}
 
 	srcdbg_provider_base::local_relative_symbol sym(m_symbol_names[value.symbol_name_index], eval_rules);
-	m_srcdbg_simple.m_local_relative_symbols_internal.push_back(std::move(sym));
+	m_srcdbg_simple.m_local_relative_symbols.push_back(std::move(sym));
 
 	return true;
 }

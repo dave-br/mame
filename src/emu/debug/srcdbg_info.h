@@ -122,15 +122,16 @@ private:
 
 	struct provider_local
 	{
-		provider_local(const srcdbg_provider_entry & sp) : m_sp(sp)
+		provider_local(const srcdbg_provider_entry & sp)
+			: m_sp(sp)
+			, m_local_fixed_idx()
+			, m_local_relative_idx()
 		{
-			m_local_fixed_idx = u32(-1);
-			m_local_relative_idx = u32(-1);
 		}
 
 		const srcdbg_provider_entry & m_sp;
-		u32				              m_local_fixed_idx;
-		u32				              m_local_relative_idx;
+		std::optional<u32>            m_local_fixed_idx;
+		std::optional<u32>            m_local_relative_idx;
 	};
 
 	void coalesce();
