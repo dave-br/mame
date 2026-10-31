@@ -683,7 +683,7 @@ void coco12_state::coco2b(machine_config &config)
 	m_vdg->hsync_wr_callback().set(FUNC(coco12_state::horizontal_sync));
 	m_vdg->fsync_wr_callback().set(FUNC(coco12_state::field_sync));
 	m_vdg->input_callback().set(FUNC(coco12_state::sam_read));
-	m_vdg->set_get_char_rom(FUNC(coco12::char_rom_r));
+	m_vdg->set_get_char_rom(FUNC(coco12_state::char_rom_r));
 }
 
 MC6847_GET_CHARROM_MEMBER(coco12_state::char_rom_r)
