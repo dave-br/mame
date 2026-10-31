@@ -58,6 +58,8 @@ public:
 	void cd6809(machine_config &config);
 	void ms1600(machine_config &config);
 
+	MC6847_GET_CHARROM_MEMBER(char_rom_r);
+	
 protected:
 	virtual void machine_start() override ATTR_COLD;
 	void configure_sam();
