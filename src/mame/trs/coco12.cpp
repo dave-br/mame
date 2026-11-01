@@ -693,7 +693,7 @@ MC6847_GET_CHARROM_MEMBER(coco12_state::char_rom_r)
 	// return 0x77;
 
 	// line ranges from 0 - 11
-	const uint8_t char_rom[] = 
+	static const uint8_t char_rom[] = 
 	{
 		// Reactor font from https://damieng.com/zx-origins
 	 16,56,124,254,56,56,56,56,0,0,0,0 , // ^
