@@ -3974,7 +3974,7 @@ Core Communication Options
     Example:
         .. code-block:: bash
 
-            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi
+            mame coco2 -debug -src_debug_info c:\MyProject\MyProject.mdi
 
 .. _mame-commandline-srcdbgsearchpath:
 
@@ -3994,7 +3994,7 @@ Core Communication Options
     Example:
         .. code-block:: bash
 
-            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_search_path c:\MyProject\SourceDir1;c:\MyProject\SourceDir2
+            mame coco2 -debug -src_debug_info c:\MyProject\MyProject.mdi -src_debug_search_path c:\MyProject\SourceDir1;c:\MyProject\SourceDir2
 
 .. _mame-commandline-srcdbgprefixmap:
 
@@ -4021,7 +4021,7 @@ Core Communication Options
     Example:
         .. code-block:: bash
 
-            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_prefix_map /cygdrive/c/;c:\;/cygdrive/d/;d:\
+            mame coco2 -debug -src_debug_info c:\MyProject\MyProject.mdi -src_debug_prefix_map /cygdrive/c/;c:\;/cygdrive/d/;d:\
 
 .. _mame-commandline-srcdbgoffset:
 
@@ -4037,7 +4037,7 @@ Core Communication Options
     Example:
         .. code-block:: bash
 
-            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_offset 57344
+            mame coco2 -debug -src_debug_info c:\MyProject\MyProject.mdi -src_debug_offset 57344
 
 .. _mame-commandline-srcdbgtabs:
 
@@ -4055,7 +4055,7 @@ Core Communication Options
     Example:
         .. code-block:: bash
 
-            mame coco2 -src_debug_info c:\MyProject\MyProject.mdi -src_debug_spaces_per_tab 8
+            mame coco2 -debug -src_debug_info c:\MyProject\MyProject.mdi -src_debug_spaces_per_tab 8
 
 .. _mame-commandline-miscoptions:
 
