@@ -494,7 +494,8 @@ Source-level breakpoints
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The expression evaluator includes syntax for specifying a source
-file and line number.  This can be used in conjunction with the
+file and line number (expressed as a 1-based decimal integer).
+This can be used in conjunction with the
 :ref:`bpset <debugger-command-bpset>` command to set
 a breakpoint on a particular line number,
 rather than specifying the address manually.  Source-level symbols
@@ -524,6 +525,12 @@ Examples:
     so long as it is unambiguous.
 ``bpset Main``
     Set a breakpoint on the label named ``Main``
+
+Note that the :ref:`MAME Debugging Information File <srcdbg_mdi>`
+must map a file / line number pair to an address for the file-line expression
+to be valid.  Assemblers or compilers will typically not map comment lines
+or blank lines to addresses, so you will not be able to set breakpoints on
+such lines.
 
 When the main window is showing source, you may also click on any source line
 and hit F9 to set a breakpoint on that line.
