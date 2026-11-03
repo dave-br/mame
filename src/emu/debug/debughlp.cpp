@@ -48,6 +48,7 @@ const help_item f_static_help_list[] =
 		"  Registerpoints\n"
 		"  Exceptionpoints\n"
 		"  Expressions\n"
+		"  Sourcedebugging\n"
 		"  Comments\n"
 		"  Cheats\n"
 		"  Image\n"
@@ -137,8 +138,11 @@ const help_item f_static_help_list[] =
 		"Type help <command> for further details on each command\n"
 		"\n"
 		"  s[tep] [<count>=1] -- single steps for <count> instructions (F11)\n"
+		"  s[tep]s -- single steps until the next source line (F11)\n"
 		"  o[ver] [<count>=1] -- single steps over <count> instructions (F10)\n"
+		"  o[ver]s -- single steps over until the next source line (F10)\n"
 		"  out -- single steps until the current subroutine/exception handler is exited (Shift-F11)\n"
+		"  outs -- single steps until the current subroutine/exception handler exits to the next source line (Shift-F11)\n"
 		"  g[o] [<address>] -- resumes execution, sets temp breakpoint at <address> (F5)\n"
 		"  gbf [<condition>] -- resumes execution until next false branch\n"
 		"  gbt [<condition>] -- resumes execution until next true branch\n"
@@ -250,6 +254,16 @@ const help_item f_static_help_list[] =
 		"As such, dw@300 refers to data memory word at address 300 and id@400 refers to an I/O memory "
 		"dword at address 400.\n"
 
+	},
+	{
+		"sourcedebugging",
+		"  s[tep]s -- single steps until the next source line (F11)\n"
+		"  o[ver]s -- single steps over until the next source line (F10)\n"
+		"  outs -- single steps until the current subroutine/exception handler exits to the next source line (Shift-F11)\n"
+		"  sdoffset <offset> -- sets the address offset to be used when source-level debugging relocated code\n"
+		"  sdlist -- lists all source-level debugging information files loaded on startup, to aid with programs that use bank switching.\n"
+		"  sdenable <sdnum> -- enables the source-level debugging information file; useful when its corresponding code is mapped into memory.\n"
+		"  sddisable <sdnum> -- disables the source-level debugging information file; useful when its corresponding code is unmapped from memory.\n"
 	},
 	{
 		"comments",
