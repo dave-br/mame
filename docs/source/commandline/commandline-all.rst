@@ -3879,83 +3879,6 @@ Debugging Options
 
             mame marble -debug -debugger_font "Comic Sans MS" -debugger_font_size 16
 
-
-.. _mame-commandline-commoptions:
-
-Core Communication Options
---------------------------
-
-.. _mame-commandline-commlocalhost:
-
-**-comm_localhost** *<string>*
-
-    Local address to bind to. This can be a traditional ``xxx.xxx.xxx.xxx``
-    address or a string containing a resolvable hostname.
-
-    The default is value is ``0.0.0.0`` (which binds to all local IPv4
-    addresses).
-
-    Example:
-        .. code-block:: bash
-
-            mame arescue -comm_localhost 192.168.1.2
-
-.. _mame-commandline-commlocalport:
-
-**-comm_localport** *<string>*
-
-    Local port to bind to. This can be any traditional communications port as
-    an unsigned 16-bit integer (0-65535).
-
-    The default value is ``15112``.
-
-    Example:
-        .. code-block:: bash
-
-            mame arescue -comm_localhost 192.168.1.2 -comm_localport 30100
-
-.. _mame-commandline-commremotehost:
-
-**-comm_remotehost** *<string>*
-
-    Remote address to connect to. This can be a traditional xxx.xxx.xxx.xxx
-    address or a string containing a resolvable hostname.
-
-    The default is value is "``0.0.0.0``" (which binds to all local IPv4
-    addresses).
-
-    Example:
-        .. code-block:: bash
-
-            mame arescue -comm_remotehost 192.168.1.2
-
-.. _mame-commandline-commremoteport:
-
-**-comm_remoteport** *<string>*
-
-    Remote port to connect to. This can be any traditional communications port
-    as an unsigned 16-bit integer (0-65535).
-
-    The default value is "``15112``".
-
-    Example:
-        .. code-block:: bash
-
-            mame arescue -comm_remotehost 192.168.1.2 -comm_remoteport 30100
-
-.. _mame-commandline-commframesync:
-
-**-[no]comm_framesync**
-
-    Synchronize frames between the communications network.
-
-    The default is OFF (**-nocomm_framesync**).
-
-    Example:
-        .. code-block:: bash
-
-            mame arescue -comm_remotehost 192.168.1.3 -comm_remoteport 30100 -comm_framesync
-
 .. _mame-commandline-srcdbginfo:
 
 **-src_debug_info** *<paths>*
@@ -4056,6 +3979,82 @@ Core Communication Options
         .. code-block:: bash
 
             mame coco2 -debug -src_debug_info c:\MyProject\MyProject.mdi -src_debug_spaces_per_tab 8
+
+.. _mame-commandline-commoptions:
+
+Core Communication Options
+--------------------------
+
+.. _mame-commandline-commlocalhost:
+
+**-comm_localhost** *<string>*
+
+    Local address to bind to. This can be a traditional ``xxx.xxx.xxx.xxx``
+    address or a string containing a resolvable hostname.
+
+    The default is value is ``0.0.0.0`` (which binds to all local IPv4
+    addresses).
+
+    Example:
+        .. code-block:: bash
+
+            mame arescue -comm_localhost 192.168.1.2
+
+.. _mame-commandline-commlocalport:
+
+**-comm_localport** *<string>*
+
+    Local port to bind to. This can be any traditional communications port as
+    an unsigned 16-bit integer (0-65535).
+
+    The default value is ``15112``.
+
+    Example:
+        .. code-block:: bash
+
+            mame arescue -comm_localhost 192.168.1.2 -comm_localport 30100
+
+.. _mame-commandline-commremotehost:
+
+**-comm_remotehost** *<string>*
+
+    Remote address to connect to. This can be a traditional xxx.xxx.xxx.xxx
+    address or a string containing a resolvable hostname.
+
+    The default is value is "``0.0.0.0``" (which binds to all local IPv4
+    addresses).
+
+    Example:
+        .. code-block:: bash
+
+            mame arescue -comm_remotehost 192.168.1.2
+
+.. _mame-commandline-commremoteport:
+
+**-comm_remoteport** *<string>*
+
+    Remote port to connect to. This can be any traditional communications port
+    as an unsigned 16-bit integer (0-65535).
+
+    The default value is "``15112``".
+
+    Example:
+        .. code-block:: bash
+
+            mame arescue -comm_remotehost 192.168.1.2 -comm_remoteport 30100
+
+.. _mame-commandline-commframesync:
+
+**-[no]comm_framesync**
+
+    Synchronize frames between the communications network.
+
+    The default is OFF (**-nocomm_framesync**).
+
+    Example:
+        .. code-block:: bash
+
+            mame arescue -comm_remotehost 192.168.1.3 -comm_remoteport 30100 -comm_framesync
 
 .. _mame-commandline-miscoptions:
 

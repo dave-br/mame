@@ -14,6 +14,9 @@ Execution Debugger Commands
 :ref:`debugger-command-out`
     single step until the current subroutine/exception handler returns
     (Shift-F11)
+:ref:`debugger-command-outs`
+    single step until the current subroutine/exception handler returns
+    to a source line (Shift-F11)
 :ref:`debugger-command-go`
     resume execution (F5)
 :ref:`debugger-command-gbt`
