@@ -138,7 +138,7 @@ Back to :ref:`debugger-execution-list`
 overs
 -----
 
-**overs**
+**o[ver]s**
 
 When :ref:`source-level debugging <srcdbg>` is enabled, this steps forward
 over one *source* line on the currently executing CPU.  When the original

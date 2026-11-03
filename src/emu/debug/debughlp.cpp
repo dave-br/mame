@@ -138,7 +138,7 @@ const help_item f_static_help_list[] =
 		"Type help <command> for further details on each command\n"
 		"\n"
 		"  s[tep] [<count>=1] -- single steps for <count> instructions (F11)\n"
-		"  s[tep]s -- single steps until the next source line (F11)\n"
+		"  st[ep]s -- single steps until the next source line (F11)\n"
 		"  o[ver] [<count>=1] -- single steps over <count> instructions (F10)\n"
 		"  o[ver]s -- single steps over until the next source line (F10)\n"
 		"  out -- single steps until the current subroutine/exception handler is exited (Shift-F11)\n"
@@ -257,6 +257,10 @@ const help_item f_static_help_list[] =
 	},
 	{
 		"sourcedebugging",
+		"\n"
+		"Source-level debugging commands\n"
+		"Type help <command> for further details on each command\n"
+		"\n"
 		"  s[tep]s -- single steps until the next source line (F11)\n"
 		"  o[ver]s -- single steps over until the next source line (F10)\n"
 		"  outs -- single steps until the current subroutine/exception handler exits to the next source line (Shift-F11)\n"
@@ -916,6 +920,32 @@ const help_item f_static_help_list[] =
 		"  Steps forward four instructions on the current CPU.\n"
 	},
 	{
+		"steps",
+		"\n"
+		"  st[ep]s\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this single-steps "
+		"one source line on the currently executing CPU.  When the original "
+		"source is assembly language, step and steps generally behave the same. "
+		"But when the original source is in a higher level language like C or BASIC, "
+		"steps results in executing the remainder of a block of instructions "
+		"associated with the current source line.\n"
+		"\n"
+		"If the current source line is a "
+		"call instruction, steps stops at the first source line in the called "
+		"function, but only if the called function has source associated with it. "
+		"If neither the called function nor any of its callees have source associated "
+		"with them, steps will continue execution until the call is complete, and "
+		"the first instruction with source associated with it is encountered.\n"
+		"\n"
+		"Examples:\n"
+		"\n"
+		"steps\n"
+		"  Steps forward to the next source line on the current CPU.\n"
+		"sts\n"
+		"  Steps forward to the next source line on the current CPU.\n"
+	},
+	{
 		"over",
 		"\n"
 		"  o[ver] [<count>=1]\n"
@@ -939,6 +969,25 @@ const help_item f_static_help_list[] =
 		"  Steps forward over four instructions on the current CPU.\n"
 	},
 	{
+		"overs",
+		"\n"
+		"  o[ver]s\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this steps forward "
+		"over one source line on the currently executing CPU.  When the original "
+		"source is assembly language, over and overs generally behave the same. "
+		"But when the original source is in a higher level language like C or BASIC, "
+		"overs results in executing the remainder of a block of instructions "
+		"associated with the current source line. "
+		"\n"
+		"Examples:\n"
+		"\n"
+		"overs\n"
+		"    Steps forward over the next source line on the current CPU.\n"
+		"os\n"
+		"    Steps forward over the next source line on the current CPU.\n"
+	},
+	{
 		"out",
 		"\n"
 		"  out\n"
@@ -955,6 +1004,33 @@ const help_item f_static_help_list[] =
 		"\n"
 		"out\n"
 		"  Steps until the current subroutine or exception handler returns.\n"
+	},
+	{
+		"outs",
+		"\n"
+		"  outs\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this single-steps "
+		"until the next return from subroutine or return from exception instruction "
+		"lands the currently executing CPU to a source line.  When the original "
+		"source is assembly language and source-level debugging information is provided "
+		"for the current and calling subroutine, out and outs generally "
+		"behave the same.  But when layers of functions or subroutines without "
+		"source-level information exist between the current instruction and the "
+		"most recent calling instruction with source-level information, outs "
+		"will skip over those \"non source-level information\" layers until it lands on "
+		"calling code with source-level information.\n"
+		"\n"
+		"If the current line returns from a recursive function, outs will stop "
+		"at the same line, but in the prior call frame.  It will appear as if "
+		"no stepping occurred, but the stack register will indicate a return "
+		"has occurred.\n"
+		"\n"
+		"Example:\n"
+		"\n"
+		"outs\n"
+    	"  Steps until a subroutine or exception handler returns to code with "
+    	"  source-level information.\n"
 	},
 	{
 		"go",

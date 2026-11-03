@@ -475,8 +475,9 @@ to specify :ref:`-src_debug_search_path <mame-commandline-srcdbgsearchpath>`
 and / or :ref:`-src_debug_prefix_map <mame-commandline-srcdbgprefixmap>`.
 
 Once source-level debugging is enabled, you will then be able to
-access the Options menu, Show Source command from
-the main debugger window.  You may switch back and forth between source
+access the Options, Show Source command from the menu bar on the
+main debugger window (gear menu on the Mac).
+You may switch back and forth between source
 and disassembly view, and open separate disassembly windows even
 while the main window shows source.
 
@@ -526,14 +527,14 @@ Examples:
 ``bpset Main``
     Set a breakpoint on the label named ``Main``
 
-Note that the :ref:`MAME Debugging Information File <srcdbg_mdi>`
-must map a file / line number pair to an address for the file-line expression
-to be valid.  Assemblers or compilers will typically not map comment lines
-or blank lines to addresses, so you will not be able to set breakpoints on
-such lines.
-
 When the main window is showing source, you may also click on any source line
 and hit F9 to set a breakpoint on that line.
+
+Note that the :ref:`MAME Debugging Information File <srcdbg_mdi>`
+must map a file / line number pair to an address for that file-line to be
+a valid breakpoint location.  Assemblers or compilers will typically not map comment lines
+or blank lines to addresses, so you will not be able to set breakpoints on
+such lines.
 
 
 .. _srcdbg_stepping:
