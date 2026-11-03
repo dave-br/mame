@@ -942,6 +942,7 @@ const help_item f_static_help_list[] =
 		"\n"
 		"steps\n"
 		"  Steps forward to the next source line on the current CPU.\n"
+		"\n"
 		"sts\n"
 		"  Steps forward to the next source line on the current CPU.\n"
 	},
@@ -983,9 +984,10 @@ const help_item f_static_help_list[] =
 		"Examples:\n"
 		"\n"
 		"overs\n"
-		"    Steps forward over the next source line on the current CPU.\n"
+		"  Steps forward over the next source line on the current CPU.\n"
+		"\n"
 		"os\n"
-		"    Steps forward over the next source line on the current CPU.\n"
+		"  Steps forward over the next source line on the current CPU.\n"
 	},
 	{
 		"out",
@@ -1831,6 +1833,70 @@ const help_item f_static_help_list[] =
 		"\n"
 		"memdump mylog.log,1\n"
 		"  Dumps memory maps for the CPU 1 and all its child devices to the file mylog.log.\n"
+	},
+	{
+		"sdoffset",
+		"\n"
+		"  sdoffset <offset>\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this "
+		"sets the address offset to be used when source-level debugging relocated code.\n"
+		"\n"
+		"Example:\n"
+		"\n"
+		"sdoffset E000\n"
+		"  Apply an offset of $E000 to all addresses present in the source-level debugging information File.\n"
+	},
+	{
+		"sdlist",
+		"\n"
+		"  sdlist\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this "
+		"lists all source-level debugging information files loaded on startup, along "
+		"with their indices, to aid with programs that use bank switching.\n"
+		"\n"
+		"Example:\n"
+		"\n"
+		"sdlist\n"
+	},
+	{
+		"sdenable",
+		"\n"
+		"  sdenable <sdnum>\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this "
+		"enables the source-level debugging information file with the specified index. "
+		"This is useful when debugging a "
+		"program that uses bank switching, and the program has mapped "
+		"code into memory that corresponds to the specified source-level "
+		"debugging information file.  Note that this command has no effect on any "
+		"breakpoints or watchpoints currently set.\n"
+		"\n"
+		"Example:\n"
+		"\n"
+		"sdenable 3\n"
+		"  Enables source-level debugging information file with index 3 as shown "
+		"in the output from the sdlist command.\n"
+	},
+	{
+		"sddisable",
+		"\n"
+		"  sddisable <sdnum>\n"
+		"\n"
+		"When source-level debugging is enabled via -src_debug_info, this "
+		"disables the source-level debugging information file with the specified index. "
+		"This is useful when debugging a "
+		"program that uses bank switching, and the program has unmapped "
+		"code from memory that corresponds to the specified source-level "
+		"debugging information file.  Note that this command has no effect on any "
+		"breakpoints or watchpoints currently set.\n"
+		"\n"
+		"Example:\n"
+		"\n"
+		"sddisable 0\n"
+		"  Disables source-level debugging information file with index 0 as shown "
+		"in the output from the sdlist command.\n"
 	},
 	{
 		"comlist",
