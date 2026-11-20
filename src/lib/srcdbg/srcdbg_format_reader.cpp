@@ -168,14 +168,14 @@ bool srcdbg_format_simp_read(const char * srcdbg_path, srcdbg_format_reader_call
 
 	u32 first_symbol_name = first_line_mapping + (header->num_line_mappings * sizeof(srcdbg_line_mapping));
 	u32 after_symbol_names = first_symbol_name + header->symbol_names_size;
+	if (after_symbol_names < first_symbol_name || data.size() <= after_symbol_names)
+	{
+		srcdbg_sprintf(error, "Error reading file\n%s\n\nFile too small to contain reported symbol_names_size=%d", srcdbg_path, header->symbol_names_size);
+		return false;
+	}
+
 	if (header->symbol_names_size > 0)
 	{
-		if (data.size() <= after_symbol_names)
-		{
-			srcdbg_sprintf(error, "Error reading file\n%s\n\nFile too small to contain reported symbol_names_size=%d", srcdbg_path, header->symbol_names_size);
-			return false;
-		}
-
 		if (data[after_symbol_names - 1] != '\0')
 		{
 			srcdbg_sprintf(error, "Error reading file\n%s\n\nnull terminator missing at end of last symbol name", srcdbg_path);
