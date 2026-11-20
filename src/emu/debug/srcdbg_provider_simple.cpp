@@ -498,6 +498,12 @@ bool srcdbg_provider_simple::address_to_file_line (offs_t address, file_line & l
 		loc.set(guess->source_file_index, guess->line_number);
 		return true;
 	}
+
+	if (guess == m_linemaps_by_address.cbegin())
+	{
+		return false;
+	}
+	
 	guess--;
 	if (guess >= m_linemaps_by_address.cbegin() &&
 		guess->range.address_first <= address && address <= guess->range.address_last)
